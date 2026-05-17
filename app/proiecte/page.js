@@ -4,7 +4,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import {
   ArrowLeft, ChevronDown, ChevronUp, Clock, GitBranch, Globe, Layers,
-  Star, Zap, ShieldCheck, ExternalLink, Code2, BookOpen
+  Star, Zap, ShieldCheck, Code2, BookOpen
 } from "lucide-react";
 
 const STACKS = [
