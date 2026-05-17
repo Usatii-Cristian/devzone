@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Dumbbell, LogOut, Star } from "lucide-react";
+import { Home, Dumbbell, LogOut, Star, Code2 } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -17,6 +17,7 @@ export default function Navbar() {
     { href: "/", icon: Home, label: "Acasă" },
     { href: "/antrenament", icon: Dumbbell, label: "Antrenament" },
     { href: "/proiecte", icon: Star, label: "Proiecte" },
+    { href: "/editor", icon: Code2, label: "Editor" },
   ];
 
   return (

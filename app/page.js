@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star } from "lucide-react";
+import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
 const MOD_ICONS = {
@@ -166,25 +166,35 @@ export default function Home() {
         )}
 
         {/* Quick actions */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           <Link href="/antrenament"
-            className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl p-4 flex items-center gap-3 shadow-sm hover:shadow-md transition-all group">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl p-3 flex flex-col items-center gap-2 shadow-sm hover:shadow-md transition-all">
+            <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
               <Dumbbell className="w-5 h-5 text-white"/>
             </div>
-            <div>
-              <p className="font-black text-white text-sm">Antrenament</p>
-              <p className="text-white/70 text-xs">Exersează întrebări</p>
+            <div className="text-center">
+              <p className="font-black text-white text-xs">Antrenament</p>
+              <p className="text-white/70 text-xs hidden sm:block">Exersează</p>
             </div>
           </Link>
           <Link href="/proiecte"
-            className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 flex items-center gap-3 shadow-sm hover:shadow-md transition-all group">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-3 flex flex-col items-center gap-2 shadow-sm hover:shadow-md transition-all">
+            <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
               <Star className="w-5 h-5 text-white"/>
             </div>
-            <div>
-              <p className="font-black text-white text-sm">Proiecte</p>
-              <p className="text-white/70 text-xs">Construiește ceva real</p>
+            <div className="text-center">
+              <p className="font-black text-white text-xs">Proiecte</p>
+              <p className="text-white/70 text-xs hidden sm:block">Construiește</p>
+            </div>
+          </Link>
+          <Link href="/editor"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-3 flex flex-col items-center gap-2 shadow-sm hover:shadow-md transition-all">
+            <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Code2 className="w-5 h-5 text-white"/>
+            </div>
+            <div className="text-center">
+              <p className="font-black text-white text-xs">Editor</p>
+              <p className="text-white/70 text-xs hidden sm:block">Scrie cod</p>
             </div>
           </Link>
         </div>

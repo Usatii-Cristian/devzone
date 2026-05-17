@@ -13,6 +13,11 @@ const STACKS = [
   { v: "react", l: "React" },
   { v: "nextjs", l: "Next.js" },
   { v: "python", l: "Python" },
+  { v: "c", l: "C" },
+  { v: "cpp", l: "C++" },
+  { v: "java", l: "Java" },
+  { v: "csharp", l: "C#" },
+  { v: "php", l: "PHP" },
 ];
 
 const DIFFS = [
@@ -33,6 +38,11 @@ const STACK_BADGE = {
   react:          { label: "React",       cls: "bg-sky-100 text-sky-700" },
   nextjs:         { label: "Next.js",     cls: "bg-slate-200 text-slate-700" },
   python:         { label: "Python",      cls: "bg-blue-100 text-blue-700" },
+  c:              { label: "C",           cls: "bg-purple-100 text-purple-700" },
+  cpp:            { label: "C++",         cls: "bg-pink-100 text-pink-700" },
+  java:           { label: "Java",        cls: "bg-red-100 text-red-700" },
+  csharp:         { label: "C#",          cls: "bg-indigo-100 text-indigo-700" },
+  php:            { label: "PHP",         cls: "bg-violet-100 text-violet-700" },
 };
 
 const PROJECTS = [
@@ -276,6 +286,241 @@ const PROJECTS = [
       "Documentează cu docstrings și expune `/docs` simplu",
     ],
   },
+  // ── C ──
+  {
+    id: 11,
+    title: "Calculator în C",
+    stack: "c",
+    difficulty: "easy",
+    hours: 2,
+    editorLang: "c",
+    description: "Calculator de bază cu operații aritmetice, împărțire cu verificare și meniu interactiv.",
+    what: [
+      "Meniu cu opțiuni: +, -, *, /, %",
+      "Citire operanzi de la utilizator",
+      "Verificare împărțire la zero",
+      "Buclă do-while pentru calcule multiple",
+      "Formatare output cu printf",
+    ],
+    steps: [
+      "Definește funcții separate: `add()`, `sub()`, `mul()`, `divSafe()`",
+      "Creează un meniu cu `switch(op)` pentru a alege operația",
+      "Adaugă verificare `if (b == 0)` înainte de împărțire",
+      "Învelește totul într-un `do { ... } while(continua);`",
+      "Compilează cu `gcc calculator.c -o calculator && ./calculator`",
+    ],
+  },
+  {
+    id: 12,
+    title: "Gestiune studenți – fișiere C",
+    stack: "c",
+    difficulty: "medium",
+    hours: 6,
+    editorLang: "c",
+    description: "Aplicație CLI care salvează și citește o listă de studenți din fișier binar, cu sortare și căutare.",
+    what: [
+      "Structura `Student` cu nume, notă, grupa",
+      "Salvare/citire din fișier binar cu `fwrite`/`fread`",
+      "Adaugă, șterge și caută student după nume",
+      "Sortare după notă cu `qsort`",
+      "Afișare formatată în tabel",
+    ],
+    steps: [
+      "Definește `typedef struct { char nume[50]; float nota; int grupa; } Student;`",
+      "Funcții `saveStudents(FILE*, Student*, int)` și `loadStudents(FILE*, Student*, int*)`",
+      "Implementează `qsort` cu comparator custom după nota",
+      "Meniu CLI cu opțiunile: Adaugă / Afișează / Sortează / Caută / Ieșire",
+      "Compilează și testează cu câțiva studenți adăugați manual",
+    ],
+  },
+  // ── C++ ──
+  {
+    id: 13,
+    title: "Joc Ghicește Numărul – C++",
+    stack: "cpp",
+    difficulty: "easy",
+    hours: 2,
+    editorLang: "cpp",
+    description: "Joc interactiv în care calculatorul generează un număr aleator și jucătorul trebuie să-l ghicească.",
+    what: [
+      "Generare număr random cu `<random>`",
+      "Hint: 'prea mare' / 'prea mic' după fiecare ghicire",
+      "Numărarea tentativelor",
+      "Dificultate selectabilă (ușor: 1-50, greu: 1-500)",
+      "Opțiune de restart fără a reporni programul",
+    ],
+    steps: [
+      "Folosește `std::mt19937 rng(std::random_device{}())` pentru random modern",
+      "Buclă `while(ghicit != secret)` cu citire `cin >> ghicit`",
+      "Afișează hint cu `if (ghicit > secret) cout << \"Prea mare!\";`",
+      "Adaugă un contor `tentative++` și afișează-l la final",
+      "Compilează: `g++ -o joc joc.cpp && ./joc`",
+    ],
+  },
+  {
+    id: 14,
+    title: "Gestiune inventar – C++ OOP",
+    stack: "cpp",
+    difficulty: "medium",
+    hours: 7,
+    editorLang: "cpp",
+    description: "Aplicație OOP în C++ pentru gestionarea inventarului unui magazin cu clase, moștenire și fișiere.",
+    what: [
+      "Clasa de bază `Produs` cu name, price, qty",
+      "Subclase: `Electronica`, `Aliment` cu atribute specifice",
+      "Supraîncărcare operator `<<` pentru afișare",
+      "Vector de pointeri la produse (polimorfism)",
+      "Salvare/citire din fișier text",
+    ],
+    steps: [
+      "Definește clasa `Produs` cu constructor, getteri, `virtual void afiseaza()`",
+      "Moștenește `Electronica : public Produs` cu `garantie` (luni)",
+      "Suprascrie `afiseaza()` în fiecare subclasă",
+      "Folosește `vector<Produs*>` pentru lista de produse",
+      "Implementează `salveaza(filename)` și `incarca(filename)` cu `fstream`",
+    ],
+  },
+  // ── Java ──
+  {
+    id: 15,
+    title: "Aplicație bancară simplă – Java",
+    stack: "java",
+    difficulty: "medium",
+    hours: 6,
+    editorLang: "java",
+    description: "Simulare de cont bancar în Java cu depuneri, retrageri, istoric tranzacții și validări.",
+    what: [
+      "Clasa `ContBancar` cu sold, titular, IBAN generat",
+      "Metode: `depune()`, `retrage()`, `transfer()`",
+      "Validare sold insuficient cu excepție custom",
+      "Istoric tranzacții cu `ArrayList<Tranzactie>`",
+      "Afișare extras de cont formatat",
+    ],
+    steps: [
+      "Creează clasa `ContBancar` cu `private double sold` (encapsulare)",
+      "Definește excepție `SoldInsuficientException extends RuntimeException`",
+      "Aruncă excepția în `retrage()` dacă `suma > sold`",
+      "Loghează fiecare operație în `ArrayList<String> istoric`",
+      "Testează în `main()` cu scenarii: depunere, retragere validă, retragere invalidă",
+    ],
+  },
+  {
+    id: 16,
+    title: "Sistem de note studenți – Java",
+    stack: "java",
+    difficulty: "easy",
+    hours: 3,
+    editorLang: "java",
+    description: "Program Java pentru gestionarea notelor unui student cu calcul medie, minim, maxim și statistici.",
+    what: [
+      "Adaugă note prin input de la consolă",
+      "Calcul medie, notă minimă și maximă",
+      "Verificare promovare (medie >= 5)",
+      "Sortare note crescător",
+      "Afișare distribuție pe intervale",
+    ],
+    steps: [
+      "Folosește `ArrayList<Double> note = new ArrayList<>()`",
+      "Adaugă cu `Scanner sc = new Scanner(System.in)` într-o buclă",
+      "Calculează media cu `note.stream().mapToDouble(Double::doubleValue).average().getAsDouble()`",
+      "Sortează cu `Collections.sort(note)`",
+      "Afișează statistici formatate cu `String.format(\"%.2f\", medie)`",
+    ],
+  },
+  // ── C# ──
+  {
+    id: 17,
+    title: "Task Manager CLI – C#",
+    stack: "csharp",
+    difficulty: "easy",
+    hours: 3,
+    editorLang: "csharp",
+    description: "Aplicație CLI în C# pentru gestionarea task-urilor zilnice cu salvare în JSON.",
+    what: [
+      "Clasă `Task` cu titlu, descriere, prioritate, status",
+      "CRUD complet: adaugă, listează, modifică, șterge",
+      "Filtrare după status (todo/done) și prioritate",
+      "Persistență în fișier JSON cu `System.Text.Json`",
+      "Interfață colorată în consolă",
+    ],
+    steps: [
+      "Definește `record Task(int Id, string Title, bool Done, string Priority)`",
+      "Salvează cu `File.WriteAllText(\"tasks.json\", JsonSerializer.Serialize(tasks))`",
+      "Citește cu `JsonSerializer.Deserialize<List<Task>>(File.ReadAllText(...))`",
+      "Adaugă culori cu `Console.ForegroundColor = ConsoleColor.Green`",
+      "Rulează: `dotnet run` în folderul proiectului",
+    ],
+  },
+  {
+    id: 18,
+    title: "Joc Snake în consolă – C#",
+    stack: "csharp",
+    difficulty: "hard",
+    hours: 12,
+    editorLang: "csharp",
+    description: "Jocul clasic Snake implementat complet în consola C# cu highscore, viteză progresivă și coliziuni.",
+    what: [
+      "Snake care crește la mâncare",
+      "Detectare coliziuni (pereți + propriul corp)",
+      "Viteză progresivă pe măsură ce scorul crește",
+      "Afișare scor și highscore",
+      "Restart la game over",
+    ],
+    steps: [
+      "Folosește `Queue<(int x, int y)>` pentru corpul șarpelui",
+      "Loop principal cu `Task.Delay(speed)` pentru FPS control",
+      "Detectează input non-blocking cu `Console.KeyAvailable`",
+      "Redesenează doar celulele schimbate (nu toată consola)",
+      "Salvează highscore în `File.WriteAllText(\"score.txt\", score.ToString())`",
+    ],
+  },
+  // ── PHP ──
+  {
+    id: 19,
+    title: "Blog simplu – PHP + MySQL",
+    stack: "php",
+    difficulty: "medium",
+    hours: 8,
+    editorLang: "php",
+    description: "Blog complet în PHP pur cu autentificare, CRUD articole, comentarii și paginare.",
+    what: [
+      "Autentificare cu sesiuni PHP",
+      "Pagina principală cu lista articolelor și paginare",
+      "Adaugă/editează/șterge articole (admin)",
+      "Comentarii pe articole",
+      "Upload imagini pentru articole",
+    ],
+    steps: [
+      "Setup: XAMPP sau WAMP, creează DB `blog` cu tabele `users`, `posts`, `comments`",
+      "Autentificare cu `password_hash()` + `password_verify()` + `$_SESSION`",
+      "CRUD articole cu PDO și prepared statements (securitate SQL injection)",
+      "Paginare: `LIMIT $perPage OFFSET $page * $perPage` în query",
+      "Upload imagini cu `move_uploaded_file()` și validare tip/mărime",
+    ],
+  },
+  {
+    id: 20,
+    title: "API REST simplu – PHP",
+    stack: "php",
+    difficulty: "easy",
+    hours: 3,
+    editorLang: "php",
+    description: "Mini API REST în PHP pur care returnează JSON, fără framework.",
+    what: [
+      "Endpoint `/api/users` — GET (listă), POST (creare)",
+      "Endpoint `/api/users/{id}` — GET, PUT, DELETE",
+      "Autentificare cu API key în header",
+      "Răspunsuri JSON cu coduri HTTP corecte",
+      "Date stocate în fișier JSON (fără DB)",
+    ],
+    steps: [
+      "Citește metoda HTTP cu `$_SERVER['REQUEST_METHOD']`",
+      "Parsează URL cu `parse_url()` și `explode('/', $path)`",
+      "Returnează JSON: `header('Content-Type: application/json'); echo json_encode($data);`",
+      "Setează status: `http_response_code(201)` pentru creare, `404` pentru negăsit",
+      "Testează cu `curl -X GET http://localhost/api/users`",
+    ],
+  },
 ];
 
 const GITHUB_GUIDE = [
@@ -348,6 +593,14 @@ function ProjectCard({ project, expanded, onToggle }) {
               ))}
             </ol>
           </div>
+
+          {/* Editor button */}
+          {project.editorLang && (
+            <Link href={`/editor`}
+              className="mt-2 w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 transition-colors text-white text-sm font-black py-2.5 rounded-xl">
+              <Code2 className="w-4 h-4"/> Deschide în Editor
+            </Link>
+          )}
         </div>
       )}
     </div>
