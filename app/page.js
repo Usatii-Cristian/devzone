@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play } from "lucide-react";
-import AntrenamentModal from "@/components/AntrenamentModal";
+import Navbar from "@/components/Navbar";
 
 const MOD_ICONS = {
   python: "🐍", javascript: "⚡", html: "🌐", css: "🎨", tailwind: "💨",
@@ -24,7 +24,6 @@ const MOD_BG = {
 export default function Home() {
   const [modules, setModules] = useState([]);
   const [progress, setProgress] = useState([]);
-  const [modal, setModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -87,7 +86,7 @@ export default function Home() {
   const overallPct = totalLessons > 0 ? Math.round((totalDone / totalLessons) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 pb-20">
       {/* Header */}
       <header className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white shadow-lg sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -95,10 +94,10 @@ export default function Home() {
             <img src="/logo.png" alt="DevZone" className="w-12 h-12 rounded-xl shadow-lg"/>
             <span className="font-black text-lg tracking-tight">DevZone</span>
           </div>
-          <button onClick={() => setModal(true)}
+          <Link href="/antrenament"
             className="bg-yellow-400 text-yellow-900 px-5 py-2 rounded-full font-black text-sm hover:bg-yellow-300 transition-colors shadow flex items-center gap-2">
             <Dumbbell className="w-4 h-4"/> Antrenament
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -232,7 +231,7 @@ export default function Home() {
         )}
       </main>
 
-      {modal && <AntrenamentModal modules={modules} onClose={() => setModal(false)}/>}
+      <Navbar/>
     </div>
   );
 }

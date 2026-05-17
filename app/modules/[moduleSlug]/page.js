@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, CheckCircle, Clock, Play } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 const MOD_BG = {
   python: "from-blue-500 to-cyan-400", javascript: "from-yellow-400 to-orange-400",
@@ -74,7 +75,7 @@ export default function ModulePage() {
   const pct = module.lessons.length > 0 ? Math.round((done / module.lessons.length) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 pb-20">
       <header className={`bg-gradient-to-r ${bg} text-white shadow-lg`}>
         <div className="max-w-4xl mx-auto px-4 py-5">
           <div className="flex items-center gap-3 mb-4">
@@ -154,6 +155,7 @@ export default function ModulePage() {
           })}
         </div>
       </main>
+      <Navbar/>
     </div>
   );
 }
