@@ -45,7 +45,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Nu există lecții pentru acest scope." }, { status: 400 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.GOOGLE_AI_KEY;
     if (!apiKey) {
       const allTasks = await prisma.task.findMany({
         where: {
@@ -101,27 +101,25 @@ Cerințe suplimentare:
 
 Returnează STRICT array-ul JSON, nimic altceva.`;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }],
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          generationConfig: { maxOutputTokens: 4096, temperature: 0.9 },
+        }),
+      }
+    );
 
     if (!response.ok) {
       return NextResponse.json({ error: "Eroare la generare. Încearcă din nou." }, { status: 500 });
     }
 
     const data = await response.json();
-    let text = data.content[0].text.trim();
+    let text = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
     text = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
 
     // Sometimes the model wraps in object instead of array

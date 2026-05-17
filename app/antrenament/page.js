@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Play, RotateCcw, Trophy, ChevronRight, Zap, CheckCircle, Sparkles, Globe, Library, ArrowLeft, Send } from "lucide-react";
+import { Play, RotateCcw, Trophy, ChevronRight, Zap, CheckCircle, Sparkles, Globe, Library, ArrowLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 

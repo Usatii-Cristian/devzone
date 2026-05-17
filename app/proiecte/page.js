@@ -736,7 +736,7 @@ export default function ProiectePage() {
             <div>
               <p className="font-black text-sm mb-2">Sfaturi pentru succes</p>
               <ul className="space-y-1.5 text-indigo-100 text-xs leading-relaxed">
-                <li>• Comenzi cu un proiect ușor — finalizarea dă încredere</li>
+                <li>• Începe cu un proiect ușor — finalizarea dă încredere</li>
                 <li>• Fă pași mici: mai întâi HTML, apoi CSS, apoi JS</li>
                 <li>• Urcă pe GitHub chiar dacă nu e gata — commit des</li>
                 <li>• Folosește DevTools (F12) pentru debugging</li>

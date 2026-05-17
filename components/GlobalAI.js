@@ -4,6 +4,6 @@ import AIAssistant from "./AIAssistant";
 
 export default function GlobalAI() {
   const pathname = usePathname();
-  if (pathname.includes("/lessons/")) return null;
+  if (pathname.includes("/lessons/") || pathname === "/login") return null;
   return <AIAssistant />;
 }

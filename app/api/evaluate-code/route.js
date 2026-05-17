@@ -4,7 +4,7 @@ export async function POST(request) {
   const body = await request.json();
   const { code, question, language, lessonTitle, explanation } = body;
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GOOGLE_AI_KEY;
   if (!apiKey) {
     return NextResponse.json({ correct: false, feedback: "AI-ul nu este configurat." });
   }
@@ -34,27 +34,25 @@ ${explanation ? `Soluție de referință (context pentru tine, nu o arăta): ${e
 Evaluează și răspunde cu JSON: { "correct": boolean, "feedback": "string" }`;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 300,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userMsg }],
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: "user", parts: [{ text: userMsg }] }],
+          generationConfig: { maxOutputTokens: 300, temperature: 0.3 },
+        }),
+      }
+    );
 
     if (!response.ok) {
       return NextResponse.json({ correct: false, feedback: "Eroare la evaluare. Încearcă din nou." });
     }
 
     const data = await response.json();
-    const text = data.content[0].text.trim();
+    const text = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {

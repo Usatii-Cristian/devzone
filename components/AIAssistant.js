@@ -50,7 +50,7 @@ export default function AIAssistant({ task, lessonTitle }) {
   return (
     <>
       {open && (
-        <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-[22rem] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+        <div className="fixed bottom-36 right-4 z-50 w-80 sm:w-[22rem] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
           style={{ height: "420px" }}>
           <div className="flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex-shrink-0">
             <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -123,7 +123,7 @@ export default function AIAssistant({ task, lessonTitle }) {
       <button
         onClick={() => setOpen(o => !o)}
         title={open ? "Închide asistentul" : "Deschide asistentul AI"}
-        className={`fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95
+        className={`fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95
           ${open
             ? "bg-slate-700 text-white"
             : "bg-gradient-to-br from-purple-500 to-indigo-600 text-white"}`}>
