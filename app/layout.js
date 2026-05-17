@@ -34,12 +34,12 @@ export const metadata = {
   },
   icons: {
     icon: [
-      { url: "/logo.png", sizes: "any", type: "image/png" },
+      { url: "/image.png", sizes: "any", type: "image/png" },
     ],
     apple: [
-      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+      { url: "/image.png", sizes: "180x180", type: "image/png" },
     ],
-    shortcut: "/logo.png",
+    shortcut: "/image.png",
   },
   manifest: "/manifest.json",
 };
