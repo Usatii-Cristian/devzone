@@ -50,8 +50,8 @@ export default function AIAssistant({ task, lessonTitle }) {
   return (
     <>
       {open && (
-        <div className="fixed bottom-36 right-4 z-50 w-80 sm:w-[22rem] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
-          style={{ height: "420px" }}>
+        <div className="fixed bottom-36 right-3 left-3 sm:left-auto sm:right-4 z-50 sm:w-[22rem] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden"
+          style={{ height: "min(420px, 65vh)" }}>
           <div className="flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex-shrink-0">
             <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
               <Bot className="w-4 h-4" />

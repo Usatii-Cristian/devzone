@@ -280,59 +280,66 @@ export default function EditorPage() {
   }, [code, langId]);
 
   return (
-    <div className="min-h-screen bg-[#1e1e2e] pb-16 flex flex-col">
-      {/* Header */}
-      <header className="bg-[#181825] border-b border-white/10 px-4 py-2.5 flex items-center gap-3 flex-shrink-0">
-        <Link href="/" className="p-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-white">
-          <ArrowLeft className="w-4 h-4"/>
-        </Link>
-        <div className="flex items-center gap-2 flex-1">
-          <Code2 className="w-4 h-4 text-indigo-400"/>
-          <span className="font-black text-white text-sm">DevZone Editor</span>
-          <span className="text-white/30 text-xs ml-1">Ctrl+Enter = Run</span>
+    <div className="min-h-screen bg-[#1e1e2e] pb-20 flex flex-col">
+      {/* Header — wraps on mobile */}
+      <header className="bg-[#181825] border-b border-white/10 flex-shrink-0">
+        {/* Top row: back, title, language */}
+        <div className="px-3 py-2 flex items-center gap-2">
+          <Link href="/" className="p-2 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-white active:scale-95 flex-shrink-0">
+            <ArrowLeft className="w-4 h-4"/>
+          </Link>
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <Code2 className="w-4 h-4 text-indigo-400 flex-shrink-0"/>
+            <span className="font-black text-white text-sm truncate">Editor</span>
+            <span className="text-white/30 text-[10px] ml-1 hidden md:inline">Ctrl+Enter</span>
+          </div>
+
+          {/* Language selector */}
+          <div className="relative flex-shrink-0">
+            <button onClick={() => setLangOpen(o => !o)}
+              className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 transition-colors px-2.5 py-2 rounded-lg text-white text-xs font-bold active:scale-95">
+              <span className="text-base leading-none">{lang.icon}</span>
+              <span>{lang.label}</span>
+              <ChevronDown className={`w-3 h-3 transition-transform ${langOpen ? "rotate-180" : ""}`}/>
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 top-full mt-1 bg-[#181825] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden w-48 max-h-80 overflow-y-auto">
+                {LANGUAGES.map(l => (
+                  <button key={l.id} onClick={() => selectLang(l)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-3 text-sm text-left transition-colors active:bg-indigo-700
+                      ${l.id === langId ? "bg-indigo-600 text-white font-bold" : "text-white/70 hover:bg-white/10 hover:text-white"}`}>
+                    <span className="text-base">{l.icon}</span>{l.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Language selector */}
-        <div className="relative">
-          <button onClick={() => setLangOpen(o => !o)}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/15 transition-colors px-3 py-1.5 rounded-lg text-white text-sm font-bold">
-            <span>{lang.icon}</span>
-            <span>{lang.label}</span>
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${langOpen ? "rotate-180" : ""}`}/>
+        {/* Bottom row: action buttons */}
+        <div className="px-3 pb-2 flex items-center gap-2">
+          <button onClick={copyCode}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 p-2 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-white/70 hover:text-white active:scale-95">
+            {copied ? <Check className="w-4 h-4 text-emerald-400"/> : <Copy className="w-4 h-4"/>}
+            <span className="text-xs sm:hidden">{copied ? "Copiat" : "Copy"}</span>
           </button>
-          {langOpen && (
-            <div className="absolute right-0 top-full mt-1 bg-[#181825] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden w-44">
-              {LANGUAGES.map(l => (
-                <button key={l.id} onClick={() => selectLang(l)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left transition-colors
-                    ${l.id === langId ? "bg-indigo-600 text-white font-bold" : "text-white/70 hover:bg-white/10 hover:text-white"}`}>
-                  <span>{l.icon}</span>{l.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <button onClick={resetCode}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 p-2 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-white/70 hover:text-white active:scale-95">
+            <RotateCcw className="w-4 h-4"/>
+            <span className="text-xs sm:hidden">Reset</span>
+          </button>
+          <button onClick={runCode} disabled={running}
+            className="flex-[2] sm:flex-none flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 transition-colors px-4 py-2 rounded-lg text-white font-black text-sm active:scale-95 sm:ml-auto">
+            <Play className="w-3.5 h-3.5 fill-current"/>
+            {running ? "Rulează..." : "Run"}
+          </button>
         </div>
-
-        {/* Actions */}
-        <button onClick={copyCode}
-          className="p-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-white/70 hover:text-white">
-          {copied ? <Check className="w-4 h-4 text-emerald-400"/> : <Copy className="w-4 h-4"/>}
-        </button>
-        <button onClick={resetCode}
-          className="p-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition-colors text-white/70 hover:text-white">
-          <RotateCcw className="w-4 h-4"/>
-        </button>
-        <button onClick={runCode} disabled={running}
-          className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 transition-colors px-4 py-1.5 rounded-lg text-white font-black text-sm">
-          <Play className="w-3.5 h-3.5 fill-current"/>
-          {running ? "Se rulează..." : "Run"}
-        </button>
       </header>
 
       {/* Editor + Output */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden" style={{ height: "calc(100vh - 110px)" }}>
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Editor */}
-        <div className="flex-1 min-h-0 border-r border-white/10" style={{ minHeight: "300px" }}>
+        <div className="flex-1 min-h-[40vh] lg:min-h-0 border-b lg:border-b-0 lg:border-r border-white/10">
           <MonacoEditor
             height="100%"
             language={lang.monacoLang}
@@ -356,7 +363,7 @@ export default function EditorPage() {
         </div>
 
         {/* Output panel */}
-        <div className="lg:w-80 xl:w-96 flex flex-col bg-[#181825] flex-shrink-0" style={{ minHeight: "200px" }}>
+        <div className="lg:w-80 xl:w-96 flex flex-col bg-[#181825] flex-shrink-0 min-h-[35vh] lg:min-h-0">
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10 flex-shrink-0">
             {lang.piston === null
               ? <Globe className="w-4 h-4 text-indigo-400"/>

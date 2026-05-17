@@ -542,38 +542,38 @@ function ProjectCard({ project, expanded, onToggle }) {
   const stack = STACK_BADGE[project.stack];
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm overflow-hidden border-2 transition-all ${expanded ? "border-indigo-300 shadow-lg" : "border-transparent hover:border-indigo-100 hover:shadow-md"}`}>
-      <button onClick={onToggle} className="w-full text-left p-5">
+    <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden border-2 transition-all ${expanded ? "border-indigo-300 shadow-lg" : "border-transparent hover:border-indigo-100 hover:shadow-md"}`}>
+      <button onClick={onToggle} className="w-full text-left p-4 sm:p-5 active:bg-slate-50 dark:active:bg-slate-700/40 transition-colors">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap gap-1.5 mb-2">
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${diff.cls}`}>{diff.label}</span>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${stack.cls}`}>{stack.label}</span>
+              <span className={`text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-full border ${diff.cls}`}>{diff.label}</span>
+              <span className={`text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-full ${stack.cls}`}>{stack.label}</span>
             </div>
-            <h3 className="font-black text-slate-800 text-base leading-snug">{project.title}</h3>
-            <p className="text-slate-500 text-sm mt-1 leading-relaxed">{project.description}</p>
-            <div className="flex items-center gap-3 mt-3 text-xs text-slate-400">
-              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5"/> ~{project.hours}h</span>
+            <h3 className="font-black text-slate-800 dark:text-white text-sm sm:text-base leading-snug">{project.title}</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 leading-relaxed">{project.description}</p>
+            <div className="flex items-center gap-3 mt-2.5 text-[11px] sm:text-xs text-slate-400">
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5"/> ~{project.hours}h</span>
             </div>
           </div>
-          <div className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${expanded ? "bg-indigo-100 text-indigo-600" : "bg-slate-100 text-slate-400"}`}>
+          <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${expanded ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300" : "bg-slate-100 dark:bg-slate-700 text-slate-400"}`}>
             {expanded ? <ChevronUp className="w-4 h-4"/> : <ChevronDown className="w-4 h-4"/>}
           </div>
         </div>
       </button>
 
       {expanded && (
-        <div className="px-5 pb-5 border-t border-slate-100 pt-4 space-y-5">
+        <div className="px-4 sm:px-5 pb-5 border-t border-slate-100 dark:border-slate-700 pt-4 space-y-5">
           {/* Ce vei construi */}
           <div>
-            <h4 className="font-black text-slate-700 text-sm mb-2.5 flex items-center gap-1.5">
+            <h4 className="font-black text-slate-700 dark:text-white text-sm mb-2.5 flex items-center gap-1.5">
               <Layers className="w-4 h-4 text-indigo-500"/> Ce vei construi
             </h4>
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               {project.what.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                  <span className="w-5 h-5 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">{i + 1}</span>
-                  {item}
+                <li key={i} className="flex items-start gap-2.5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <span className="w-5 h-5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">{i + 1}</span>
+                  <span className="flex-1">{item}</span>
                 </li>
               ))}
             </ul>
@@ -581,14 +581,14 @@ function ProjectCard({ project, expanded, onToggle }) {
 
           {/* Pași de implementare */}
           <div>
-            <h4 className="font-black text-slate-700 text-sm mb-2.5 flex items-center gap-1.5">
+            <h4 className="font-black text-slate-700 dark:text-white text-sm mb-2.5 flex items-center gap-1.5">
               <Code2 className="w-4 h-4 text-emerald-500"/> Pași de implementare
             </h4>
-            <ol className="space-y-2">
+            <ol className="space-y-2.5">
               {project.steps.map((step, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm">
-                  <span className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">{i + 1}</span>
-                  <span className="text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: step.replace(/`([^`]+)`/g, "<code class='bg-slate-100 text-indigo-700 px-1 rounded font-mono text-xs'>$1</code>") }}/>
+                  <span className="w-5 h-5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">{i + 1}</span>
+                  <span className="text-slate-600 dark:text-slate-300 leading-relaxed flex-1" dangerouslySetInnerHTML={{ __html: step.replace(/`([^`]+)`/g, "<code class='bg-slate-100 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono text-xs'>$1</code>") }}/>
                 </li>
               ))}
             </ol>
@@ -597,7 +597,7 @@ function ProjectCard({ project, expanded, onToggle }) {
           {/* Editor button */}
           {project.editorLang && (
             <Link href={`/editor`}
-              className="mt-2 w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 transition-colors text-white text-sm font-black py-2.5 rounded-xl">
+              className="mt-2 w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 transition-colors text-white text-sm font-black py-3 rounded-xl active:scale-[0.98] shadow-sm">
               <Code2 className="w-4 h-4"/> Deschide în Editor
             </Link>
           )}
@@ -609,17 +609,17 @@ function ProjectCard({ project, expanded, onToggle }) {
 
 function GuideSection({ title, icon: Icon, items, color }) {
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm">
-      <h3 className={`font-black text-sm mb-4 flex items-center gap-2 ${color}`}>
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+      <h3 className={`font-black text-sm mb-3 sm:mb-4 flex items-center gap-2 ${color}`}>
         <Icon className="w-4 h-4"/> {title}
       </h3>
       <div className="space-y-3">
         {items.map(item => (
           <div key={item.step} className="flex gap-3">
-            <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black text-slate-600 flex-shrink-0">{item.step}</div>
-            <div>
-              <p className="font-bold text-slate-800 text-sm">{item.title}</p>
-              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed" dangerouslySetInnerHTML={{ __html: item.desc.replace(/`([^`]+)`/g, "<code class='bg-slate-100 text-indigo-700 px-1 rounded font-mono'>$1</code>") }}/>
+            <div className="w-7 h-7 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-xs font-black text-slate-600 dark:text-slate-300 flex-shrink-0">{item.step}</div>
+            <div className="min-w-0">
+              <p className="font-bold text-slate-800 dark:text-white text-sm">{item.title}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: item.desc.replace(/`([^`]+)`/g, "<code class='bg-slate-100 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 px-1 rounded font-mono'>$1</code>") }}/>
             </div>
           </div>
         ))}
@@ -640,61 +640,61 @@ export default function ProiectePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 pb-24">
       {/* Header */}
       <header className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white shadow-lg sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link href="/" className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2">
+          <Link href="/" className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors active:scale-95 flex-shrink-0">
             <ArrowLeft className="w-5 h-5"/>
           </Link>
-          <div className="flex items-center gap-2 flex-1">
-            <div className="w-8 h-8 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="w-9 h-9 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0">
               <Star className="w-4 h-4 text-yellow-900"/>
             </div>
-            <div>
-              <h1 className="font-black text-base leading-none">Proiecte</h1>
-              <p className="text-indigo-200 text-xs">Aplică ce ai învățat</p>
+            <div className="min-w-0">
+              <h1 className="font-black text-base leading-tight">Proiecte</h1>
+              <p className="text-indigo-200 text-[11px] leading-tight">Aplică ce ai învățat</p>
             </div>
           </div>
           <button
             onClick={() => setGuideOpen(o => !o)}
-            className="text-xs bg-white/15 hover:bg-white/25 transition-colors px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5"/> Ghid Deploy
+            className="text-[11px] sm:text-xs bg-white/15 hover:bg-white/25 transition-colors px-2.5 sm:px-3 py-2 rounded-full font-bold flex items-center gap-1.5 active:scale-95 flex-shrink-0">
+            <BookOpen className="w-3.5 h-3.5"/> <span className="hidden sm:inline">Ghid Deploy</span><span className="sm:hidden">Ghid</span>
           </button>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6 space-y-5">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5">
 
         {/* Deploy Guide (collapsible) */}
         {guideOpen && (
-          <div className="grid sm:grid-cols-2 gap-4">
-            <GuideSection title="GitHub — Urcă codul" icon={GitBranch} items={GITHUB_GUIDE} color="text-slate-800"/>
-            <GuideSection title="Vercel — Site live gratis" icon={Globe} items={VERCEL_GUIDE} color="text-indigo-700"/>
+          <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+            <GuideSection title="GitHub — Urcă codul" icon={GitBranch} items={GITHUB_GUIDE} color="text-slate-800 dark:text-white"/>
+            <GuideSection title="Vercel — Site live gratis" icon={Globe} items={VERCEL_GUIDE} color="text-indigo-700 dark:text-indigo-300"/>
           </div>
         )}
 
-        {/* Filters */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+        {/* Filters — horizontal scroll on mobile */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm space-y-3">
           <div>
-            <p className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Stack / Limbaj</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 px-1">Limbaj</p>
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
               {STACKS.map(s => (
                 <button key={s.v} onClick={() => setStack(s.v)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition-all
-                    ${stack === s.v ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-600 hover:border-indigo-200"}`}>
+                  className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all active:scale-95
+                    ${stack === s.v ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300" : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-200"}`}>
                   {s.l}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <p className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Dificultate</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 px-1">Dificultate</p>
+            <div className="flex gap-2">
               {DIFFS.map(d => (
                 <button key={d.v} onClick={() => setDiff(d.v)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition-all
-                    ${diff === d.v ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-600 hover:border-indigo-200"}`}>
+                  className={`flex-1 px-2 py-2 rounded-xl text-xs font-bold border-2 transition-all active:scale-95
+                    ${diff === d.v ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300" : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-200"}`}>
                   {d.l}
                 </button>
               ))}
@@ -703,18 +703,18 @@ export default function ProiectePage() {
         </div>
 
         {/* Stats row */}
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-slate-500">{filtered.length} proiecte</span>
-          <span className="text-slate-300">•</span>
-          <span className="flex items-center gap-1 text-slate-400 text-xs">
-            <Zap className="w-3.5 h-3.5 text-yellow-400"/> Click pe un proiect pentru detalii complete
+        <div className="flex items-center gap-2 text-xs sm:text-sm px-1">
+          <span className="font-bold text-slate-700 dark:text-slate-300">{filtered.length} proiecte</span>
+          <span className="text-slate-300 dark:text-slate-600">•</span>
+          <span className="flex items-center gap-1 text-slate-400 text-[11px] sm:text-xs">
+            <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-400"/> Click pe un proiect
           </span>
         </div>
 
         {/* Project cards */}
         {filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl p-10 text-center shadow-sm">
-            <p className="text-slate-500 font-semibold">Niciun proiect găsit cu filtrele selectate.</p>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 text-center shadow-sm">
+            <p className="text-slate-500 dark:text-slate-400 font-semibold">Niciun proiect găsit cu filtrele selectate.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -730,17 +730,17 @@ export default function ProiectePage() {
         )}
 
         {/* Tips card */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-5 text-white">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-4 sm:p-5 text-white">
           <div className="flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 flex-shrink-0 mt-0.5 text-indigo-200"/>
-            <div>
+            <div className="min-w-0">
               <p className="font-black text-sm mb-2">Sfaturi pentru succes</p>
               <ul className="space-y-1.5 text-indigo-100 text-xs leading-relaxed">
                 <li>• Începe cu un proiect ușor — finalizarea dă încredere</li>
-                <li>• Fă pași mici: mai întâi HTML, apoi CSS, apoi JS</li>
-                <li>• Urcă pe GitHub chiar dacă nu e gata — commit des</li>
+                <li>• Fă pași mici: HTML → CSS → JS</li>
+                <li>• Commit des pe GitHub, chiar dacă nu e gata</li>
                 <li>• Folosește DevTools (F12) pentru debugging</li>
-                <li>• Dacă ești blocat, întreabă asistentul AI (butonul violet de jos)</li>
+                <li>• Întreabă asistentul AI dacă ești blocat</li>
               </ul>
             </div>
           </div>

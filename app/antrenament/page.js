@@ -100,38 +100,38 @@ export default function AntrenamentPage() {
   const diff = DIFF[task?.difficulty ?? "easy"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 pb-24">
       {/* Header */}
       <header className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white shadow-lg sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link href="/" className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+        <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2">
+          <Link href="/" className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors active:scale-95 flex-shrink-0">
             <ArrowLeft className="w-5 h-5"/>
           </Link>
-          <div className="flex items-center gap-2 flex-1">
-            <div className="w-8 h-8 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="w-9 h-9 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0">
               <Zap className="w-4 h-4 text-yellow-900"/>
             </div>
-            <div>
-              <h1 className="font-black text-base leading-none">Antrenament</h1>
-              <p className="text-indigo-200 text-xs">Exersează ce ai învățat</p>
+            <div className="min-w-0">
+              <h1 className="font-black text-base leading-tight">Antrenament</h1>
+              <p className="text-indigo-200 text-[11px] leading-tight">Exersează AI</p>
             </div>
           </div>
           {tasks && !done && (
-            <span className="text-xs font-black bg-white/20 px-3 py-1 rounded-full">
+            <span className="text-[11px] sm:text-xs font-black bg-white/20 px-2.5 sm:px-3 py-1.5 rounded-full flex-shrink-0">
               {idx + 1}/{tasks.length} · {score} ✓
             </span>
           )}
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
 
         {/* ── SETUP ── */}
         {!tasks && (
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             {/* Scope */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
-              <h2 className="text-sm font-black text-slate-700 mb-3 flex items-center gap-1.5">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+              <h2 className="text-sm font-black text-slate-700 dark:text-white mb-3 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-indigo-500"/> Sursa întrebărilor
               </h2>
               <div className="space-y-2">
@@ -140,14 +140,14 @@ export default function AntrenamentPage() {
                   const active = scope === s.v;
                   return (
                     <button key={s.v} onClick={() => setScope(s.v)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 transition-all text-left
-                        ${active ? "border-indigo-500 bg-indigo-50" : "border-slate-200 hover:border-indigo-200"}`}>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${active ? "bg-indigo-500 text-white" : "bg-slate-100 text-slate-500"}`}>
+                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 transition-all text-left active:scale-[0.99]
+                        ${active ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30" : "border-slate-200 dark:border-slate-700 hover:border-indigo-200"}`}>
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${active ? "bg-indigo-500 text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300"}`}>
                         <Icon className="w-4 h-4"/>
                       </div>
-                      <div>
-                        <p className={`text-sm font-black ${active ? "text-indigo-700" : "text-slate-700"}`}>{s.l}</p>
-                        <p className="text-xs text-slate-400">{s.desc}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-sm font-black ${active ? "text-indigo-700 dark:text-indigo-300" : "text-slate-700 dark:text-white"}`}>{s.l}</p>
+                        <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 leading-tight mt-0.5">{s.desc}</p>
                       </div>
                     </button>
                   );
@@ -156,13 +156,13 @@ export default function AntrenamentPage() {
             </div>
 
             {/* Module */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
-              <h2 className="text-sm font-black text-slate-700 mb-3">Modul</h2>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+              <h2 className="text-sm font-black text-slate-700 dark:text-white mb-3">Modul</h2>
               <div className="grid grid-cols-2 gap-2">
                 {available.map(m => (
                   <button key={m.slug} onClick={() => setModuleSlug(m.slug)}
-                    className={`px-3 py-2.5 rounded-xl text-sm font-bold border-2 transition-all text-left
-                      ${moduleSlug === m.slug ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-600 hover:border-indigo-200"}`}>
+                    className={`px-3 py-3 rounded-xl text-xs sm:text-sm font-bold border-2 transition-all text-left active:scale-[0.98] min-h-[48px]
+                      ${moduleSlug === m.slug ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300" : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-200"}`}>
                     {m.title}
                   </button>
                 ))}
@@ -170,35 +170,36 @@ export default function AntrenamentPage() {
             </div>
 
             {/* Difficulty + Count */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
               <div>
-                <h2 className="text-sm font-black text-slate-700 mb-3">Dificultate</h2>
-                <div className="flex gap-2">
+                <h2 className="text-sm font-black text-slate-700 dark:text-white mb-3">Dificultate</h2>
+                <div className="grid grid-cols-4 gap-2">
                   {[{v:"all",l:"Toate"},{v:"easy",l:"Ușor"},{v:"medium",l:"Mediu"},{v:"hard",l:"Greu"}].map(d => (
                     <button key={d.v} onClick={() => setDifficulty(d.v)}
-                      className={`flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-all
-                        ${difficulty === d.v ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-600 hover:border-indigo-200"}`}>
+                      className={`py-2.5 rounded-xl text-xs sm:text-sm font-bold border-2 transition-all active:scale-95
+                        ${difficulty === d.v ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300" : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-200"}`}>
                       {d.l}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <h2 className="text-sm font-black text-slate-700 mb-2">
-                  Număr de probleme: <span className="text-indigo-600">{count}</span>
-                </h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-sm font-black text-slate-700 dark:text-white">Număr probleme</h2>
+                  <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">{count}</span>
+                </div>
                 <input type="range" min={1} max={10} value={count} onChange={e => setCount(Number(e.target.value))}
-                  className="w-full accent-indigo-500"/>
+                  className="w-full accent-indigo-500 h-3"/>
                 <div className="flex justify-between text-xs text-slate-400 mt-1"><span>1</span><span>10</span></div>
               </div>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">{error}</div>
+              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 text-sm px-4 py-3 rounded-xl">{error}</div>
             )}
 
             <button onClick={start} disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-4 rounded-2xl font-black hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg text-base">
+              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-4 rounded-2xl font-black hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg text-base active:scale-[0.98]">
               <Play className="w-5 h-5"/> {loading ? "Se generează..." : "Începe antrenamentul"}
             </button>
           </div>
@@ -206,22 +207,22 @@ export default function AntrenamentPage() {
 
         {/* ── DONE ── */}
         {tasks && done && (
-          <div className="text-center py-10">
-            <div className={`w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-5 ${score >= tasks.length * 0.8 ? "bg-yellow-100" : "bg-slate-100"}`}>
-              <Trophy className={`w-14 h-14 ${score >= tasks.length * 0.8 ? "text-yellow-500" : "text-slate-400"}`}/>
+          <div className="text-center py-8 sm:py-10 px-2">
+            <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center mx-auto mb-5 ${score >= tasks.length * 0.8 ? "bg-yellow-100 dark:bg-yellow-900/30" : "bg-slate-100 dark:bg-slate-700"}`}>
+              <Trophy className={`w-12 h-12 sm:w-14 sm:h-14 ${score >= tasks.length * 0.8 ? "text-yellow-500" : "text-slate-400"}`}/>
             </div>
-            <h2 className="text-2xl font-black text-slate-900 mb-2">Antrenament terminat!</h2>
-            <p className="text-slate-500 mb-1 text-lg">
-              <span className="font-black text-indigo-600">{score}</span>/{tasks.length} corecte
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">Antrenament terminat!</h2>
+            <p className="text-slate-500 dark:text-slate-300 mb-1 text-base sm:text-lg">
+              <span className="font-black text-indigo-600 dark:text-indigo-400">{score}</span>/{tasks.length} corecte
             </p>
-            <p className="text-slate-400 text-sm mb-8">{Math.round((score / tasks.length) * 100)}% corect</p>
-            <div className="flex gap-3 justify-center flex-wrap">
+            <p className="text-slate-400 dark:text-slate-500 text-sm mb-6 sm:mb-8">{Math.round((score / tasks.length) * 100)}% corect</p>
+            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center">
               <button onClick={restart}
-                className="flex items-center gap-2 bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
+                className="flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors active:scale-95">
                 <RotateCcw className="w-4 h-4"/> Din nou
               </button>
               <Link href="/"
-                className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity">
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity active:scale-95">
                 Înapoi acasă
               </Link>
             </div>
@@ -233,25 +234,25 @@ export default function AntrenamentPage() {
           <div>
             {/* Progress */}
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-400 font-semibold">{idx + 1} / {tasks.length}</span>
-              <span className="text-xs text-emerald-600 font-black flex items-center gap-1">
+              <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">{idx + 1} / {tasks.length}</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-black flex items-center gap-1">
                 <CheckCircle className="w-3 h-3"/> {score} corecte
               </span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2 mb-5">
+            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mb-4 sm:mb-5">
               <div className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
                 style={{ width: `${((idx + 1) / tasks.length) * 100}%` }}/>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-black text-slate-800 flex-1 pr-2">{task.name}</h2>
-                <span className={`text-xs font-bold px-2 py-1 rounded-full border flex-shrink-0 ${diff.cls}`}>{diff.label}</span>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm p-4 sm:p-5 mb-4">
+              <div className="flex items-start justify-between mb-3 gap-2">
+                <h2 className="text-sm sm:text-base font-black text-slate-800 dark:text-white flex-1">{task.name}</h2>
+                <span className={`text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full border flex-shrink-0 ${diff.cls}`}>{diff.label}</span>
               </div>
               {task.lesson?.title && (
-                <p className="text-xs text-slate-400 mb-3 font-semibold">{task.lesson.title}</p>
+                <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mb-3 font-semibold">{task.lesson.title}</p>
               )}
-              <div className="text-slate-700 text-sm leading-relaxed"
+              <div className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: fmtQuestion(task.question || "") }}/>
             </div>
 
@@ -259,41 +260,41 @@ export default function AntrenamentPage() {
               {task.options.map(opt => {
                 const isSel = selected === opt;
                 const isCorrect = opt === task.answer;
-                let cls = "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer";
+                let cls = "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer";
                 if (submitted) {
-                  if (isCorrect) cls = "border-emerald-400 bg-emerald-50";
-                  else if (isSel) cls = "border-red-400 bg-red-50";
-                  else cls = "border-slate-100 opacity-40";
-                } else if (isSel) cls = "border-indigo-500 bg-indigo-50";
+                  if (isCorrect) cls = "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30";
+                  else if (isSel) cls = "border-red-400 bg-red-50 dark:bg-red-900/30";
+                  else cls = "border-slate-100 dark:border-slate-700 opacity-40";
+                } else if (isSel) cls = "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30";
                 return (
                   <button key={opt} onClick={() => handleAnswer(opt)} disabled={submitted}
-                    className={`w-full text-left px-4 py-3 rounded-xl border-2 font-medium transition-all text-sm flex items-center justify-between ${cls}`}>
-                    <span>{opt}</span>
-                    {submitted && isCorrect && <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0"/>}
-                    {submitted && isSel && !isCorrect && <span className="text-red-500 flex-shrink-0">✗</span>}
+                    className={`w-full text-left px-4 py-3.5 rounded-xl border-2 font-medium transition-all text-sm flex items-center justify-between gap-2 min-h-[52px] active:scale-[0.99] ${cls}`}>
+                    <span className="flex-1 text-slate-700 dark:text-white">{opt}</span>
+                    {submitted && isCorrect && <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0"/>}
+                    {submitted && isSel && !isCorrect && <span className="text-red-500 text-lg flex-shrink-0">✗</span>}
                   </button>
                 );
               })}
             </div>
 
             {submitted && (
-              <div className={`rounded-2xl p-4 mb-4 border-2 ${selected === task.answer ? "bg-emerald-50 border-emerald-300" : "bg-red-50 border-red-300"}`}>
-                <p className={`font-black text-sm mb-1 ${selected === task.answer ? "text-emerald-700" : "text-red-700"}`}>
+              <div className={`rounded-2xl p-4 mb-4 border-2 ${selected === task.answer ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700" : "bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700"}`}>
+                <p className={`font-black text-sm mb-1 ${selected === task.answer ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"}`}>
                   {selected === task.answer ? "✓ Corect!" : `✗ Corect era: ${task.answer}`}
                 </p>
-                {task.explanation && <p className="text-slate-600 text-xs mt-1">{task.explanation}</p>}
-                <div className="flex items-center justify-between mt-3">
-                  <p className="text-xs text-slate-400">Enter ↵ = următoarea</p>
+                {task.explanation && <p className="text-slate-600 dark:text-slate-300 text-xs mt-1 leading-relaxed">{task.explanation}</p>}
+                <div className="flex items-center justify-between mt-3 gap-2">
+                  <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 hidden sm:block">Enter ↵</p>
                   <button onClick={nextTask}
-                    className="bg-indigo-500 text-white px-5 py-2 rounded-full text-xs font-black hover:bg-indigo-600 transition-colors flex items-center gap-1">
-                    {idx + 1 >= tasks.length ? <><Trophy className="w-3 h-3"/> Finalizează</> : <>Următoarea <ChevronRight className="w-3 h-3"/></>}
+                    className="bg-indigo-500 text-white px-5 py-2.5 rounded-full text-xs sm:text-sm font-black hover:bg-indigo-600 transition-colors flex items-center gap-1.5 ml-auto active:scale-95">
+                    {idx + 1 >= tasks.length ? <><Trophy className="w-3.5 h-3.5"/> Finalizează</> : <>Următoarea <ChevronRight className="w-3.5 h-3.5"/></>}
                   </button>
                 </div>
               </div>
             )}
 
             {!submitted && (
-              <p className="text-center text-xs text-slate-400">Alege o opțiune pentru a răspunde</p>
+              <p className="text-center text-xs text-slate-400 dark:text-slate-500">Alege o opțiune pentru a răspunde</p>
             )}
           </div>
         )}

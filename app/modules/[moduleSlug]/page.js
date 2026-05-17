@@ -75,32 +75,32 @@ export default function ModulePage() {
   const pct = module.lessons.length > 0 ? Math.round((done / module.lessons.length) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 pb-20">
-      <header className={`bg-gradient-to-r ${bg} text-white shadow-lg`}>
-        <div className="max-w-4xl mx-auto px-4 py-5">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 pb-24">
+      <header className={`bg-gradient-to-r ${bg} text-white shadow-lg sticky top-0 z-30`}>
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-5">
           <div className="flex items-center gap-3 mb-4">
-            <Link href="/" className="text-white/70 hover:text-white transition-colors p-1">
+            <Link href="/" className="text-white/70 hover:text-white transition-colors p-2 -ml-2 rounded-xl bg-white/0 hover:bg-white/10 active:scale-95">
               <ChevronLeft className="w-5 h-5"/>
             </Link>
-            <div className="flex-1">
-              <p className="text-white/60 text-xs uppercase tracking-widest font-bold">Modul</p>
-              <h1 className="text-xl font-black">{module.title}</h1>
+            <div className="flex-1 min-w-0">
+              <p className="text-white/60 text-[10px] sm:text-xs uppercase tracking-widest font-bold">Modul</p>
+              <h1 className="text-lg sm:text-xl font-black truncate">{module.title}</h1>
             </div>
-            <div className="text-right">
-              <p className="text-white/60 text-xs">Progres</p>
-              <p className="text-2xl font-black text-yellow-300">{pct}%</p>
-              <p className="text-white/60 text-xs">{done}/{module.lessons.length} lecții</p>
+            <div className="text-right flex-shrink-0">
+              <p className="text-white/60 text-[10px] sm:text-xs">Progres</p>
+              <p className="text-xl sm:text-2xl font-black text-yellow-300 leading-tight">{pct}%</p>
+              <p className="text-white/60 text-[10px] sm:text-xs">{done}/{module.lessons.length}</p>
             </div>
           </div>
-          <div className="w-full bg-white/20 rounded-full h-2 mb-4">
+          <div className="w-full bg-white/20 rounded-full h-2 mb-3 sm:mb-4">
             <div className="h-2 rounded-full bg-yellow-300 transition-all" style={{ width: `${pct}%` }}/>
           </div>
           {continueLesson && pct < 100 && (
             <Link href={`/modules/${moduleSlug}/lessons/${continueLesson.id}`}
-              className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-xl font-bold text-sm text-white">
-              <Play className="w-4 h-4 fill-current"/>
-              {getStatus(continueLesson.id) === "progress" ? "Continuă lecția curentă" : "Începe lecția"}
-              <span className="text-white/70 text-xs font-normal truncate max-w-[160px]">{continueLesson.title}</span>
+              className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-3 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm text-white max-w-full active:scale-95">
+              <Play className="w-4 h-4 fill-current flex-shrink-0"/>
+              <span className="flex-shrink-0">{getStatus(continueLesson.id) === "progress" ? "Continuă" : "Începe"}:</span>
+              <span className="text-white/80 font-normal truncate min-w-0">{continueLesson.title}</span>
             </Link>
           )}
           {pct === 100 && (
@@ -111,45 +111,45 @@ export default function ModulePage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {inProgressCount > 0 && (
-          <p className="text-xs text-amber-600 font-semibold mb-3 flex items-center gap-1">
+          <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mb-3 flex items-center gap-1 px-1">
             <Clock className="w-3.5 h-3.5"/> {inProgressCount} lecț{inProgressCount === 1 ? "ie" : "ii"} în curs
           </p>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
           {module.lessons.map((lesson, idx) => {
             const status = getStatus(lesson.id);
             return (
               <Link key={lesson.id} href={`/modules/${moduleSlug}/lessons/${lesson.id}`}
-                className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex items-center gap-3 group border-2 border-transparent hover:border-indigo-200">
+                className="bg-white dark:bg-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-sm hover:shadow-md transition-all flex items-center gap-3 group border-2 border-transparent hover:border-indigo-200 active:scale-[0.98]">
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0 transition-all
                   ${status === "done" ? "bg-emerald-500 text-white"
                     : status === "progress" ? "bg-amber-400 text-white"
-                    : "bg-indigo-100 text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white"}`}>
+                    : "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 group-hover:bg-indigo-500 group-hover:text-white"}`}>
                   {status === "done" ? <CheckCircle className="w-5 h-5"/> : idx + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-800 text-sm leading-snug group-hover:text-indigo-700 transition-colors truncate">
+                  <p className="font-bold text-slate-800 dark:text-white text-sm leading-snug group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors truncate">
                     {lesson.title}
                   </p>
                   <div className="mt-1">
                     {status === "done" && (
-                      <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1">
+                      <span className="text-[10px] sm:text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1">
                         <CheckCircle className="w-3 h-3"/> Gata
                       </span>
                     )}
                     {status === "progress" && (
-                      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1">
+                      <span className="text-[10px] sm:text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1">
                         <Clock className="w-3 h-3"/> În curs
                       </span>
                     )}
                     {status === "none" && (
-                      <span className="text-xs text-slate-400">Neînceput</span>
+                      <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500">Neînceput</span>
                     )}
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-colors flex-shrink-0"/>
+                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-indigo-400 transition-colors flex-shrink-0"/>
               </Link>
             );
           })}

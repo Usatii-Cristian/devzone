@@ -401,14 +401,14 @@ parent.postMessage({logs:_log},'*');
   const showReview = view === "tasks" && !finished && reviewTasks && reviewTasks.length > 0 && !reviewDone && rt;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-indigo-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-indigo-50 dark:from-slate-900 dark:to-slate-800 flex flex-col">
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={() => setSidebarOpen(false)}/>
       )}
 
       <div className="flex flex-1 overflow-hidden min-h-screen">
         {/* ── SIDEBAR ── */}
-        <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-200 flex flex-col shadow-xl lg:shadow-none transition-transform duration-200
+        <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-[85vw] max-w-[300px] lg:w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col shadow-xl lg:shadow-none transition-transform duration-200
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
 
           <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-4 text-white">
@@ -482,32 +482,32 @@ parent.postMessage({logs:_log},'*');
         {/* ── MAIN ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top bar */}
-          <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 shadow-sm">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+          <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 shadow-sm sticky top-0 z-20">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 active:scale-95">
               <Menu className="w-5 h-5"/>
             </button>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-400 font-semibold">{lesson.module?.title}</p>
-              <p className="text-sm font-black text-slate-800 truncate">{lesson.title}</p>
+              <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-semibold truncate">{lesson.module?.title}</p>
+              <p className="text-xs sm:text-sm font-black text-slate-800 dark:text-white truncate">{lesson.title}</p>
             </div>
             {view === "tasks" && !finished && totalTasks > 0 && (
-              <div className="lg:hidden flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-xl flex-shrink-0">
-                <span className="text-xs font-black text-indigo-600">{doneCount}/{totalTasks}</span>
-                <div className="w-16 bg-indigo-100 rounded-full h-1.5">
+              <div className="flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-900/40 px-2 sm:px-3 py-1.5 rounded-xl flex-shrink-0">
+                <span className="text-[10px] sm:text-xs font-black text-indigo-600 dark:text-indigo-300">{doneCount}/{totalTasks}</span>
+                <div className="w-12 sm:w-16 bg-indigo-100 dark:bg-indigo-900/60 rounded-full h-1.5">
                   <div className="h-1.5 rounded-full bg-indigo-500 transition-all"
                     style={{ width: `${totalTasks > 0 ? (doneCount / totalTasks) * 100 : 0}%` }}/>
                 </div>
               </div>
             )}
             {finished && (
-              <span className="bg-emerald-500 text-white text-xs font-black px-3 py-1 rounded-full flex items-center gap-1">
-                <Trophy className="w-3.5 h-3.5"/> Finalizat!
+              <span className="bg-emerald-500 text-white text-[10px] sm:text-xs font-black px-2.5 py-1.5 rounded-full flex items-center gap-1 flex-shrink-0">
+                <Trophy className="w-3.5 h-3.5"/> Gata!
               </span>
             )}
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-6">
 
             {/* ── THEORY VIEW ── */}
             {view === "theory" && (
@@ -834,9 +834,12 @@ parent.postMessage({logs:_log},'*');
                         value={codeValue || task.starterCode || ""}
                         onChange={e => { setCodeValue(e.target.value); setCodeResult(null); }}
                         spellCheck={false}
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        autoComplete="off"
                         disabled={codeResult?.correct}
                         rows={10}
-                        className="w-full bg-gray-900 text-green-300 font-mono text-sm p-4 rounded-2xl border-2 border-gray-700 focus:border-indigo-500 focus:outline-none resize-y leading-relaxed disabled:opacity-70"
+                        className="w-full bg-gray-900 text-green-300 font-mono text-xs sm:text-sm p-3 sm:p-4 rounded-2xl border-2 border-gray-700 focus:border-indigo-500 focus:outline-none resize-y leading-relaxed disabled:opacity-70 min-h-[240px]"
                         placeholder={task.starterCode || "// scrie codul tău aici"}
                       />
                     </div>
@@ -862,32 +865,32 @@ parent.postMessage({logs:_log},'*');
                     )}
 
                     {/* Coding action buttons */}
-                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-3">
                       <button onClick={prev} disabled={taskIdx === 0}
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                        className="hidden sm:flex items-center gap-1.5 px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-95">
                         <ChevronLeft className="w-4 h-4"/> Anterior
                       </button>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
                         {!codeResult?.correct && (
                           <>
                             <button
                               onClick={() => runCode(codeValue || task.starterCode || "", task.language)}
                               disabled={codeRunning || codeEvaluating}
-                              className="flex items-center gap-2 bg-gray-800 text-green-300 px-4 py-2.5 rounded-xl font-black text-sm hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
+                              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-gray-800 text-green-300 px-3 sm:px-4 py-3 rounded-xl font-black text-sm hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm active:scale-95 min-h-[48px]">
                               {codeRunning ? <><RefreshCw className="w-4 h-4 animate-spin"/> Rulează...</> : <><Play className="w-4 h-4"/> Rulează</>}
                             </button>
                             <button
                               onClick={() => submitCode(task, codeValue || task.starterCode || "")}
                               disabled={codeEvaluating || codeRunning || !(codeValue || task.starterCode)}
-                              className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-5 py-2.5 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-md">
-                              {codeEvaluating ? <><RefreshCw className="w-4 h-4 animate-spin"/> Se verifică...</> : <><Send className="w-4 h-4"/> Trimite răspunsul</>}
+                              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 sm:px-5 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-md active:scale-95 min-h-[48px]">
+                              {codeEvaluating ? <><RefreshCw className="w-4 h-4 animate-spin"/> Verifică...</> : <><Send className="w-4 h-4"/> Trimite</>}
                             </button>
                           </>
                         )}
                         {codeResult?.correct && (
                           <button onClick={next}
-                            className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-2.5 rounded-xl font-black text-sm hover:opacity-90 transition-opacity shadow-md">
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity shadow-md active:scale-95 min-h-[48px]">
                             {taskIdx + 1 >= totalTasks
                               ? <><Trophy className="w-4 h-4"/> Finalizează</>
                               : <>Următoarea <ChevronRight className="w-4 h-4"/></>}
@@ -903,28 +906,28 @@ parent.postMessage({logs:_log},'*');
                       {task.options.map(opt => {
                         const isSel = selected === opt;
                         const isCorrect = opt === task.answer;
-                        let cls = "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer";
+                        let cls = "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer active:scale-[0.99]";
                         if (submitted) {
-                          if (isCorrect) cls = "border-emerald-400 bg-emerald-50";
-                          else if (isSel) cls = "border-red-400 bg-red-50";
-                          else cls = "border-slate-100 bg-slate-50 opacity-40";
-                        } else if (isSel) cls = "border-indigo-500 bg-indigo-50";
+                          if (isCorrect) cls = "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30";
+                          else if (isSel) cls = "border-red-400 bg-red-50 dark:bg-red-900/30";
+                          else cls = "border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/40 opacity-40";
+                        } else if (isSel) cls = "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30";
 
                         return (
                           <div key={opt} onClick={() => !submitted && setSelected(opt)}
-                            className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all ${cls} ${submitted ? "cursor-default" : ""}`}>
+                            className={`flex items-center gap-3 p-3.5 sm:p-4 rounded-xl border-2 transition-all min-h-[56px] ${cls} ${submitted ? "cursor-default" : ""}`}>
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
                               ${submitted && isCorrect ? "border-emerald-500 bg-emerald-500"
                                 : submitted && isSel ? "border-red-400 bg-red-400"
                                 : isSel ? "border-indigo-500 bg-indigo-500"
-                                : "border-slate-300"}`}>
+                                : "border-slate-300 dark:border-slate-500"}`}>
                               {(isSel || (submitted && isCorrect)) && <div className="w-2 h-2 rounded-full bg-white"/>}
                             </div>
-                            <span className={`text-sm font-medium flex-1 ${submitted && isCorrect ? "text-emerald-800 font-bold" : submitted && isSel ? "text-red-700" : "text-slate-700"}`}>
+                            <span className={`text-sm font-medium flex-1 ${submitted && isCorrect ? "text-emerald-800 dark:text-emerald-200 font-bold" : submitted && isSel ? "text-red-700 dark:text-red-300" : "text-slate-700 dark:text-slate-200"}`}>
                               {opt}
                             </span>
-                            {submitted && isCorrect && <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0"/>}
-                            {submitted && isSel && !isCorrect && <span className="text-red-500 text-lg leading-none flex-shrink-0">✗</span>}
+                            {submitted && isCorrect && <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0"/>}
+                            {submitted && isSel && !isCorrect && <span className="text-red-500 text-xl leading-none flex-shrink-0">✗</span>}
                           </div>
                         );
                       })}
@@ -943,27 +946,27 @@ parent.postMessage({logs:_log},'*');
                     )}
 
                     {/* Action buttons */}
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-2 sm:gap-3">
                       <button onClick={prev} disabled={taskIdx === 0}
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                        <ChevronLeft className="w-4 h-4"/> Anterior
+                        className="flex items-center gap-1.5 px-3 sm:px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 min-h-[48px]">
+                        <ChevronLeft className="w-4 h-4"/> <span className="hidden xs:inline">Anterior</span><span className="xs:hidden">Înapoi</span>
                       </button>
 
-                      <div className="flex flex-col items-end gap-1">
+                      <div className="flex flex-col items-end gap-1 flex-1 max-w-[60%]">
                         {!submitted ? (
                           <button onClick={submit} disabled={!selected}
-                            className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-2.5 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-md">
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 sm:px-6 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-md active:scale-95 min-h-[48px]">
                             <Send className="w-4 h-4"/> Trimite răspunsul
                           </button>
                         ) : (
                           <button onClick={next}
-                            className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-2.5 rounded-xl font-black text-sm hover:opacity-90 transition-opacity shadow-md">
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-4 sm:px-6 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity shadow-md active:scale-95 min-h-[48px]">
                             {taskIdx + 1 >= totalTasks
                               ? <><Trophy className="w-4 h-4"/> Finalizează</>
                               : <>Următoarea <ChevronRight className="w-4 h-4"/></>}
                           </button>
                         )}
-                        <p className="text-xs text-slate-400 hidden sm:block">
+                        <p className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">
                           {!submitted ? "Enter ↵ = verifică" : "Enter ↵ = următoarea"}
                         </p>
                       </div>
