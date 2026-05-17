@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import { useLocalStorage } from "@/lib/hooks";
 import {
   ArrowLeft, Play, RotateCcw, Copy, Check, ChevronDown,
   Terminal, Code2, Globe
@@ -206,14 +207,10 @@ export default function EditorPage() {
   const [running, setRunning] = useState(false);
   const [copied, setCopied] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const [editorTheme, setEditorTheme] = useState("vs-dark");
-  const [editorFont, setEditorFont] = useState(14);
+  const [editorTheme] = useLocalStorage("editor-theme", "vs-dark");
+  const [editorFontRaw] = useLocalStorage("editor-font", "14");
+  const editorFont = Number(editorFontRaw) || 14;
   const iframeRef = useRef(null);
-
-  useEffect(() => {
-    setEditorTheme(localStorage.getItem("editor-theme") || "vs-dark");
-    setEditorFont(Number(localStorage.getItem("editor-font") || 14));
-  }, []);
 
   const lang = LANGUAGES.find(l => l.id === langId);
 

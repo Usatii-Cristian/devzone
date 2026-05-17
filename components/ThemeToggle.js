@@ -1,19 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";
 import { Moon, Sun } from "lucide-react";
+import { useLocalStorage } from "@/lib/hooks";
 
 export default function ThemeToggle({ className = "" }) {
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-  }, []);
+  const [theme, setTheme] = useLocalStorage("theme", null);
+  const dark = theme === "dark";
 
   function toggle() {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
+    const next = dark ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
   }
 
   return (

@@ -47,17 +47,19 @@ export default function LessonPage() {
 
   useEffect(() => {
     if (!lesson) return;
+    let cancelled = false;
     const order = lesson.order;
-    if (order < 5) { setReviewTasks([]); return; }
 
-    const key = `review_${moduleSlug}`;
-    const stored = JSON.parse(localStorage.getItem(key) || "{}");
-    const nextAt = stored.nextAt ?? 5;
-    if (order < nextAt) { setReviewTasks([]); return; }
-
-    fetch(`/api/review?moduleSlug=${moduleSlug}&count=3`)
-      .then(r => r.json())
-      .then(tasks => {
+    async function loadReview() {
+      if (order < 5) { if (!cancelled) setReviewTasks([]); return; }
+      const key = `review_${moduleSlug}`;
+      const stored = JSON.parse(localStorage.getItem(key) || "{}");
+      const nextAt = stored.nextAt ?? 5;
+      if (order < nextAt) { if (!cancelled) setReviewTasks([]); return; }
+      try {
+        const res = await fetch(`/api/review?moduleSlug=${moduleSlug}&count=3`);
+        const tasks = await res.json();
+        if (cancelled) return;
         if (tasks.length > 0) {
           setReviewTasks(tasks);
           const interval = Math.floor(Math.random() * 4) + 1;
@@ -65,9 +67,13 @@ export default function LessonPage() {
         } else {
           setReviewTasks([]);
         }
-      })
-      .catch(() => setReviewTasks([]));
-  }, [lesson]);
+      } catch {
+        if (!cancelled) setReviewTasks([]);
+      }
+    }
+    loadReview();
+    return () => { cancelled = true; };
+  }, [lesson, moduleSlug]);
 
   useEffect(() => {
     Promise.all([

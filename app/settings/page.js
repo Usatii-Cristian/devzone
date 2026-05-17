@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import { useLocalStorage } from "@/lib/hooks";
 import {
   ArrowLeft, Settings, Moon, Sun, Download, Type, Palette, Code2, Trash2, AlertTriangle
 } from "lucide-react";
@@ -15,33 +16,27 @@ const EDITOR_THEMES = [
 const FONT_SIZES = [12, 13, 14, 15, 16, 18, 20];
 
 export default function SettingsPage() {
-  const [theme, setTheme] = useState("light");
-  const [editorTheme, setEditorTheme] = useState("vs-dark");
-  const [editorFont, setEditorFont] = useState(14);
+  const [themeRaw, setThemeStored] = useLocalStorage("theme", null);
+  const [editorTheme, setEditorTheme] = useLocalStorage("editor-theme", "vs-dark");
+  const [editorFontRaw, setEditorFontStored] = useLocalStorage("editor-font", "14");
+  const theme = themeRaw || "light";
+  const editorFont = Number(editorFontRaw) || 14;
+
   const [exporting, setExporting] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
 
-  useEffect(() => {
-    setTheme(localStorage.getItem("theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
-    setEditorTheme(localStorage.getItem("editor-theme") || "vs-dark");
-    setEditorFont(Number(localStorage.getItem("editor-font") || 14));
-  }, []);
-
   function applyTheme(t) {
-    setTheme(t);
-    localStorage.setItem("theme", t);
+    setThemeStored(t);
     document.documentElement.classList.toggle("dark", t === "dark");
   }
 
   function applyEditorTheme(t) {
     setEditorTheme(t);
-    localStorage.setItem("editor-theme", t);
   }
 
   function applyEditorFont(f) {
-    setEditorFont(f);
-    localStorage.setItem("editor-font", String(f));
+    setEditorFontStored(String(f));
   }
 
   async function exportProgress() {
