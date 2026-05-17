@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import {
-  ArrowLeft, ChevronDown, ChevronUp, Clock, Github, Globe, Layers,
+  ArrowLeft, ChevronDown, ChevronUp, Clock, GitBranch, Globe, Layers,
   Star, Zap, ShieldCheck, ExternalLink, Code2, BookOpen
 } from "lucide-react";
 
@@ -416,7 +416,7 @@ export default function ProiectePage() {
         {/* Deploy Guide (collapsible) */}
         {guideOpen && (
           <div className="grid sm:grid-cols-2 gap-4">
-            <GuideSection title="GitHub — Urcă codul" icon={Github} items={GITHUB_GUIDE} color="text-slate-800"/>
+            <GuideSection title="GitHub — Urcă codul" icon={GitBranch} items={GITHUB_GUIDE} color="text-slate-800"/>
             <GuideSection title="Vercel — Site live gratis" icon={Globe} items={VERCEL_GUIDE} color="text-indigo-700"/>
           </div>
         )}
