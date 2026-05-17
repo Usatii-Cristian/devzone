@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 const DEFAULT_USER_ID = "local-user";
 
 export async function POST(request) {
+  const limit = rateLimit(`training:${clientKey(request)}`, 8);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Prea multe antrenamente într-un minut. Așteaptă puțin." },
+      { status: 429 }
+    );
+  }
   try {
     const body = await request.json();
     const { moduleSlug, difficulty, count, scope } = body;

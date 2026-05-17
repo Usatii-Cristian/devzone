@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -36,7 +37,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="DevZone" className="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-lg"/>
+          <Image src="/logo.png" alt="DevZone" width={64} height={64} priority className="w-16 h-16 rounded-2xl mx-auto mb-4 shadow-lg"/>
           <h1 className="text-2xl font-black text-slate-900">DevZone</h1>
           <p className="text-slate-500 text-sm mt-1">Autentifică-te pentru a continua</p>
         </div>

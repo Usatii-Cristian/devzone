@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GlobalAI from "@/components/GlobalAI";
+import ThemeInit from "@/components/ThemeInit";
+import PWAInit from "@/components/PWAInit";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +52,9 @@ export default function RootLayout({ children }) {
       lang="ro"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-50">
+      <body className="min-h-full flex flex-col bg-slate-50 dark:bg-slate-900">
+        <ThemeInit />
+        <PWAInit />
         {children}
         <GlobalAI />
       </body>

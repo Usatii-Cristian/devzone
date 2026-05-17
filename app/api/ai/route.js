@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
+import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 export async function POST(request) {
+  const limit = rateLimit(`ai:${clientKey(request)}`, 15);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { reply: "Prea multe întrebări într-un minut. Așteaptă puțin și încearcă din nou." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   const body = await request.json();
   const { messages, taskQuestion, taskOptions, lessonTitle } = body;
 

@@ -206,7 +206,14 @@ export default function EditorPage() {
   const [running, setRunning] = useState(false);
   const [copied, setCopied] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [editorTheme, setEditorTheme] = useState("vs-dark");
+  const [editorFont, setEditorFont] = useState(14);
   const iframeRef = useRef(null);
+
+  useEffect(() => {
+    setEditorTheme(localStorage.getItem("editor-theme") || "vs-dark");
+    setEditorFont(Number(localStorage.getItem("editor-font") || 14));
+  }, []);
 
   const lang = LANGUAGES.find(l => l.id === langId);
 
@@ -334,9 +341,9 @@ export default function EditorPage() {
             language={lang.monacoLang}
             value={code}
             onChange={v => setCode(v || "")}
-            theme="vs-dark"
+            theme={editorTheme}
             options={{
-              fontSize: 14,
+              fontSize: editorFont,
               fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
               minimap: { enabled: false },
               scrollBeyondLastLine: false,

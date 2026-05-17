@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
+import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 export async function POST(request) {
+  const limit = rateLimit(`eval:${clientKey(request)}`, 20);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { correct: false, feedback: "Prea multe evaluări într-un minut. Așteaptă puțin." },
+      { status: 429 }
+    );
+  }
   const body = await request.json();
   const { code, question, language, lessonTitle, explanation } = body;
 

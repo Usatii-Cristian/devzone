@@ -8,17 +8,19 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const lessonId = searchParams.get("lessonId");
 
+    const headers = { "Cache-Control": "no-store, no-cache, must-revalidate" };
+
     if (lessonId) {
       const progress = await prisma.lessonProgress.findUnique({
         where: { userId_lessonId: { userId: DEFAULT_USER_ID, lessonId } },
       });
-      return NextResponse.json(progress || null);
+      return NextResponse.json(progress || null, { headers });
     }
 
     const allProgress = await prisma.lessonProgress.findMany({
       where: { userId: DEFAULT_USER_ID },
     });
-    return NextResponse.json(allProgress);
+    return NextResponse.json(allProgress, { headers });
   } catch {
     return NextResponse.json([]);
   }

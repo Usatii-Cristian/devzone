@@ -1,8 +1,11 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2 } from "lucide-react";
+import Image from "next/image";
+import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import ThemeToggle from "@/components/ThemeToggle";
+import { computeStreak, computeAchievements } from "@/lib/stats";
 
 const MOD_ICONS = {
   python: "🐍", javascript: "⚡", html: "🌐", css: "🎨", tailwind: "💨",
@@ -37,7 +40,6 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Pre-compute lookup maps — O(1) per lesson instead of O(n) filter per module
   const progressMap = useMemo(() => {
     const m = new Map();
     for (const p of progress) m.set(p.lessonId, p);
@@ -55,15 +57,12 @@ export default function Home() {
     return { done, inProgress, total: mod.lessons.length };
   }
 
-  // Find most recent in-progress lesson across all modules
   const continueLesson = useMemo(() => {
     if (!modules.length || !progress.length) return null;
-    // Build a map lessonId → module
     const lessonToMod = new Map();
     for (const mod of modules) {
       for (const l of mod.lessons) lessonToMod.set(l.id, { mod, lesson: l });
     }
-    // Find in-progress progress entries, pick the one with most completedTasks
     let best = null;
     for (const p of progress) {
       if (p.completed) continue;
@@ -77,6 +76,10 @@ export default function Home() {
     return best;
   }, [modules, progress]);
 
+  const streak = useMemo(() => computeStreak(progress), [progress]);
+  const achievements = useMemo(() => computeAchievements(progress, modules), [progress, modules]);
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
+
   const totalDone = useMemo(() => progress.filter(p => p.completed).length, [progress]);
   const totalInProgress = useMemo(
     () => progress.filter(p => !p.completed && p.completedTasks?.length > 0).length,
@@ -86,18 +89,21 @@ export default function Home() {
   const overallPct = totalLessons > 0 ? Math.round((totalDone / totalLessons) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 pb-24">
       {/* Header */}
       <header className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white shadow-lg sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="DevZone" className="w-12 h-12 rounded-xl shadow-lg"/>
+            <Image src="/logo.png" alt="DevZone" width={48} height={48} priority className="w-12 h-12 rounded-xl shadow-lg"/>
             <span className="font-black text-lg tracking-tight">DevZone</span>
           </div>
-          <Link href="/antrenament"
-            className="bg-yellow-400 text-yellow-900 px-5 py-2 rounded-full font-black text-sm hover:bg-yellow-300 transition-colors shadow flex items-center gap-2">
-            <Dumbbell className="w-4 h-4"/> Antrenament
-          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle/>
+            <Link href="/antrenament"
+              className="bg-yellow-400 text-yellow-900 px-5 py-2 rounded-full font-black text-sm hover:bg-yellow-300 transition-colors shadow flex items-center gap-2">
+              <Dumbbell className="w-4 h-4"/> <span className="hidden sm:inline">Antrenament</span>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -122,7 +128,7 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <div className="hidden sm:grid grid-cols-3 gap-2 text-center flex-shrink-0">
+            <div className="hidden sm:grid grid-cols-4 gap-2 text-center flex-shrink-0">
               <div className="bg-white/15 rounded-2xl px-3 py-2.5">
                 <p className="text-xl font-black text-yellow-300">{totalDone}</p>
                 <p className="text-xs text-indigo-200 mt-0.5 flex items-center justify-center gap-1">
@@ -136,9 +142,39 @@ export default function Home() {
                 </p>
               </div>
               <div className="bg-white/15 rounded-2xl px-3 py-2.5">
-                <p className="text-xl font-black text-cyan-300">{loading ? "—" : totalLessons - totalDone}</p>
-                <p className="text-xs text-indigo-200 mt-0.5">Rămase</p>
+                <p className="text-xl font-black text-orange-300 flex items-center justify-center gap-1">
+                  {streak.current > 0 && <Flame className="w-4 h-4 fill-current"/>}{streak.current}
+                </p>
+                <p className="text-xs text-indigo-200 mt-0.5">Streak</p>
               </div>
+              <div className="bg-white/15 rounded-2xl px-3 py-2.5">
+                <p className="text-xl font-black text-pink-300">{unlockedCount}</p>
+                <p className="text-xs text-indigo-200 mt-0.5 flex items-center justify-center gap-1">
+                  <Award className="w-3 h-3"/> Badge-uri
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile mini-stats row */}
+          <div className="sm:hidden grid grid-cols-4 gap-1.5 mt-4 text-center">
+            <div className="bg-white/15 rounded-xl py-1.5">
+              <p className="text-sm font-black text-yellow-300">{totalDone}</p>
+              <p className="text-[10px] text-indigo-200">Gata</p>
+            </div>
+            <div className="bg-white/15 rounded-xl py-1.5">
+              <p className="text-sm font-black text-emerald-300">{totalInProgress}</p>
+              <p className="text-[10px] text-indigo-200">Activ</p>
+            </div>
+            <div className="bg-white/15 rounded-xl py-1.5">
+              <p className="text-sm font-black text-orange-300 flex items-center justify-center gap-0.5">
+                {streak.current > 0 && <Flame className="w-3 h-3 fill-current"/>}{streak.current}
+              </p>
+              <p className="text-[10px] text-indigo-200">Streak</p>
+            </div>
+            <div className="bg-white/15 rounded-xl py-1.5">
+              <p className="text-sm font-black text-pink-300">{unlockedCount}</p>
+              <p className="text-[10px] text-indigo-200">Badge</p>
             </div>
           </div>
         </div>
@@ -161,6 +197,36 @@ export default function Home() {
                 className="bg-white text-indigo-700 px-4 py-2 rounded-xl font-black text-sm hover:bg-indigo-50 transition-colors flex items-center gap-2 flex-shrink-0 shadow-sm">
                 <Play className="w-4 h-4 fill-current"/> Continuă
               </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Achievements preview */}
+        {!loading && totalDone > 0 && (
+          <div className="mb-6 bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <Award className="w-4 h-4 text-pink-500"/> Realizări <span className="text-slate-400 dark:text-slate-500 font-bold">({unlockedCount}/{achievements.length})</span>
+              </h2>
+              {streak.current > 0 && (
+                <span className="text-xs font-black bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <Flame className="w-3 h-3 fill-current"/> {streak.current} zile la rând
+                </span>
+              )}
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {achievements.map(a => (
+                <div key={a.id}
+                  title={`${a.title} — ${a.desc}`}
+                  className={`flex-shrink-0 w-20 h-20 rounded-2xl flex flex-col items-center justify-center text-center transition-all
+                    ${a.unlocked
+                      ? "bg-gradient-to-br from-pink-100 to-yellow-100 dark:from-pink-900/40 dark:to-yellow-900/40 shadow-sm"
+                      : "bg-slate-100 dark:bg-slate-700/50 opacity-50"}`}>
+                  <span className="text-2xl mb-0.5">{a.icon}</span>
+                  <span className={`text-[10px] font-bold leading-tight px-1
+                    ${a.unlocked ? "text-pink-700 dark:text-pink-300" : "text-slate-400 dark:text-slate-500"}`}>{a.title}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -200,25 +266,25 @@ export default function Home() {
         </div>
 
         {/* Modules */}
-        <h2 className="text-lg font-black text-indigo-900 mb-4 flex items-center gap-2">
-          <BookMarked className="w-5 h-5 text-indigo-600"/> Module de învățare
+        <h2 className="text-lg font-black text-indigo-900 dark:text-indigo-300 mb-4 flex items-center gap-2">
+          <BookMarked className="w-5 h-5 text-indigo-600 dark:text-indigo-400"/> Module de învățare
         </h2>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
-                <div className="h-16 bg-gradient-to-r from-slate-200 to-slate-100"/>
+              <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm animate-pulse">
+                <div className="h-16 bg-gradient-to-r from-slate-200 to-slate-100 dark:from-slate-700 dark:to-slate-600"/>
                 <div className="p-4 space-y-2">
-                  <div className="h-3 bg-slate-100 rounded-full w-3/4"/>
-                  <div className="h-2 bg-slate-100 rounded-full w-full"/>
+                  <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-full w-3/4"/>
+                  <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full w-full"/>
                 </div>
               </div>
             ))}
           </div>
         ) : modules.length === 0 ? (
-          <div className="bg-white rounded-2xl p-10 text-center shadow-sm">
-            <p className="text-slate-600 font-semibold">Baza de date nu e conectată.</p>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 text-center shadow-sm">
+            <p className="text-slate-600 dark:text-slate-300 font-semibold">Baza de date nu e conectată.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -230,7 +296,7 @@ export default function Home() {
               const icon = MOD_ICONS[mod.slug] || "◆";
               return (
                 <Link key={mod.id} href={hasLessons ? `/modules/${mod.slug}` : "#"}
-                  className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group block ${!hasLessons ? "opacity-60 pointer-events-none" : ""}`}>
+                  className={`bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group block ${!hasLessons ? "opacity-60 pointer-events-none" : ""}`}>
                   <div className={`bg-gradient-to-r ${bg} p-4 flex items-center gap-3`}>
                     <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl flex-shrink-0">{icon}</div>
                     <div className="flex-1 min-w-0">
@@ -245,15 +311,15 @@ export default function Home() {
                     }
                   </div>
                   <div className="px-4 py-3">
-                    <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
                       <span>{s.done}/{s.total} lecții finalizate</span>
-                      <span className="font-bold text-indigo-600">{pct}%</span>
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400">{pct}%</span>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2">
+                    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
                       <div className={`h-2 rounded-full bg-gradient-to-r ${bg} transition-all`} style={{ width: `${pct}%` }}/>
                     </div>
                     {s.inProgress > 0 && (
-                      <p className="text-xs text-amber-600 mt-1.5 font-medium flex items-center gap-1">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5 font-medium flex items-center gap-1">
                         <Clock className="w-3 h-3"/> {s.inProgress} în curs
                       </p>
                     )}
