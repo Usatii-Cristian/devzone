@@ -16,7 +16,7 @@ export async function POST(request) {
 
     const token = await new SignJWT({ email })
       .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("30d")
+      .setExpirationTime("365d")
       .sign(SECRET);
 
     const res = NextResponse.json({ ok: true });
@@ -24,7 +24,7 @@ export async function POST(request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: 60 * 60 * 24 * 365,
       path: "/",
     });
     return res;
