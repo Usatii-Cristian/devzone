@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
 
-export async function middleware(request) {
+export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   if (
