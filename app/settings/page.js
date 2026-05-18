@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -26,6 +26,11 @@ export default function SettingsPage() {
   const [exporting, setExporting] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
+  const [user, setUser] = useState({ name: "", initial: "", email: "" });
+
+  useEffect(() => {
+    fetch("/api/me").then(r => r.json()).then(u => { if (u?.name) setUser(u); }).catch(() => {});
+  }, []);
 
   function applyTheme(t) {
     setThemeStored(t);
@@ -107,10 +112,11 @@ export default function SettingsPage() {
 
         {/* User info */}
         <section className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-4 text-white shadow-lg flex items-center gap-3">
-          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl font-black flex-shrink-0">C</div>
+          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl font-black flex-shrink-0">{user.initial || "?"}</div>
           <div className="flex-1 min-w-0">
             <p className="text-indigo-200 text-xs">Conectat ca</p>
-            <p className="font-black text-base truncate">Cristi</p>
+            <p className="font-black text-base truncate">{user.name || "..."}</p>
+            {user.email && <p className="text-indigo-200 text-xs truncate">{user.email}</p>}
           </div>
           <User className="w-5 h-5 text-white/60 flex-shrink-0"/>
         </section>

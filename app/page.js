@@ -15,13 +15,15 @@ export default function Home() {
   const [progress, setProgress] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [user, setUser] = useState({ name: "", initial: "" });
 
   useEffect(() => {
-    Promise.all([fetch("/api/modules"), fetch("/api/progress")])
-      .then(([m, p]) => Promise.all([m.json(), p.json()]))
-      .then(([mods, prog]) => {
+    Promise.all([fetch("/api/modules"), fetch("/api/progress"), fetch("/api/me")])
+      .then(([m, p, u]) => Promise.all([m.json(), p.json(), u.json()]))
+      .then(([mods, prog, usr]) => {
         setModules(Array.isArray(mods) ? mods : []);
         setProgress(Array.isArray(prog) ? prog : []);
+        if (usr?.name) setUser(usr);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -102,10 +104,10 @@ export default function Home() {
         {/* Profile card */}
         <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl p-5 sm:p-6 mb-5 sm:mb-6 text-white shadow-xl">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black shadow-inner flex-shrink-0">C</div>
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black shadow-inner flex-shrink-0">{user.initial || "?"}</div>
             <div className="flex-1 min-w-0">
               <p className="text-indigo-200 text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-0.5">Bine ai venit</p>
-              <h1 className="text-lg sm:text-xl font-black leading-tight">Bine ai venit!</h1>
+              <h1 className="text-lg sm:text-xl font-black leading-tight">Bine ai venit{user.name ? `, ${user.name}` : ""}!</h1>
               {!loading && totalLessons > 0 && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between mb-1">
