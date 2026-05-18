@@ -2,12 +2,12 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search, BookOpen } from "lucide-react";
+import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search, BookOpen, Trophy, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import ThemeToggle from "@/components/ThemeToggle";
 import SearchModal from "@/components/SearchModal";
 import AchievementIcon from "@/components/AchievementIcon";
-import { computeStreak, computeAchievements, computeXP, computeLevel } from "@/lib/stats";
+import { computeStreak, computeAchievements, computeXP, computeLevel, XP_LEVELS } from "@/lib/stats";
 import { ModIcon, MOD_BG } from "@/lib/moduleIcons";
 
 export default function Home() {
@@ -15,6 +15,7 @@ export default function Home() {
   const [progress, setProgress] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [ranksOpen, setRanksOpen] = useState(false);
   const [user, setUser] = useState({ name: "", initial: "" });
 
   useEffect(() => {
@@ -83,6 +84,71 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 pb-28">
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} modules={modules}/>
 
+      {/* Ranks Modal */}
+      {ranksOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setRanksOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"/>
+          <div className="relative bg-white dark:bg-slate-900 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85vh] flex flex-col"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-yellow-500"/>
+                <h2 className="font-black text-slate-800 dark:text-white text-base">Toate rangurile</h2>
+              </div>
+              <button onClick={() => setRanksOpen(false)}
+                className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                <X className="w-4 h-4 text-slate-600 dark:text-slate-300"/>
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 px-4 py-3 space-y-1.5">
+              {XP_LEVELS.map((lvl, i) => {
+                const isCurrent = lvl.level === level.level;
+                const isUnlocked = xp >= lvl.minXP;
+                const nextLvl = XP_LEVELS[i + 1];
+                return (
+                  <div key={lvl.level}
+                    className={`rounded-2xl px-4 py-3 flex items-center gap-3 transition-all
+                      ${isCurrent ? "ring-2 ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 shadow-md scale-[1.02]"
+                        : isUnlocked ? "bg-slate-50 dark:bg-slate-800"
+                        : "bg-slate-50/50 dark:bg-slate-800/40 opacity-50"}`}>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 bg-gradient-to-br ${lvl.color} shadow-sm`}>
+                      <span>{lvl.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r ${lvl.color} text-white`}>
+                          Niv. {lvl.level}
+                        </span>
+                        <span className={`text-sm font-black ${isCurrent ? "text-indigo-700 dark:text-indigo-300" : "text-slate-700 dark:text-white"}`}>
+                          {lvl.label}
+                        </span>
+                        {isCurrent && <span className="text-[10px] font-bold bg-indigo-500 text-white px-1.5 py-0.5 rounded-full">Tu ești aici</span>}
+                      </div>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        {lvl.minXP.toLocaleString()} XP
+                        {nextLvl ? ` — ${nextLvl.minXP.toLocaleString()} XP` : " +"}
+                      </p>
+                      {isCurrent && level.next && (
+                        <div className="mt-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                          <div className={`h-1.5 rounded-full bg-gradient-to-r ${lvl.color}`} style={{ width: `${level.pct}%` }}/>
+                        </div>
+                      )}
+                    </div>
+                    {isUnlocked && !isCurrent && <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0"/>}
+                    {!isUnlocked && <span className="text-slate-300 dark:text-slate-600 text-lg flex-shrink-0">🔒</span>}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="px-5 pb-5 pt-3 flex-shrink-0">
+              <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+                Ai <span className="font-black text-indigo-600 dark:text-indigo-400">{xp.toLocaleString()} XP</span> · Nivel {level.level}/20
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white shadow-lg sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
@@ -124,24 +190,29 @@ export default function Home() {
           </div>
 
           {/* Level + XP bar */}
-          <div className="mt-3 bg-white/10 rounded-2xl px-3 py-2.5">
+          <button onClick={() => setRanksOpen(true)}
+            className="mt-3 w-full bg-white/10 hover:bg-white/15 active:bg-white/20 rounded-2xl px-3 py-2.5 text-left transition-colors cursor-pointer">
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-2">
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r ${level.color} text-white`}>
                   Niv. {level.level}
                 </span>
                 <span className="text-white/90 text-xs font-black">{level.label}</span>
+                <span className="text-white/50 text-[10px]">{level.icon}</span>
               </div>
-              <span className="text-yellow-300 text-xs font-black">{xp} XP</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-yellow-300 text-xs font-black">{xp} XP</span>
+                <Trophy className="w-3 h-3 text-yellow-300/70"/>
+              </div>
             </div>
             <div className="w-full bg-white/20 rounded-full h-2">
               <div className={`h-2 rounded-full bg-gradient-to-r ${level.color} transition-all duration-700`}
                 style={{ width: `${level.pct}%` }}/>
             </div>
             {level.next && (
-              <p className="text-indigo-200 text-[10px] mt-1 text-right">{level.next.minXP - xp} XP până la {level.next.label}</p>
+              <p className="text-indigo-200 text-[10px] mt-1 text-right">{level.next.minXP - xp} XP până la {level.next.label} · Vezi ranguri</p>
             )}
-          </div>
+          </button>
 
           {/* Stats — responsive grid (always visible) */}
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mt-3 text-center">

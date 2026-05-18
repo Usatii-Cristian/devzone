@@ -410,8 +410,8 @@ parent.postMessage({logs:_log},'*');
       const nw = wrong.filter(id => id !== t.id);
       setCompleted(nc);
       setWrong(nw);
-      const allDone = lesson.tasks.every(tk => nc.includes(tk.id));
-      save({ completedTasks: nc, wrongTasks: nw, completed: allDone });
+      // Always save completed: true — lesson is already done (entered retry from finish screen)
+      save({ completedTasks: nc, wrongTasks: nw, completed: true });
     } else {
       setDisabledOpts(prev => ({
         ...prev,
