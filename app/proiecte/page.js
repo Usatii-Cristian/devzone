@@ -4,7 +4,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import {
   ArrowLeft, ChevronDown, ChevronUp, Clock, GitBranch, Globe, Layers,
-  Star, Zap, ShieldCheck, Code2, BookOpen
+  Star, Zap, ShieldCheck, Code2, BookOpen, Target, Wrench
 } from "lucide-react";
 
 const STACKS = [
@@ -53,20 +53,32 @@ const PROJECTS = [
     difficulty: "easy",
     hours: 4,
     description: "Crează un site de prezentare pentru o pizzerie fictivă cu meniu, secțiune de contact și un design atractiv.",
+    goal: "Să construiești de la zero un site complet de o pagină, folosind doar HTML, CSS și un pic de JavaScript. Va fi primul tău proiect care arată profesional — îl poți pune în portofoliu sau să-l dai unei pizzerii reale.",
+    skills: ["HTML semantic", "CSS Flexbox", "CSS Grid", "Responsive design", "JS DOM basics", "Mobile-first"],
     what: [
-      "Header cu logo și navigație",
-      "Hero section cu imagine și call-to-action",
-      "Meniu cu 3-4 categorii de pizza și prețuri",
-      "Secțiune 'Despre noi' cu povestea pizzeriei",
-      "Formular de contact (nume, email, mesaj)",
-      "Footer cu adresă și program de funcționare",
+      "Header sticky (rămâne sus la scroll) cu logo și meniu de navigație",
+      "Hero section: imagine full-width cu overlay text și buton 'Comandă acum'",
+      "Meniu cu 3-4 categorii (Pizza Clasică, Specială, Vegan) — fiecare cu 3-5 produse, prețuri",
+      "Secțiunea 'Despre noi' — istoricul pizzeriei, valori (ingrediente fresh, livrare rapidă)",
+      "Galerie foto cu efect hover (zoom ușor pe imagine)",
+      "Formular de contact (nume, email, mesaj) cu validare basic în JS",
+      "Footer cu adresă, telefon, orar și linkuri social media",
     ],
     steps: [
-      "Creează un folder `pizzerie` și fișierele `index.html`, `style.css`, `script.js`",
-      "Construiește structura HTML cu toate secțiunile",
-      "Stilizează cu CSS folosind un color scheme cald (roșu, portocaliu, galben)",
-      "Adaugă un mic JS pentru meniu mobil (hamburger toggle)",
-      "Testează pe telefon (responsive design)",
+      "Creează un folder `pizzerie` cu fișierele `index.html`, `style.css`, `script.js`",
+      "Construiește mai întâi structura HTML semantic: `<header>`, `<main>` cu `<section>` pentru fiecare zonă, `<footer>`",
+      "Adaugă conținut text și imagini placeholder (de la unsplash.com sau pexels.com)",
+      "Stilizează cu CSS folosind variabile (`--rosu: #d62828`, `--galben: #fcbf49`, `--negru: #1a1a1a`)",
+      "Folosește Flexbox pentru navbar și carduri, CSS Grid pentru meniul de pizza",
+      "Adaugă media query `@media (max-width: 768px)` pentru telefon",
+      "În `script.js`: hamburger menu toggle, smooth scroll la click pe link-uri de nav, validare formular cu `e.preventDefault()`",
+      "Testează pe Chrome DevTools în mod responsive (F12 → toggle device toolbar)",
+    ],
+    bonus: [
+      "Animații CSS la scroll cu `Intersection Observer`",
+      "Mode dark cu toggle (salvat în localStorage)",
+      "Filtrare pizza după ingredient (vegan, picant, fără gluten)",
+      "Slider de testimoniale clienți",
     ],
   },
   {
@@ -123,19 +135,35 @@ const PROJECTS = [
     difficulty: "easy",
     hours: 3,
     description: "Aplicație clasică de task management cu persistență în browser.",
+    goal: "Să stăpânești manipularea DOM-ului, evenimente, array-uri și localStorage — fundamentul pentru orice aplicație JavaScript reală. To-Do List e proiectul universal pentru a învăța aceste concepte.",
+    skills: ["DOM manipulation", "Event listeners", "Array methods", "localStorage", "JSON parse/stringify", "Render pattern"],
     what: [
-      "Adaugă task-uri cu Enter sau buton",
-      "Marchează task-uri complete (click pe checkbox)",
-      "Șterge task-uri individuale sau toate cele finalizate",
-      "Filtre: Toate / Active / Finalizate",
-      "Persistență în localStorage (datele rămân după refresh)",
+      "Input pentru adăugarea de task-uri (Enter sau buton 'Adaugă')",
+      "Listă cu task-uri afișate cu checkbox + text + buton 'Șterge'",
+      "Click pe checkbox marchează task-ul ca finalizat (text barat)",
+      "Buton 'Șterge' pentru fiecare task individual",
+      "Filtre Toate / Active / Finalizate (3 butoane în header)",
+      "Counter în footer: 'X task-uri rămase'",
+      "Buton 'Șterge cele finalizate' (curăță tot ce e bifat)",
+      "Persistență totală în localStorage (refresh page → datele rămân)",
     ],
     steps: [
-      "Creează HTML simplu: input + buton + lista",
-      "Funcție `addTask(text)` care creează obiect `{ id, text, done }`",
-      "Salvează array de task-uri în `localStorage.setItem('todos', JSON.stringify(tasks))`",
-      "Funcție `render()` care redraw-ează lista din state",
-      "Adaugă filtre cu variabilă `currentFilter`",
+      "Creează `index.html` cu: header, input + buton, `<ul id=\"list\">`, footer cu counter și filtre",
+      "În CSS: stil curat, text barat (`text-decoration: line-through`) pentru task done",
+      "În `app.js` definește array global `let tasks = []` și `let filter = 'all'`",
+      "Funcție `addTask(text)`: creează `{ id: Date.now(), text, done: false }`, adaugă în `tasks`, apoi `save()` și `render()`",
+      "Funcție `save()`: `localStorage.setItem('todos', JSON.stringify(tasks))`",
+      "Funcție `load()`: `tasks = JSON.parse(localStorage.getItem('todos') || '[]')`",
+      "Funcție `render()`: golește `<ul>`, iterează `tasks` filtrate după `filter`, creează `<li>` cu checkbox + span + buton delete",
+      "Adaugă event listeners pentru: Enter în input, click pe checkbox, click pe delete, click pe filtre",
+      "La pornire: `load()` apoi `render()`",
+    ],
+    bonus: [
+      "Drag & drop pentru reordonare (`draggable` attribute)",
+      "Editare task la dublu-click pe text",
+      "Prioritate (mic/mediu/mare) cu badge colorat",
+      "Date de scadență (deadline) cu indicator vizual pentru cele expirate",
+      "Export ca fișier JSON pentru backup",
     ],
   },
   {
@@ -342,19 +370,33 @@ const PROJECTS = [
     hours: 2,
     editorLang: "cpp",
     description: "Joc interactiv în care calculatorul generează un număr aleator și jucătorul trebuie să-l ghicească.",
+    goal: "Să folosești input/output, bucle while, condiționale și biblioteca modernă `<random>` din C++11+. E primul joc complet pe care îl poți construi după ce ai învățat bazele C++.",
+    skills: ["std::cin/cout", "Bucle while", "If/else", "Random modern (mt19937)", "Funcții", "do-while pentru restart"],
     what: [
-      "Generare număr random cu `<random>`",
-      "Hint: 'prea mare' / 'prea mic' după fiecare ghicire",
-      "Numărarea tentativelor",
-      "Dificultate selectabilă (ușor: 1-50, greu: 1-500)",
-      "Opțiune de restart fără a reporni programul",
+      "Calculatorul alege un număr secret între 1 și N (random)",
+      "Jucătorul introduce ghicituri prin tastatură",
+      "După fiecare ghicire afișează 'Prea mare!' / 'Prea mic!' / 'Bravo!'",
+      "Contorizează numărul de tentative și afișează la final",
+      "Meniu de dificultate: Ușor (1-50), Mediu (1-100), Greu (1-500)",
+      "După câștig, întreabă 'Vrei să joci din nou? (D/N)'",
+      "Statistici simple: cel mai bun scor (cele mai puține tentative)",
     ],
     steps: [
-      "Folosește `std::mt19937 rng(std::random_device{}())` pentru random modern",
-      "Buclă `while(ghicit != secret)` cu citire `cin >> ghicit`",
-      "Afișează hint cu `if (ghicit > secret) cout << \"Prea mare!\";`",
-      "Adaugă un contor `tentative++` și afișează-l la final",
-      "Compilează: `g++ -o joc joc.cpp && ./joc`",
+      "Include header-ele necesare: `<iostream>`, `<random>`, `<limits>`",
+      "Creează generatorul random: `std::random_device rd; std::mt19937 rng(rd());`",
+      "Funcție `int ghiceste(int max)`: distribuție `std::uniform_int_distribution<>(1, max)(rng)` returnează numărul secret",
+      "În `main()`: afișează meniu dificultate, citește alegerea cu `cin >> nivel`",
+      "Mapează nivel → max (1→50, 2→100, 3→500)",
+      "Buclă `while (ghicit != secret) { cin >> ghicit; tentative++; if (...) ... }`",
+      "După ghicire corectă: afișează numărul de tentative",
+      "Buclă exterioară `do { ... } while(continua == 'D')` pentru restart",
+      "Compilează: `g++ -std=c++17 -O2 joc.cpp -o joc && ./joc`",
+    ],
+    bonus: [
+      "Timpul scurs cu `std::chrono` (cât a durat să ghicești)",
+      "Salvare highscore în fișier `score.txt`",
+      "Mod 'inversat': tu alegi numărul, calculatorul ghicește prin căutare binară",
+      "Sistem de hint-uri (par/impar, divizibil cu, etc.) — câștigi cu mai puține",
     ],
   },
   {
@@ -564,10 +606,36 @@ function ProjectCard({ project, expanded, onToggle }) {
 
       {expanded && (
         <div className="px-4 sm:px-5 pb-5 border-t border-slate-100 dark:border-slate-700 pt-4 space-y-5">
+          {/* Goal — extended description */}
+          {project.goal && (
+            <div className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl p-3.5">
+              <h4 className="font-black text-indigo-800 dark:text-indigo-200 text-xs mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
+                <Target className="w-3.5 h-3.5"/> Scop
+              </h4>
+              <p className="text-sm text-indigo-900 dark:text-indigo-100 leading-relaxed">{project.goal}</p>
+            </div>
+          )}
+
+          {/* Skills you'll learn */}
+          {project.skills && project.skills.length > 0 && (
+            <div>
+              <h4 className="font-black text-slate-700 dark:text-white text-sm mb-2.5 flex items-center gap-1.5">
+                <Wrench className="w-4 h-4 text-amber-500"/> Ce vei învăța
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {project.skills.map((s, i) => (
+                  <span key={i} className="text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 px-2.5 py-1 rounded-lg">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Ce vei construi */}
           <div>
             <h4 className="font-black text-slate-700 dark:text-white text-sm mb-2.5 flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-indigo-500"/> Ce vei construi
+              <Layers className="w-4 h-4 text-indigo-500"/> Funcționalități cerute
             </h4>
             <ul className="space-y-2">
               {project.what.map((item, i) => (
@@ -593,6 +661,23 @@ function ProjectCard({ project, expanded, onToggle }) {
               ))}
             </ol>
           </div>
+
+          {/* Bonus / Stretch goals */}
+          {project.bonus && project.bonus.length > 0 && (
+            <div className="bg-violet-50 dark:bg-violet-900/30 border border-violet-100 dark:border-violet-800 rounded-xl p-3.5">
+              <h4 className="font-black text-violet-800 dark:text-violet-200 text-xs mb-2 flex items-center gap-1.5 uppercase tracking-wider">
+                <Star className="w-3.5 h-3.5"/> Bonus (dacă vrei mai mult)
+              </h4>
+              <ul className="space-y-1.5">
+                {project.bonus.map((b, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-violet-900 dark:text-violet-100 leading-relaxed">
+                    <span className="text-violet-500 dark:text-violet-400 font-black flex-shrink-0">+</span>
+                    <span className="flex-1">{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Editor button */}
           {project.editorLang && (
