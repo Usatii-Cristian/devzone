@@ -8,13 +8,18 @@ import {
   ArrowLeft, Play, RotateCcw, Copy, Check, ChevronDown,
   Terminal, Code2, Globe
 } from "lucide-react";
+import {
+  SiPython, SiJavascript, SiC, SiCplusplus, SiSharp, SiPhp,
+  SiHtml5, SiNextdotjs
+} from "react-icons/si";
+import { FaJava } from "react-icons/fa";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 const LANGUAGES = [
   {
     id: "python", label: "Python", monacoLang: "python", piston: "python", version: "3.10.0",
-    icon: "🐍",
+    Icon: SiPython, color: "#3776AB",
     default: `# Python — scrie codul tău aici
 def salut(nume):
     return f"Salut, {nume}!"
@@ -29,7 +34,7 @@ print(f"Suma: {suma}")
   },
   {
     id: "javascript", label: "JavaScript", monacoLang: "javascript", piston: "javascript", version: "18.15.0",
-    icon: "⚡",
+    Icon: SiJavascript, color: "#F7DF1E",
     default: `// JavaScript (Node.js)
 function fibonacci(n) {
   if (n <= 1) return n;
@@ -43,7 +48,7 @@ for (let i = 0; i < 10; i++) {
   },
   {
     id: "c", label: "C", monacoLang: "c", piston: "c", version: "10.2.0",
-    icon: "©",
+    Icon: SiC, color: "#A8B9CC",
     default: `#include <stdio.h>
 
 int factorial(int n) {
@@ -61,7 +66,7 @@ int main() {
   },
   {
     id: "cpp", label: "C++", monacoLang: "cpp", piston: "c++", version: "10.2.0",
-    icon: "⊕",
+    Icon: SiCplusplus, color: "#00599C",
     default: `#include <iostream>
 #include <vector>
 #include <algorithm>
@@ -82,7 +87,7 @@ int main() {
   },
   {
     id: "java", label: "Java", monacoLang: "java", piston: "java", version: "15.0.2",
-    icon: "☕",
+    Icon: FaJava, color: "#ED8B00",
     default: `public class Main {
     static int[] bubbleSort(int[] arr) {
         int n = arr.length;
@@ -108,7 +113,7 @@ int main() {
   },
   {
     id: "csharp", label: "C#", monacoLang: "csharp", piston: "csharp", version: "6.12.0",
-    icon: "◇",
+    Icon: SiSharp, color: "#239120",
     default: `using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -125,7 +130,7 @@ class Program {
   },
   {
     id: "php", label: "PHP", monacoLang: "php", piston: "php", version: "8.2.3",
-    icon: "🐘",
+    Icon: SiPhp, color: "#777BB4",
     default: `<?php
 function isPrime($n) {
     if ($n < 2) return false;
@@ -142,7 +147,7 @@ echo "Total: " . count($primes) . " numere prime\\n";
   },
   {
     id: "html", label: "HTML+CSS+JS", monacoLang: "html", piston: null,
-    icon: "🌐",
+    Icon: SiHtml5, color: "#E34F26",
     default: `<!DOCTYPE html>
 <html lang="ro">
 <head>
@@ -196,6 +201,59 @@ echo "Total: " . count($primes) . " numere prime\\n";
 </html>
 `,
   },
+  {
+    id: "nextjs", label: "Next.js (React)", monacoLang: "javascript", piston: null,
+    Icon: SiNextdotjs, color: "#000000",
+    isReact: true,
+    default: `// Next.js / React component — preview live în iframe
+// Notă: pentru aplicații Next.js reale, deploy-uiește pe Vercel.
+
+function Counter() {
+  const [count, setCount] = React.useState(0);
+
+  return (
+    <div style={{
+      fontFamily: 'system-ui',
+      padding: 24,
+      background: 'linear-gradient(135deg, #667eea, #764ba2)',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div style={{
+        background: 'white',
+        padding: 32,
+        borderRadius: 16,
+        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+        textAlign: 'center'
+      }}>
+        <h1 style={{ color: '#4f46e5', marginBottom: 16 }}>
+          ⚛ React Counter
+        </h1>
+        <p style={{ fontSize: 48, fontWeight: 900, color: '#1e1b4b' }}>{count}</p>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+          <button onClick={() => setCount(c => c - 1)}
+            style={{ background: '#ef4444', color: 'white', border: 'none', padding: '12px 20px', borderRadius: 8, fontSize: 16, cursor: 'pointer' }}>
+            −1
+          </button>
+          <button onClick={() => setCount(0)}
+            style={{ background: '#64748b', color: 'white', border: 'none', padding: '12px 20px', borderRadius: 8, fontSize: 16, cursor: 'pointer' }}>
+            Reset
+          </button>
+          <button onClick={() => setCount(c => c + 1)}
+            style={{ background: '#22c55e', color: 'white', border: 'none', padding: '12px 20px', borderRadius: 8, fontSize: 16, cursor: 'pointer' }}>
+            +1
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Counter />);
+`,
+  },
 ];
 
 const PISTON_URL = "https://emkc.org/api/v2/piston/execute";
@@ -229,7 +287,27 @@ export default function EditorPage() {
     // HTML+CSS+JS — render in iframe
     if (lang.piston === null) {
       if (iframeRef.current) {
-        iframeRef.current.srcdoc = code;
+        if (lang.isReact) {
+          // Wrap with React + Babel CDN for JSX
+          iframeRef.current.srcdoc = `<!DOCTYPE html>
+<html><head>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>body{margin:0;font-family:system-ui}</style>
+</head><body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+try {
+${code}
+} catch(e) {
+  document.getElementById('root').innerHTML = '<pre style="color:red;padding:20px;font-family:monospace">'+e.message+'</pre>';
+}
+</script>
+</body></html>`;
+        } else {
+          iframeRef.current.srcdoc = code;
+        }
       }
       setOutput({ type: "html" });
       setRunning(false);
@@ -298,19 +376,23 @@ export default function EditorPage() {
           <div className="relative flex-shrink-0">
             <button onClick={() => setLangOpen(o => !o)}
               className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 transition-colors px-2.5 py-2 rounded-lg text-white text-xs font-bold active:scale-95">
-              <span className="text-base leading-none">{lang.icon}</span>
+              <lang.Icon className="w-4 h-4" style={{ color: lang.color }}/>
               <span>{lang.label}</span>
               <ChevronDown className={`w-3 h-3 transition-transform ${langOpen ? "rotate-180" : ""}`}/>
             </button>
             {langOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-[#181825] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden w-48 max-h-80 overflow-y-auto">
-                {LANGUAGES.map(l => (
-                  <button key={l.id} onClick={() => selectLang(l)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-3 text-sm text-left transition-colors active:bg-indigo-700
-                      ${l.id === langId ? "bg-indigo-600 text-white font-bold" : "text-white/70 hover:bg-white/10 hover:text-white"}`}>
-                    <span className="text-base">{l.icon}</span>{l.label}
-                  </button>
-                ))}
+              <div className="absolute right-0 top-full mt-1 bg-[#181825] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden w-52 max-h-80 overflow-y-auto">
+                {LANGUAGES.map(l => {
+                  const LIcon = l.Icon;
+                  return (
+                    <button key={l.id} onClick={() => selectLang(l)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-3 text-sm text-left transition-colors active:bg-indigo-700
+                        ${l.id === langId ? "bg-indigo-600 text-white font-bold" : "text-white/70 hover:bg-white/10 hover:text-white"}`}>
+                      <LIcon className="w-4 h-4 flex-shrink-0" style={{ color: l.id === langId ? "#fff" : l.color }}/>
+                      <span>{l.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

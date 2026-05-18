@@ -4,17 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, CheckCircle, Clock, Play } from "lucide-react";
 import Navbar from "@/components/Navbar";
-
-const MOD_BG = {
-  python: "from-blue-500 to-cyan-400", javascript: "from-yellow-400 to-orange-400",
-  html: "from-orange-500 to-red-500", css: "from-blue-500 to-indigo-600",
-  tailwind: "from-cyan-400 to-teal-500", react: "from-sky-400 to-blue-500",
-  "nextjs-frontend": "from-gray-700 to-gray-900", "nextjs-backend": "from-slate-600 to-slate-800",
-  c: "from-purple-500 to-violet-600", cpp: "from-violet-500 to-pink-600",
-  csharp: "from-indigo-500 to-purple-700", java: "from-red-500 to-orange-600",
-  cybersecurity: "from-emerald-500 to-green-700",
-  sql: "from-blue-600 to-cyan-700", php: "from-violet-600 to-indigo-700",
-};
+import { MOD_BG } from "@/lib/moduleIcons";
 
 export default function ModulePage() {
   const { moduleSlug } = useParams();
@@ -59,13 +49,16 @@ export default function ModulePage() {
   }, [module, progressMap]);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-indigo-50">
-      <div className="text-indigo-400 animate-pulse font-semibold">Se încarcă...</div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 rounded-full border-4 border-indigo-200 dark:border-indigo-900 border-t-indigo-600 dark:border-t-indigo-400 animate-spin"/>
+        <p className="text-indigo-500 dark:text-indigo-300 font-semibold text-sm">Se încarcă lecțiile...</p>
+      </div>
     </div>
   );
   if (!module) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Link href="/" className="text-indigo-600 flex items-center gap-1"><ChevronLeft className="w-4 h-4"/> Acasă</Link>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+      <Link href="/" className="text-indigo-600 dark:text-indigo-400 flex items-center gap-1"><ChevronLeft className="w-4 h-4"/> Acasă</Link>
     </div>
   );
 

@@ -7,23 +7,7 @@ import Navbar from "@/components/Navbar";
 import ThemeToggle from "@/components/ThemeToggle";
 import SearchModal from "@/components/SearchModal";
 import { computeStreak, computeAchievements } from "@/lib/stats";
-
-const MOD_ICONS = {
-  python: "🐍", javascript: "⚡", html: "🌐", css: "🎨", tailwind: "💨",
-  react: "⚛", "nextjs-frontend": "▲", "nextjs-backend": "⬡",
-  c: "©", cpp: "⊕", csharp: "◇", java: "☕", cybersecurity: "🛡",
-  sql: "🗄", php: "🐘",
-};
-const MOD_BG = {
-  python: "from-blue-500 to-cyan-400", javascript: "from-yellow-400 to-orange-400",
-  html: "from-orange-500 to-red-500", css: "from-blue-500 to-indigo-600",
-  tailwind: "from-cyan-400 to-teal-500", react: "from-sky-400 to-blue-500",
-  "nextjs-frontend": "from-gray-700 to-gray-900", "nextjs-backend": "from-slate-600 to-slate-800",
-  c: "from-purple-500 to-violet-600", cpp: "from-violet-500 to-pink-600",
-  csharp: "from-indigo-500 to-purple-700", java: "from-red-500 to-orange-600",
-  cybersecurity: "from-emerald-500 to-green-700",
-  sql: "from-blue-600 to-cyan-700", php: "from-violet-600 to-indigo-700",
-};
+import { ModIcon, MOD_BG } from "@/lib/moduleIcons";
 
 export default function Home() {
   const [modules, setModules] = useState([]);
@@ -167,8 +151,8 @@ export default function Home() {
         {!loading && continueLesson && (
           <div className="mb-5 sm:mb-6">
             <div className={`bg-gradient-to-r ${MOD_BG[continueLesson.mod.slug] || "from-indigo-500 to-purple-600"} rounded-2xl p-3.5 sm:p-4 flex items-center gap-3 shadow-lg`}>
-              <div className="w-10 h-10 sm:w-11 sm:h-11 bg-white/20 rounded-xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
-                {MOD_ICONS[continueLesson.mod.slug] || "◆"}
+              <div className="w-10 h-10 sm:w-11 sm:h-11 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <ModIcon slug={continueLesson.mod.slug} className="w-5 h-5 sm:w-6 sm:h-6 text-white"/>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white/70 text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{continueLesson.mod.title} · Continuă</p>
@@ -270,12 +254,13 @@ export default function Home() {
               const pct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0;
               const hasLessons = mod.lessons.length > 0;
               const bg = MOD_BG[mod.slug] || "from-slate-500 to-slate-700";
-              const icon = MOD_ICONS[mod.slug] || "◆";
               return (
                 <Link key={mod.id} href={hasLessons ? `/modules/${mod.slug}` : "#"}
                   className={`bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group block active:scale-[0.98] ${!hasLessons ? "opacity-60 pointer-events-none" : ""}`}>
                   <div className={`bg-gradient-to-r ${bg} p-3.5 sm:p-4 flex items-center gap-3`}>
-                    <div className="w-10 h-10 sm:w-11 sm:h-11 bg-white/20 rounded-xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">{icon}</div>
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <ModIcon slug={mod.slug} className="w-5 h-5 sm:w-6 sm:h-6 text-white"/>
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-black text-white text-sm sm:text-base leading-tight">{mod.title}</h3>
                       <p className="text-white/70 text-[11px] sm:text-xs truncate mt-0.5">{mod.description}</p>

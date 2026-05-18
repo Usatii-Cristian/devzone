@@ -377,14 +377,17 @@ parent.postMessage({logs:_log},'*');
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-indigo-50">
-      <div className="text-indigo-400 animate-pulse font-semibold">Se încarcă lecția...</div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-indigo-50 dark:from-slate-900 dark:to-slate-800">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 rounded-full border-4 border-indigo-200 dark:border-indigo-900 border-t-indigo-600 dark:border-t-indigo-400 animate-spin"/>
+        <p className="text-indigo-500 dark:text-indigo-300 font-semibold text-sm">Se încarcă lecția...</p>
+      </div>
     </div>
   );
 
   if (!lesson) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Link href={`/modules/${moduleSlug}`} className="text-indigo-600 flex items-center gap-2">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-indigo-50 dark:from-slate-900 dark:to-slate-800">
+      <Link href={`/modules/${moduleSlug}`} className="text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
         <ChevronLeft className="w-4 h-4"/> Înapoi la modul
       </Link>
     </div>
@@ -426,26 +429,26 @@ parent.postMessage({logs:_log},'*');
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-slate-200 bg-slate-50">
+          <div className="flex border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
             <button onClick={() => setView("theory")}
               className={`flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-b-2
-                ${view === "theory" ? "border-indigo-500 text-indigo-600 bg-white" : "border-transparent text-slate-500 hover:text-slate-700"}`}>
+                ${view === "theory" ? "border-indigo-500 text-indigo-600 dark:text-indigo-300 bg-white dark:bg-slate-800" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
               <BookOpen className="w-3.5 h-3.5"/> Teorie
             </button>
             <button onClick={() => setView("tasks")}
               className={`flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-b-2
-                ${view === "tasks" ? "border-indigo-500 text-indigo-600 bg-white" : "border-transparent text-slate-500 hover:text-slate-700"}`}>
+                ${view === "tasks" ? "border-indigo-500 text-indigo-600 dark:text-indigo-300 bg-white dark:bg-slate-800" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>
               <ClipboardList className="w-3.5 h-3.5"/> Probleme
             </button>
           </div>
 
           {/* Progress */}
-          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Progres</span>
-              <span className="text-xs font-black text-indigo-600">{doneCount}/{totalTasks}</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Progres</span>
+              <span className="text-xs font-black text-indigo-600 dark:text-indigo-300">{doneCount}/{totalTasks}</span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2">
+            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
               <div className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
                 style={{ width: `${totalTasks > 0 ? Math.round((doneCount / totalTasks) * 100) : 0}%` }}/>
             </div>
@@ -453,7 +456,7 @@ parent.postMessage({logs:_log},'*');
 
           {/* Problem list */}
           <div className="flex-1 overflow-y-auto py-2">
-            <p className="px-4 py-1 text-xs font-black text-slate-400 uppercase tracking-widest">Probleme</p>
+            <p className="px-4 py-1 text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Probleme</p>
             {tasks.map((t, idx) => {
               const isDone = completed.includes(t.id);
               const isWrong = wrong.includes(t.id) && !isDone;
@@ -461,14 +464,14 @@ parent.postMessage({logs:_log},'*');
               const d = DIFF[t.difficulty] ?? DIFF.easy;
               return (
                 <button key={t.id} onClick={() => { setView("tasks"); jumpTo(idx); }}
-                  className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-all hover:bg-indigo-50 border-l-4
-                    ${isCurrent ? "bg-indigo-50 border-indigo-500" : "border-transparent"}`}>
+                  className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-all hover:bg-indigo-50 dark:hover:bg-indigo-900/30 border-l-4
+                    ${isCurrent ? "bg-indigo-50 dark:bg-indigo-900/40 border-indigo-500" : "border-transparent"}`}>
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0
-                    ${isDone ? "bg-emerald-500 text-white" : isWrong ? "bg-red-500 text-white" : isCurrent ? "bg-indigo-500 text-white" : "bg-slate-200 text-slate-600"}`}>
+                    ${isDone ? "bg-emerald-500 text-white" : isWrong ? "bg-red-500 text-white" : isCurrent ? "bg-indigo-500 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"}`}>
                     {isDone ? <CheckCircle className="w-4 h-4"/> : isWrong ? <XCircle className="w-4 h-4"/> : idx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-semibold truncate ${isCurrent ? "text-indigo-700" : "text-slate-700"}`}>
+                    <p className={`text-xs font-semibold truncate ${isCurrent ? "text-indigo-700 dark:text-indigo-200" : "text-slate-700 dark:text-slate-200"}`}>
                       {t.name || `Problema ${idx + 1}`}
                     </p>
                     <span className={`text-xs font-bold px-1.5 py-0.5 rounded border ${d.cls}`}>{d.label}</span>
@@ -513,30 +516,30 @@ parent.postMessage({logs:_log},'*');
             {view === "theory" && (
               <div className="max-w-2xl mx-auto">
                 <div className="mb-6">
-                  <h1 className="text-2xl font-black text-indigo-900 mb-2">{lesson.title}</h1>
-                  <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  <h1 className="text-2xl font-black text-indigo-900 dark:text-indigo-200 mb-2">{lesson.title}</h1>
+                  <div className="flex items-start gap-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 rounded-xl p-3">
                     <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5"/>
-                    <p className="text-xs text-amber-700 leading-relaxed">
-                      <span className="font-black">Sfat:</span> Citește teoria cu atenție înainte de probleme — exemplele de cod sunt esența fiecărei secțiuni. Poți reveni oricând.
+                    <p className="text-xs text-amber-700 dark:text-amber-200 leading-relaxed">
+                      <span className="font-black">Sfat:</span> Citește teoria cu atenție înainte de probleme — exemplele de cod sunt esența fiecărei secțiuni.
                     </p>
                   </div>
                 </div>
                 {lesson.theory.map(th => (
                   <div key={th.id} className="mb-8">
-                    <h2 className="text-lg font-black text-slate-800 mb-3 flex items-center gap-2">
+                    <h2 className="text-lg font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
                       <span className="w-7 h-7 bg-indigo-500 text-white rounded-lg flex items-center justify-center text-sm font-black flex-shrink-0">{th.order}</span>
                       {th.title}
                     </h2>
                     <TheoryContent content={th.content}/>
                   </div>
                 ))}
-                <div className="mt-6 bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-black text-indigo-800 text-sm">Gata cu teoria?</p>
-                    <p className="text-xs text-indigo-500 mt-0.5">{lesson.tasks.length} probleme te așteaptă · {Math.ceil(lesson.tasks.length * 0.5)} min estimat</p>
+                <div className="mt-6 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-black text-indigo-800 dark:text-indigo-200 text-sm">Gata cu teoria?</p>
+                    <p className="text-xs text-indigo-500 dark:text-indigo-400 mt-0.5">{lesson.tasks.length} probleme te așteaptă · ~{Math.ceil(lesson.tasks.length * 0.5)} min</p>
                   </div>
                   <button onClick={() => setView("tasks")}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-5 py-2.5 rounded-xl font-black hover:opacity-90 transition-opacity flex items-center gap-2 flex-shrink-0 text-sm shadow-md">
+                    className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-5 py-2.5 rounded-xl font-black hover:opacity-90 transition-opacity flex items-center gap-2 flex-shrink-0 text-sm shadow-md active:scale-95">
                     <ClipboardList className="w-4 h-4"/> Probleme <ArrowRight className="w-4 h-4"/>
                   </button>
                 </div>
@@ -555,15 +558,15 @@ parent.postMessage({logs:_log},'*');
                   <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-5 ${allCorrect ? "bg-yellow-100" : "bg-orange-100"}`}>
                     <Trophy className={`w-12 h-12 ${allCorrect ? "text-yellow-500" : "text-orange-500"}`}/>
                   </div>
-                  <h2 className="text-2xl font-black text-slate-900 mb-2">
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
                     {allCorrect ? "Lecție finalizată perfect!" : "Lecție finalizată!"}
                   </h2>
-                  <p className="text-slate-500 mb-1">
-                    <span className="font-black text-emerald-600">{correctCount}</span> corecte ·{" "}
+                  <p className="text-slate-500 dark:text-slate-300 mb-1">
+                    <span className="font-black text-emerald-600 dark:text-emerald-400">{correctCount}</span> corecte ·{" "}
                     {wrongCount > 0 && <span className="font-black text-red-500">{wrongCount} greșite · </span>}
-                    <span className="font-black text-slate-700">{percent}%</span>
+                    <span className="font-black text-slate-700 dark:text-slate-200">{percent}%</span>
                   </p>
-                  <p className="text-xs text-slate-400 mb-5">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-5">
                     {allCorrect ? "Excelent! Toate răspunsurile corecte din prima!" : "Poți corecta răspunsurile greșite pentru puncte bonus."}
                   </p>
                   <div className={`bg-gradient-to-r ${allCorrect ? "from-yellow-50 to-amber-50 border-yellow-200" : "from-orange-50 to-red-50 border-orange-200"} border rounded-2xl p-4 mb-6 flex items-center justify-center gap-3`}>
@@ -585,11 +588,11 @@ parent.postMessage({logs:_log},'*');
                       </button>
                     )}
                     <button onClick={() => setView("theory")}
-                      className="flex items-center gap-2 bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm">
+                      className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm active:scale-95">
                       <BookOpen className="w-4 h-4"/> Recitește teoria
                     </button>
                     <button onClick={() => { setFinished(false); jumpTo(0); }}
-                      className="flex items-center gap-2 bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm">
+                      className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm active:scale-95">
                       <RotateCcw className="w-4 h-4"/> Reia
                     </button>
                     {lesson.nextLesson && (
@@ -599,7 +602,7 @@ parent.postMessage({logs:_log},'*');
                       </Link>
                     )}
                     <Link href={`/modules/${moduleSlug}`}
-                      className="flex items-center gap-2 bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm">
+                      className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm active:scale-95">
                       <ChevronLeft className="w-4 h-4"/> Înapoi la modul
                     </Link>
                   </div>
@@ -625,11 +628,11 @@ parent.postMessage({logs:_log},'*');
                   </div>
 
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-sm font-black text-slate-800 flex-1">{t.name}</h3>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white flex-1">{t.name}</h3>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${tDiff.cls}`}>{tDiff.label}</span>
                   </div>
-                  <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-slate-100">
-                    <p className="text-slate-800 text-sm leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: fmtQuestion(t.question) }}/>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 mb-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                    <p className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: fmtQuestion(t.question) }}/>
                   </div>
 
                   <div className="space-y-2.5 mb-4">
@@ -655,7 +658,7 @@ parent.postMessage({logs:_log},'*');
                               : "border-slate-300"}`}>
                             {(isSel || (submitted && isCorr)) && <div className="w-2 h-2 rounded-full bg-white"/>}
                           </div>
-                          <span className={`text-sm font-medium flex-1 ${isDisabled ? "text-slate-400" : submitted && isCorr ? "text-emerald-800 font-bold" : "text-slate-700"}`}>{opt}</span>
+                          <span className={`text-sm font-medium flex-1 ${isDisabled ? "text-slate-400 dark:text-slate-500" : submitted && isCorr ? "text-emerald-800 dark:text-emerald-200 font-bold" : "text-slate-700 dark:text-slate-200"}`}>{opt}</span>
                           {isDisabled && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0"/>}
                           {submitted && isCorr && <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0"/>}
                         </div>
@@ -670,7 +673,7 @@ parent.postMessage({logs:_log},'*');
                           ? <><CheckCircle className="w-4 h-4"/> Corect! +5 puncte recuperate.</>
                           : <><XCircle className="w-4 h-4"/> Tot greșit. Răspuns: <strong>{t.answer}</strong></>}
                       </p>
-                      {t.explanation && <p className="text-slate-600 text-sm">{t.explanation}</p>}
+                      {t.explanation && <p className="text-slate-600 dark:text-slate-300 text-sm">{t.explanation}</p>}
                     </div>
                   )}
 
@@ -720,11 +723,11 @@ parent.postMessage({logs:_log},'*');
 
                   {/* Question */}
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-sm font-black text-slate-800 flex-1">{rt?.name}</h3>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white flex-1">{rt?.name}</h3>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${rtDiff.cls}`}>{rtDiff.label}</span>
                   </div>
-                  <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-slate-100">
-                    <p className="text-slate-800 text-sm leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: fmtQuestion(rt?.question || "") }}/>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 mb-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                    <p className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: fmtQuestion(rt?.question || "") }}/>
                   </div>
 
                   {/* Options */}
@@ -748,7 +751,7 @@ parent.postMessage({logs:_log},'*');
                               : "border-slate-300"}`}>
                             {(isSel || (reviewSub && isCorr)) && <div className="w-2 h-2 rounded-full bg-white"/>}
                           </div>
-                          <span className={`text-sm font-medium flex-1 ${reviewSub && isCorr ? "text-emerald-800 font-bold" : reviewSub && isSel ? "text-red-700" : "text-slate-700"}`}>{opt}</span>
+                          <span className={`text-sm font-medium flex-1 ${reviewSub && isCorr ? "text-emerald-800 dark:text-emerald-200 font-bold" : reviewSub && isSel ? "text-red-700 dark:text-red-300" : "text-slate-700 dark:text-slate-200"}`}>{opt}</span>
                           {reviewSub && isCorr && <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0"/>}
                         </div>
                       );
@@ -805,7 +808,7 @@ parent.postMessage({logs:_log},'*');
                     PROBLEMA {taskIdx + 1} DIN {totalTasks}
                   </p>
                   <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <h2 className="text-xl font-black text-slate-900">{task.name || `Problema ${taskIdx + 1}`}</h2>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">{task.name || `Problema ${taskIdx + 1}`}</h2>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={`text-xs font-black px-2.5 py-1 rounded-full border ${diff.cls}`}>{diff.label}</span>
                       <span className="text-xs font-black bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full border border-yellow-200 flex items-center gap-1">
@@ -816,8 +819,8 @@ parent.postMessage({logs:_log},'*');
                 </div>
 
                 {/* Question */}
-                <div className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-slate-100">
-                  <p className="text-slate-800 leading-relaxed font-medium text-sm" dangerouslySetInnerHTML={{ __html: fmtQuestion(task.question) }}/>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 mb-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                  <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-medium text-sm" dangerouslySetInnerHTML={{ __html: fmtQuestion(task.question) }}/>
                 </div>
 
                 {/* CODING TASK */}
@@ -941,7 +944,7 @@ parent.postMessage({logs:_log},'*');
                             ? <><CheckCircle className="w-4 h-4"/> Răspuns corect! Excelent!</>
                             : <><span className="text-base">✗</span> Greșit. Corect: <strong>{task.answer}</strong></>}
                         </p>
-                        {task.explanation && <p className="text-slate-600 text-sm">{task.explanation}</p>}
+                        {task.explanation && <p className="text-slate-600 dark:text-slate-300 text-sm">{task.explanation}</p>}
                       </div>
                     )}
 
@@ -998,7 +1001,7 @@ function TheoryContent({ content }) {
   return (
     <div className="space-y-3">
       {parts.map((p, i) => p.type === "code" ? (
-        <pre key={i} className="bg-gray-900 text-green-300 rounded-2xl p-4 text-xs font-mono overflow-x-auto leading-relaxed">
+        <pre key={i} className="bg-gray-900 dark:bg-black/60 dark:ring-1 dark:ring-white/10 text-green-300 rounded-2xl p-4 text-xs font-mono overflow-x-auto leading-relaxed">
           {p.text}
         </pre>
       ) : (
@@ -1006,24 +1009,24 @@ function TheoryContent({ content }) {
           {p.text.split("\n").map((line, j) => {
             if (!line.trim()) return <div key={j} className="h-1"/>;
             if (line.startsWith("### ")) return (
-              <h4 key={j} className="text-sm font-black text-indigo-700 mt-3 mb-1">{line.slice(4)}</h4>
+              <h4 key={j} className="text-sm font-black text-indigo-700 dark:text-indigo-300 mt-3 mb-1">{line.slice(4)}</h4>
             );
             if (line.startsWith("## ")) return (
-              <h3 key={j} className="text-base font-black text-slate-800 mt-4 mb-1 border-b border-slate-200 pb-1">{line.slice(3)}</h3>
+              <h3 key={j} className="text-base font-black text-slate-800 dark:text-white mt-4 mb-1 border-b border-slate-200 dark:border-slate-700 pb-1">{line.slice(3)}</h3>
             );
             if (line.startsWith("# ")) return (
-              <h2 key={j} className="text-lg font-black text-slate-900 mt-4 mb-2">{line.slice(2)}</h2>
+              <h2 key={j} className="text-lg font-black text-slate-900 dark:text-white mt-4 mb-2">{line.slice(2)}</h2>
             );
             if (line.startsWith("• ") || line.startsWith("- ")) {
               const content = line.startsWith("• ") ? line.slice(2) : line.slice(2);
               return (
-                <div key={j} className="flex gap-2 text-sm text-slate-700">
-                  <span className="text-indigo-500 flex-shrink-0 font-black mt-0.5">•</span>
+                <div key={j} className="flex gap-2 text-sm text-slate-700 dark:text-slate-200">
+                  <span className="text-indigo-500 dark:text-indigo-400 flex-shrink-0 font-black mt-0.5">•</span>
                   <span dangerouslySetInnerHTML={{ __html: fmt(content) }}/>
                 </div>
               );
             }
-            return <p key={j} className="text-sm text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: fmt(line) }}/>;
+            return <p key={j} className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed" dangerouslySetInnerHTML={{ __html: fmt(line) }}/>;
           })}
         </div>
       ))}
@@ -1033,12 +1036,11 @@ function TheoryContent({ content }) {
 
 function fmt(t) {
   return t
-    .replace(/\*\*(.+?)\*\*/g, "<strong class='text-slate-900'>$1</strong>")
-    .replace(/`(.+?)`/g, "<code class='bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-mono text-xs'>$1</code>");
+    .replace(/\*\*(.+?)\*\*/g, "<strong class='text-slate-900 dark:text-white'>$1</strong>")
+    .replace(/`(.+?)`/g, "<code class='bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono text-xs'>$1</code>");
 }
 
 function fmtQuestion(text) {
-  // Render ```code blocks``` as pre, then inline `code`, then **bold**
   const parts = [];
   const re = /```(?:\w*)\n?([\s\S]*?)```/g;
   let last = 0, m;
@@ -1046,7 +1048,7 @@ function fmtQuestion(text) {
     if (m.index > last) {
       parts.push(`<span>${fmt(text.slice(last, m.index))}</span>`);
     }
-    parts.push(`<pre class="bg-gray-900 text-green-300 rounded-xl p-3 text-xs font-mono overflow-x-auto my-2 leading-relaxed whitespace-pre">${m[1].trim()}</pre>`);
+    parts.push(`<pre class="bg-gray-900 dark:bg-black/60 text-green-300 rounded-xl p-3 text-xs font-mono overflow-x-auto my-2 leading-relaxed whitespace-pre">${m[1].trim()}</pre>`);
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push(`<span>${fmt(text.slice(last))}</span>`);
