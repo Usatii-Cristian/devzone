@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 
 export default function Error({ error, reset }) {
   useEffect(() => { console.error(error); }, [error]);
@@ -8,7 +9,9 @@ export default function Error({ error, reset }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 px-4">
       <div className="bg-white rounded-3xl p-10 max-w-md w-full text-center shadow-xl">
-        <div className="text-6xl mb-4">⚠️</div>
+        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-900/30 mb-4 mx-auto">
+          <AlertTriangle className="w-10 h-10 text-amber-500"/>
+        </div>
         <h2 className="text-xl font-black text-slate-800 mb-2">Ceva a mers prost</h2>
         <p className="text-slate-500 text-sm mb-6">
           {error?.message?.includes("fetch") ? "Probleme de conexiune. Verifică internetul." : "A apărut o eroare neașteptată."}

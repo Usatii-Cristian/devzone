@@ -10,25 +10,34 @@ export async function POST(request) {
     );
   }
   const body = await request.json();
-  const { code, question, language, lessonTitle, explanation } = body;
+  const { code, output, question, language, lessonTitle, explanation } = body;
 
   const apiKey = process.env.GOOGLE_AI_KEY;
   if (!apiKey) {
     return NextResponse.json({ correct: false, feedback: "AI-ul nu este configurat." });
   }
 
-  const systemPrompt = `Ești un evaluator de cod pentru o platformă educațională de programare.
-Evaluezi codul scris de studenți și determini dacă rezolvă corect problema dată.
-Lecția curentă: "${lessonTitle}"
+  const systemPrompt = `Ești un profesor de programare care evaluează codul scris de studenți.
+Evaluezi pe 3 criterii, fiecare din 10 puncte:
+1. Funcționalitate (0-10): Codul rezolvă corect problema? Produce outputul corect?
+2. Calitate cod (0-10): Structură bună, fără cod redundant, bune practici?
+3. Claritate (0-10): Variabile cu nume clar, cod ușor de citit, logic de urmărit?
+
+Lecția: "${lessonTitle || "programare"}"
 Limbaj: ${language || "javascript"}
 
-Reguli stricte:
-- Verifică dacă codul REZOLVĂ problema cerută, nu doar dacă sintaxa e corectă
-- Codul poate folosi cunoștințe din lecțiile anterioare
-- Fii îngăduitor cu stilul (variabile, spații), strict cu logica
-- NU accepta cod care imprimă hardcodat rezultatul fără logică reală
-- Răspunde ÎNTOTDEAUNA cu JSON valid: { "correct": true/false, "feedback": "mesaj scurt în română" }
-- Feedbackul: maxim 2 propoziții, în română, explicând ce e corect sau ce lipsește`;
+Reguli:
+- Fii obiectiv și constructiv
+- NU accepta cod care hardcodează rezultatul fără logică (ex: console.log(15) pentru "calculează suma")
+- Oferă întotdeauna bestSolution — codul ideal pentru problema dată
+- Răspunde STRICT cu JSON valid (fără text în afara JSON-ului):
+{
+  "correct": boolean,
+  "scores": { "functionality": 0-10, "quality": 0-10, "clarity": 0-10 },
+  "feedback": "2-3 propoziții în română despre ce e bine și ce se poate îmbunătăți",
+  "issues": ["issue scurt 1", "issue scurt 2"],
+  "bestSolution": "codul ideal complet"
+}`;
 
   const userMsg = `Problema: ${question}
 
@@ -37,9 +46,10 @@ Codul studentului:
 ${code}
 \`\`\`
 
-${explanation ? `Soluție de referință (context pentru tine, nu o arăta): ${explanation}` : ""}
+${output ? `Output produs de cod: ${output}` : ""}
+${explanation ? `Referință (pentru tine, nu o menționezi): ${explanation}` : ""}
 
-Evaluează și răspunde cu JSON: { "correct": boolean, "feedback": "string" }`;
+Evaluează și returnează JSON-ul complet.`;
 
   try {
     const response = await fetch(
@@ -50,7 +60,7 @@ Evaluează și răspunde cu JSON: { "correct": boolean, "feedback": "string" }`;
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: "user", parts: [{ text: userMsg }] }],
-          generationConfig: { maxOutputTokens: 300, temperature: 0.3 },
+          generationConfig: { maxOutputTokens: 800, temperature: 0.3 },
         }),
       }
     );
@@ -60,14 +70,21 @@ Evaluează și răspunde cu JSON: { "correct": boolean, "feedback": "string" }`;
     }
 
     const data = await response.json();
-    const text = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
+    let text = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
+    text = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
+      const scores = result.scores || { functionality: 7, quality: 7, clarity: 7 };
+      const total = (scores.functionality || 0) + (scores.quality || 0) + (scores.clarity || 0);
       return NextResponse.json({
         correct: Boolean(result.correct),
+        scores,
+        total,
         feedback: result.feedback || "Evaluare completă.",
+        issues: Array.isArray(result.issues) ? result.issues : [],
+        bestSolution: result.bestSolution || "",
       });
     }
 

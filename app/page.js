@@ -103,7 +103,7 @@ export default function Home() {
             <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black shadow-inner flex-shrink-0">C</div>
             <div className="flex-1 min-w-0">
               <p className="text-indigo-200 text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-0.5">Bine ai venit</p>
-              <h1 className="text-lg sm:text-xl font-black leading-tight">Salut, Cristi! 👋</h1>
+              <h1 className="text-lg sm:text-xl font-black leading-tight">Bine ai venit!</h1>
               {!loading && totalLessons > 0 && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between mb-1">
@@ -159,7 +159,7 @@ export default function Home() {
                 <p className="text-white/70 text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{continueLesson.mod.title} · Continuă</p>
                 <p className="text-white font-black text-sm truncate mt-0.5">{continueLesson.lesson.title}</p>
                 <p className="text-white/60 text-[11px] sm:text-xs mt-0.5">
-                  {continueLesson.p.completedTasks.length} întrebări ✓
+                  {continueLesson.p.completedTasks.length} întrebări completate
                 </p>
               </div>
               <Link href={`/modules/${continueLesson.mod.slug}/lessons/${continueLesson.lesson.id}`}

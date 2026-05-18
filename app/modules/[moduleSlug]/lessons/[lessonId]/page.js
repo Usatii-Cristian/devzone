@@ -385,12 +385,43 @@ parent.postMessage({logs:_log},'*');
     scrollTop();
   }
 
+  const PISTON_LANGS = {
+    python: { language: "python", version: "3.10.0" },
+    c: { language: "c", version: "10.2.0" },
+    cpp: { language: "c++", version: "10.2.0" },
+    java: { language: "java", version: "15.0.2" },
+    csharp: { language: "csharp", version: "6.12.0" },
+    php: { language: "php", version: "8.2.3" },
+    sql: null,
+  };
+
+  async function runWithPiston(code, lang) {
+    const cfg = PISTON_LANGS[lang];
+    if (!cfg) return "(execuție indisponibilă pentru " + lang + ")";
+    try {
+      const res = await fetch("https://emkc.org/api/v2/piston/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: cfg.language, version: cfg.version, files: [{ content: code }] }),
+      });
+      const data = await res.json();
+      return (data.run?.stdout || "") + (data.run?.stderr ? "EROARE: " + data.run.stderr : "") || "(fără output)";
+    } catch {
+      return "Eroare la conexiunea cu serverul de execuție.";
+    }
+  }
+
   async function runCode(code, language) {
     setCodeRunning(true);
     setCodeOutput(null);
     let out = "";
     try {
-      out = await runInIframe(code);
+      const lang = (language || "javascript").toLowerCase();
+      if (lang === "javascript" || !lang) {
+        out = await runInIframe(code);
+      } else {
+        out = await runWithPiston(code, lang);
+      }
       setCodeOutput(out);
     } catch {
       out = "Eroare la rularea codului.";
@@ -404,33 +435,39 @@ parent.postMessage({logs:_log},'*');
     if (!code.trim()) return;
     setCodeEvaluating(true);
     const output = await runCode(code, task.language);
-    const expected = (task.expectedOutput || "").trim();
-    const actual = output.trim();
-    const correct = expected
-      ? actual.toLowerCase().includes(expected.toLowerCase())
-      : !actual.toLowerCase().startsWith("eroare") && !actual.toLowerCase().includes("timeout");
 
-    const feedback = correct
-      ? `Output corect: "${actual}"`
-      : expected
-        ? `Output-ul trebuie să conțină "${expected}". Ai primit: "${actual}"`
-        : "Codul a returnat o eroare. Verifică logica.";
+    try {
+      const res = await fetch("/api/evaluate-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          output,
+          question: task.question,
+          language: task.language || "javascript",
+          lessonTitle: lesson?.title || "",
+          explanation: task.explanation || "",
+        }),
+      });
+      const evaluation = await res.json();
+      setCodeResult(evaluation);
 
-    setCodeResult({ correct, feedback });
-    if (correct) {
-      const nc = completed.includes(task.id) ? completed : [...completed, task.id];
-      const nw = wrong.filter(id => id !== task.id);
-      setCompleted(nc);
-      setWrong(nw);
-      const allDone = lesson.tasks.every(tk => nc.includes(tk.id));
-      if (allDone) setFinished(true);
-      save({ completedTasks: nc, wrongTasks: nw, completed: allDone });
-    } else {
-      if (!wrong.includes(task.id) && !completed.includes(task.id)) {
-        const nw = [...wrong, task.id];
+      if (evaluation.correct) {
+        const nc = completed.includes(task.id) ? completed : [...completed, task.id];
+        const nw = wrong.filter(id => id !== task.id);
+        setCompleted(nc);
         setWrong(nw);
-        save({ wrongTasks: nw });
+        const allDone = lesson.tasks.every(tk => nc.includes(tk.id));
+        if (allDone) setFinished(true);
+        save({ completedTasks: nc, wrongTasks: nw, completed: allDone });
+      } else {
+        if (!wrong.includes(task.id) && !completed.includes(task.id)) {
+          setWrong(nw => [...nw, task.id]);
+          save({ wrongTasks: [...wrong, task.id] });
+        }
       }
+    } catch {
+      setCodeResult({ correct: false, feedback: "Eroare la evaluare. Încearcă din nou." });
     }
     setCodeEvaluating(false);
   }
@@ -885,15 +922,19 @@ parent.postMessage({logs:_log},'*');
                 {/* CODING TASK */}
                 {task.type === "coding" ? (
                   <>
-                    <div className="mb-3 flex items-center gap-2">
-                      <span className="text-xs font-black bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full border border-indigo-200 flex items-center gap-1">
-                        <Play className="w-3 h-3"/> {(task.language || "javascript").toUpperCase()} · Sandbox izolat
-                      </span>
-                    </div>
-
-                    <div className="relative mb-3">
+                    {/* Language badge + editor */}
+                    <div className="rounded-2xl overflow-hidden border-2 border-gray-700 mb-3 shadow-lg">
+                      <div className="flex items-center justify-between px-3 py-2 bg-gray-800 border-b border-gray-700">
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">{(task.language || "javascript").toUpperCase()}</span>
+                        {!codeResult?.correct && (
+                          <button onClick={() => { setCodeValue(task.starterCode || ""); setCodeResult(null); setCodeOutput(null); }}
+                            className="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-1 transition-colors">
+                            <RefreshCw className="w-3 h-3"/> Reset
+                          </button>
+                        )}
+                      </div>
                       <textarea
-                        value={codeValue || task.starterCode || ""}
+                        value={codeValue !== "" ? codeValue : (task.starterCode || "")}
                         onChange={e => { setCodeValue(e.target.value); setCodeResult(null); }}
                         onKeyDown={handleCodeKeyDown}
                         spellCheck={false}
@@ -902,65 +943,141 @@ parent.postMessage({logs:_log},'*');
                         autoComplete="off"
                         disabled={codeResult?.correct}
                         rows={10}
-                        className="w-full bg-gray-900 text-green-300 font-mono text-xs sm:text-sm p-3 sm:p-4 rounded-2xl border-2 border-gray-700 focus:border-indigo-500 focus:outline-none resize-y leading-relaxed disabled:opacity-70 min-h-[240px]"
-                        placeholder={task.starterCode || "// scrie codul tău aici"}
+                        className="w-full bg-gray-900 text-green-300 font-mono text-xs sm:text-sm p-3 sm:p-4 focus:outline-none resize-y leading-relaxed disabled:opacity-70 min-h-[200px]"
+                        placeholder="// scrie codul tău aici"
                       />
                     </div>
 
+                    {/* Buttons row */}
+                    {!codeResult?.correct && (
+                      <div className="flex gap-2 mb-3">
+                        <button
+                          onClick={() => runCode(codeValue !== "" ? codeValue : (task.starterCode || ""), task.language)}
+                          disabled={codeRunning || codeEvaluating}
+                          className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-black text-sm transition-colors disabled:opacity-40 shadow-sm active:scale-95 min-h-[44px]">
+                          {codeRunning ? <><RefreshCw className="w-4 h-4 animate-spin"/> Rulează...</> : <><Play className="w-4 h-4"/> Rulează</>}
+                        </button>
+                        <button
+                          onClick={() => submitCode(task, codeValue !== "" ? codeValue : (task.starterCode || ""))}
+                          disabled={codeEvaluating || codeRunning}
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2.5 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-40 shadow-md active:scale-95 min-h-[44px]">
+                          {codeEvaluating ? <><RefreshCw className="w-4 h-4 animate-spin"/> Verifică cu AI...</> : <><Send className="w-4 h-4"/> Trimite răspunsul</>}
+                        </button>
+                      </div>
+                    )}
+
                     {/* Console output */}
-                    {codeOutput !== null && (
+                    {codeOutput !== null && !codeResult && (
                       <div className="mb-3 bg-gray-950 rounded-xl p-3 border border-gray-700">
-                        <p className="text-xs font-black text-gray-400 mb-1 uppercase tracking-wide">Output</p>
+                        <p className="text-xs font-black text-gray-400 mb-1.5 uppercase tracking-wide flex items-center gap-1.5">
+                          <Play className="w-3 h-3 fill-current text-emerald-400"/> Output
+                        </p>
                         <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap">{codeOutput}</pre>
                       </div>
                     )}
 
-                    {/* Result */}
+                    {/* AI Evaluation result — full feedback like PyWeb */}
                     {codeResult && (
-                      <div className={`rounded-2xl p-4 mb-4 border-2 ${codeResult.correct ? "bg-emerald-50 border-emerald-300" : "bg-red-50 border-red-300"}`}>
-                        <p className={`font-black text-sm mb-1 flex items-center gap-1.5 ${codeResult.correct ? "text-emerald-700" : "text-red-700"}`}>
-                          {codeResult.correct
-                            ? <><CheckCircle className="w-4 h-4"/> Corect!</>
-                            : <><XCircle className="w-4 h-4"/> Output incorect. Mai încearcă.</>}
-                        </p>
-                        <p className="text-slate-600 text-sm font-mono text-xs">{codeResult.feedback}</p>
+                      <div className={`rounded-2xl overflow-hidden border-2 mb-4 ${codeResult.correct ? "border-emerald-400" : "border-amber-400"}`}>
+                        {/* Header */}
+                        <div className={`px-4 py-3 flex items-center justify-between ${codeResult.correct ? "bg-emerald-50 dark:bg-emerald-900/30" : "bg-amber-50 dark:bg-amber-900/20"}`}>
+                          <div className="flex items-center gap-2">
+                            {codeResult.correct
+                              ? <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0"/>
+                              : <XCircle className="w-5 h-5 text-amber-600 flex-shrink-0"/>}
+                            <span className={`font-black text-sm ${codeResult.correct ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}>
+                              {codeResult.correct ? "Rezolvat — bravo!" : "Mai încearcă!"}
+                            </span>
+                          </div>
+                          {codeResult.scores && (
+                            <span className={`text-sm font-black ${codeResult.correct ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}>
+                              Nota: {codeResult.total ?? ((codeResult.scores.functionality||0)+(codeResult.scores.quality||0)+(codeResult.scores.clarity||0))}/30
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-800 p-4">
+                          {/* Output row */}
+                          {codeOutput && (
+                            <div className="mb-3 bg-gray-900 rounded-lg p-2.5">
+                              <p className="text-xs font-black text-gray-400 mb-1 uppercase tracking-wide">Output</p>
+                              <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap">{codeOutput}</pre>
+                            </div>
+                          )}
+
+                          {/* Feedback text */}
+                          <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Feedback profesor</p>
+                          <p className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed mb-3">{codeResult.feedback}</p>
+
+                          {/* 3 scores */}
+                          {codeResult.scores && (
+                            <div className="space-y-2 mb-3">
+                              {[
+                                { label: "Funcționalitate", key: "functionality", color: "bg-emerald-500" },
+                                { label: "Calitate cod", key: "quality", color: "bg-blue-500" },
+                                { label: "Claritate", key: "clarity", color: "bg-purple-500" },
+                              ].map(({ label, key, color }) => {
+                                const val = codeResult.scores[key] ?? 0;
+                                return (
+                                  <div key={key} className="flex items-center gap-2">
+                                    <span className="text-xs text-slate-500 dark:text-slate-400 w-32 flex-shrink-0">{label}</span>
+                                    <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+                                      <div className={`h-2 rounded-full ${color} transition-all`} style={{ width: `${val * 10}%` }}/>
+                                    </div>
+                                    <span className="text-xs font-black text-slate-600 dark:text-slate-300 w-8 text-right">{val}/10</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Issues */}
+                          {codeResult.issues?.length > 0 && (
+                            <div className="mb-3">
+                              {codeResult.issues.map((issue, i) => (
+                                <p key={i} className="text-xs text-amber-700 dark:text-amber-400 flex items-start gap-1.5 mb-1">
+                                  <span className="flex-shrink-0 mt-0.5">•</span>{issue}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Best solution */}
+                          {codeResult.bestSolution && (
+                            <>
+                              <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                <Wand2 className="w-3 h-3"/> Soluția ideală
+                              </p>
+                              <pre className="bg-gray-900 text-green-300 font-mono text-xs p-3 rounded-xl overflow-x-auto whitespace-pre-wrap">{codeResult.bestSolution}</pre>
+                            </>
+                          )}
+
+                          {/* Next button */}
+                          {codeResult.correct && (
+                            <button onClick={next}
+                              className="mt-4 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity shadow-md active:scale-95">
+                              {taskIdx + 1 >= totalTasks
+                                ? <><Trophy className="w-4 h-4"/> Finalizează lecția</>
+                                : <>Următoarea problemă <ChevronRight className="w-4 h-4"/></>}
+                            </button>
+                          )}
+                          {!codeResult.correct && (
+                            <button onClick={() => { setCodeResult(null); setCodeOutput(null); }}
+                              className="mt-3 w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-white px-6 py-2.5 rounded-xl font-black text-sm transition-colors active:scale-95">
+                              <RefreshCw className="w-4 h-4"/> Încearcă din nou
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
 
-                    {/* Coding action buttons */}
-                    <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-3">
+                    {/* Prev button (desktop) */}
+                    {!codeResult && (
                       <button onClick={prev} disabled={taskIdx === 0}
-                        className="hidden sm:flex items-center gap-1.5 px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-95">
+                        className="hidden sm:flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 mt-1">
                         <ChevronLeft className="w-4 h-4"/> Anterior
                       </button>
-
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
-                        {!codeResult?.correct && (
-                          <>
-                            <button
-                              onClick={() => runCode(codeValue || task.starterCode || "", task.language)}
-                              disabled={codeRunning || codeEvaluating}
-                              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-gray-800 text-green-300 px-3 sm:px-4 py-3 rounded-xl font-black text-sm hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm active:scale-95 min-h-[48px]">
-                              {codeRunning ? <><RefreshCw className="w-4 h-4 animate-spin"/> Rulează...</> : <><Play className="w-4 h-4"/> Rulează</>}
-                            </button>
-                            <button
-                              onClick={() => submitCode(task, codeValue || task.starterCode || "")}
-                              disabled={codeEvaluating || codeRunning || !(codeValue || task.starterCode)}
-                              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 sm:px-5 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-md active:scale-95 min-h-[48px]">
-                              {codeEvaluating ? <><RefreshCw className="w-4 h-4 animate-spin"/> Verifică...</> : <><Send className="w-4 h-4"/> Trimite</>}
-                            </button>
-                          </>
-                        )}
-                        {codeResult?.correct && (
-                          <button onClick={next}
-                            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity shadow-md active:scale-95 min-h-[48px]">
-                            {taskIdx + 1 >= totalTasks
-                              ? <><Trophy className="w-4 h-4"/> Finalizează</>
-                              : <>Următoarea <ChevronRight className="w-4 h-4"/></>}
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </>
                 ) : (
                   <>
