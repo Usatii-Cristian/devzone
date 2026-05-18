@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Play, RotateCcw, Trophy, ChevronRight, Zap, CheckCircle, Sparkles, Globe, Library, ArrowLeft, RefreshCw, Send, XCircle, Wand2, Terminal } from "lucide-react";
+import { Play, RotateCcw, Trophy, ChevronRight, Zap, CheckCircle, Sparkles, Globe, Library, ArrowLeft, RefreshCw, Send, XCircle, Wand2, Terminal, Lightbulb, PenLine } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
+import CodeEditor from "@/components/CodeEditor";
 
 function fmt(t) {
   return t
@@ -36,9 +37,10 @@ const SCOPES = [
 ];
 
 const TASK_TYPES = [
-  { v: "mixed",  l: "Mixt",  desc: "Quiz + exerciții de cod" },
-  { v: "quiz",   l: "Quiz",  desc: "Întrebări cu variante de răspuns" },
-  { v: "coding", l: "Cod",   desc: "Exerciții de programare cu editor" },
+  { v: "mixed",     l: "Mixt",        desc: "Toate tipurile" },
+  { v: "quiz",      l: "Quiz",        desc: "Variante de răspuns" },
+  { v: "coding",    l: "Cod",         desc: "Editor de programare" },
+  { v: "fillblank", l: "Completează", desc: "Completează spațiul liber" },
 ];
 
 const PISTON_LANGS = {
@@ -74,6 +76,14 @@ export default function AntrenamentPage() {
   const [codeResult, setCodeResult] = useState(null);
   const [codeScored, setCodeScored] = useState(false);
 
+  // Hints state
+  const [hints, setHints] = useState({});
+  const [hintLoading, setHintLoading] = useState(false);
+
+  // Fill-in-blank state
+  const [fillValue, setFillValue] = useState("");
+  const [fillSubmitted, setFillSubmitted] = useState(false);
+
   useEffect(() => {
     fetch("/api/modules")
       .then(r => r.json())
@@ -99,6 +109,32 @@ export default function AntrenamentPage() {
     setCodeEvaluating(false);
     setCodeResult(null);
     setCodeScored(false);
+    setFillValue("");
+    setFillSubmitted(false);
+  }
+
+  async function fetchHint(task) {
+    if (hintLoading) return;
+    const key = task.id || task.name;
+    const current = hints[key] || [];
+    if (current.length >= 3) return;
+    setHintLoading(true);
+    try {
+      const res = await fetch("/api/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: task.question,
+          language: task.language,
+          type: task.type,
+          lessonTitle: task.lesson?.title || "",
+          hintIndex: current.length,
+        }),
+      });
+      const data = await res.json();
+      if (data.hint) setHints(h => ({ ...h, [key]: [...current, data.hint] }));
+    } catch {}
+    setHintLoading(false);
   }
 
   function handleCodeKeyDown(e) {
@@ -256,6 +292,7 @@ parent.postMessage({logs:_log},'*');
   function restart() {
     setTasks(null); setDone(false); setScore(0);
     setSelected(null); setSubmitted(false);
+    setHints({});
     resetCodingState();
   }
 
@@ -328,7 +365,7 @@ parent.postMessage({logs:_log},'*');
               <h2 className="text-sm font-black text-slate-700 dark:text-white mb-3 flex items-center gap-1.5">
                 <Terminal className="w-4 h-4 text-indigo-500"/> Tip exerciții
               </h2>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {TASK_TYPES.map(tt => (
                   <button key={tt.v} onClick={() => setTaskType(tt.v)}
                     className={`px-3 py-3 rounded-xl text-xs sm:text-sm font-bold border-2 transition-all text-center active:scale-[0.98] min-h-[56px] flex flex-col items-center justify-center gap-1
@@ -474,6 +511,23 @@ parent.postMessage({logs:_log},'*');
                 dangerouslySetInnerHTML={{ __html: fmtQuestion(task.question || "") }}/>
             </div>
 
+            {/* Hint button + hints */}
+            <div className="mb-3">
+              {(hints[task.id || task.name] || []).map((h, i) => (
+                <div key={i} className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2 mb-2">
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5"/>
+                  <p className="text-amber-800 dark:text-amber-200 text-xs leading-relaxed">{h}</p>
+                </div>
+              ))}
+              {!submitted && !codeResult && !fillSubmitted && (hints[task.id || task.name]?.length || 0) < 3 && (
+                <button onClick={() => fetchHint(task)} disabled={hintLoading}
+                  className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 font-bold transition-colors disabled:opacity-50">
+                  {hintLoading ? <RefreshCw className="w-3 h-3 animate-spin"/> : <Sparkles className="w-3 h-3"/>}
+                  {hints[task.id || task.name]?.length ? "Încă un indiciu" : "Arată indiciu"}
+                </button>
+              )}
+            </div>
+
             {/* ── CODING TASK ── */}
             {task.type === "coding" ? (
               <>
@@ -487,18 +541,12 @@ parent.postMessage({logs:_log},'*');
                       </button>
                     )}
                   </div>
-                  <textarea
+                  <CodeEditor
                     value={code !== "" ? code : (task.starterCode || "")}
-                    onChange={e => { setCode(e.target.value); setCodeResult(null); }}
-                    onKeyDown={handleCodeKeyDown}
-                    spellCheck={false}
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    autoComplete="off"
+                    onChange={val => { setCode(val); setCodeResult(null); }}
+                    language={task.language}
                     disabled={codeResult?.correct}
-                    rows={10}
-                    className="w-full bg-gray-900 text-green-300 font-mono text-xs sm:text-sm p-3 sm:p-4 focus:outline-none resize-y leading-relaxed disabled:opacity-70 min-h-[200px]"
-                    placeholder="// scrie codul tău aici"
+                    minHeight="200px"
                   />
                 </div>
 
@@ -599,6 +647,50 @@ parent.postMessage({logs:_log},'*');
 
                 {!codeResult && (
                   <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-2">Scrie codul și apasă "Trimite răspunsul" pentru evaluare AI</p>
+                )}
+              </>
+            ) : task.type === "fillblank" ? (
+              <>
+                {/* ── FILL-IN-BLANK ── */}
+                <div className="mb-4">
+                  <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${fillSubmitted ? (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "border-red-400 bg-red-50 dark:bg-red-900/30") : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"}`}>
+                    <PenLine className="w-4 h-4 text-slate-400 flex-shrink-0"/>
+                    <input
+                      type="text"
+                      value={fillValue}
+                      onChange={e => { if (!fillSubmitted) setFillValue(e.target.value); }}
+                      onKeyDown={e => { if (e.key === "Enter" && !fillSubmitted && fillValue.trim()) { setFillSubmitted(true); if (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()) setScore(s => s + 1); } }}
+                      disabled={fillSubmitted}
+                      placeholder="Scrie răspunsul tău..."
+                      className="flex-1 bg-transparent text-sm font-mono text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none disabled:opacity-70"
+                      autoComplete="off" autoCorrect="off" spellCheck={false}
+                    />
+                    {fillSubmitted && (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()
+                      ? <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0"/>
+                      : <XCircle className="w-5 h-5 text-red-500 flex-shrink-0"/>)}
+                  </div>
+                </div>
+
+                {fillSubmitted && (
+                  <div className={`rounded-2xl p-4 mb-4 border-2 ${fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700" : "bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700"}`}>
+                    <p className={`font-black text-sm mb-1 ${fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"}`}>
+                      {fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()
+                        ? "✓ Corect!"
+                        : `✗ Răspuns corect: ${task.answer}`}
+                    </p>
+                    {task.explanation && <p className="text-slate-600 dark:text-slate-300 text-xs mt-1">{task.explanation}</p>}
+                    <button onClick={nextTask}
+                      className="mt-3 bg-indigo-500 text-white px-5 py-2 rounded-full text-xs font-black hover:bg-indigo-600 transition-colors flex items-center gap-1.5 ml-auto active:scale-95">
+                      {idx + 1 >= tasks.length ? <><Trophy className="w-3.5 h-3.5"/> Finalizează</> : <>Următoarea <ChevronRight className="w-3.5 h-3.5"/></>}
+                    </button>
+                  </div>
+                )}
+
+                {!fillSubmitted && (
+                  <button onClick={() => { if (fillValue.trim()) { setFillSubmitted(true); if (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()) setScore(s => s + 1); }}} disabled={!fillValue.trim()}
+                    className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-95">
+                    <Send className="w-4 h-4"/> Verifică
+                  </button>
                 )}
               </>
             ) : (

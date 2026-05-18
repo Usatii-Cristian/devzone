@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import ThemeToggle from "@/components/ThemeToggle";
 import SearchModal from "@/components/SearchModal";
 import AchievementIcon from "@/components/AchievementIcon";
-import { computeStreak, computeAchievements } from "@/lib/stats";
+import { computeStreak, computeAchievements, computeXP, computeLevel } from "@/lib/stats";
 import { ModIcon, MOD_BG } from "@/lib/moduleIcons";
 
 export default function Home() {
@@ -66,6 +66,8 @@ export default function Home() {
   const streak = useMemo(() => computeStreak(progress), [progress]);
   const achievements = useMemo(() => computeAchievements(progress, modules), [progress, modules]);
   const unlockedCount = achievements.filter(a => a.unlocked).length;
+  const xp = useMemo(() => computeXP(progress), [progress]);
+  const level = useMemo(() => computeLevel(xp), [xp]);
 
   const totalDone = useMemo(() => progress.filter(p => p.completed).length, [progress]);
   const totalInProgress = useMemo(
@@ -119,8 +121,28 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Level + XP bar */}
+          <div className="mt-3 bg-white/10 rounded-2xl px-3 py-2.5">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r ${level.color} text-white`}>
+                  Niv. {level.level}
+                </span>
+                <span className="text-white/90 text-xs font-black">{level.label}</span>
+              </div>
+              <span className="text-yellow-300 text-xs font-black">{xp} XP</span>
+            </div>
+            <div className="w-full bg-white/20 rounded-full h-2">
+              <div className={`h-2 rounded-full bg-gradient-to-r ${level.color} transition-all duration-700`}
+                style={{ width: `${level.pct}%` }}/>
+            </div>
+            {level.next && (
+              <p className="text-indigo-200 text-[10px] mt-1 text-right">{level.next.minXP - xp} XP până la {level.next.label}</p>
+            )}
+          </div>
+
           {/* Stats — responsive grid (always visible) */}
-          <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mt-4 text-center">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mt-3 text-center">
             <div className="bg-white/15 rounded-xl sm:rounded-2xl py-2 sm:py-2.5">
               <p className="text-base sm:text-xl font-black text-yellow-300">{totalDone}</p>
               <p className="text-[10px] sm:text-xs text-indigo-200 mt-0.5 flex items-center justify-center gap-0.5 sm:gap-1">

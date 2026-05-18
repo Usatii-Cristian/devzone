@@ -58,7 +58,7 @@ export async function POST(request) {
     }
 
     const apiKey = process.env.GOOGLE_AI_KEY;
-    if (!apiKey || effectiveTaskType === "coding") {
+    if (!apiKey || effectiveTaskType === "coding" || effectiveTaskType === "fillblank") {
       const allTasks = await prisma.task.findMany({
         where: {
           lessonId: { in: lessonsForContext.map(l => l.id) },

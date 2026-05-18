@@ -5,8 +5,10 @@ import Link from "next/link";
 import AIAssistant from "@/components/AIAssistant";
 import {
   ChevronLeft, BookOpen, ClipboardList, ChevronRight,
-  CheckCircle, Menu, Send, ArrowRight, RotateCcw, Trophy, Zap, Lightbulb, Brain, XCircle, Wand2, Play, RefreshCw
+  CheckCircle, Menu, Send, ArrowRight, RotateCcw, Trophy, Zap, Lightbulb, Brain, XCircle, Wand2, Play, RefreshCw,
+  Copy, Sparkles, PenLine
 } from "lucide-react";
+import CodeEditor from "@/components/CodeEditor";
 
 const DIFF = {
   easy:   { label:"Ușor",  cls:"bg-green-100 text-green-700 border-green-200" },
@@ -44,6 +46,14 @@ export default function LessonPage() {
   const [codeRunning, setCodeRunning] = useState(false);
   const [codeEvaluating, setCodeEvaluating] = useState(false);
   const [codeResult, setCodeResult] = useState(null); // { correct, feedback }
+
+  // Hints state
+  const [hints, setHints] = useState({});        // { [taskId]: string[] }
+  const [hintLoading, setHintLoading] = useState(false);
+
+  // Fill-in-blank state
+  const [fillValue, setFillValue] = useState("");
+  const [fillSubmitted, setFillSubmitted] = useState(false);
 
   useEffect(() => {
     if (!lesson) return;
@@ -182,6 +192,51 @@ export default function LessonPage() {
     setCodeRunning(false);
     setCodeEvaluating(false);
     setCodeResult(null);
+    setFillValue("");
+    setFillSubmitted(false);
+  }
+
+  async function fetchHint(task) {
+    if (hintLoading) return;
+    const current = hints[task.id] || [];
+    if (current.length >= 3) return;
+    setHintLoading(true);
+    try {
+      const res = await fetch("/api/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: task.question,
+          language: task.language,
+          type: task.type,
+          lessonTitle: lesson?.title || "",
+          hintIndex: current.length,
+        }),
+      });
+      const data = await res.json();
+      if (data.hint) setHints(h => ({ ...h, [task.id]: [...current, data.hint] }));
+    } catch {}
+    setHintLoading(false);
+  }
+
+  function submitFillBlank(task) {
+    if (fillSubmitted) return;
+    setFillSubmitted(true);
+    const correct = fillValue.trim().toLowerCase() === (task.answer || "").trim().toLowerCase();
+    if (correct) {
+      const nc = completed.includes(task.id) ? completed : [...completed, task.id];
+      const nw = wrong.filter(id => id !== task.id);
+      setCompleted(nc);
+      setWrong(nw);
+      const allDone = lesson.tasks.every(tk => nc.includes(tk.id));
+      if (allDone) setFinished(true);
+      save({ completedTasks: nc, wrongTasks: nw, completed: allDone });
+    } else {
+      if (!wrong.includes(task.id) && !completed.includes(task.id)) {
+        setWrong(nw => [...nw, task.id]);
+        save({ wrongTasks: [...wrong, task.id] });
+      }
+    }
   }
 
   function handleCodeKeyDown(e) {
@@ -915,8 +970,25 @@ parent.postMessage({logs:_log},'*');
                 </div>
 
                 {/* Question */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 mb-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 mb-2 shadow-sm border border-slate-100 dark:border-slate-700">
                   <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-medium text-sm" dangerouslySetInnerHTML={{ __html: fmtQuestion(task.question) }}/>
+                </div>
+
+                {/* Hint button + hints */}
+                <div className="mb-3">
+                  {(hints[task.id] || []).map((h, i) => (
+                    <div key={i} className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2 mb-2">
+                      <Lightbulb className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5"/>
+                      <p className="text-amber-800 dark:text-amber-200 text-xs leading-relaxed">{h}</p>
+                    </div>
+                  ))}
+                  {(hints[task.id]?.length || 0) < 3 && !completed.includes(task.id) && (
+                    <button onClick={() => fetchHint(task)} disabled={hintLoading}
+                      className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-bold transition-colors disabled:opacity-50">
+                      {hintLoading ? <RefreshCw className="w-3 h-3 animate-spin"/> : <Sparkles className="w-3 h-3"/>}
+                      {hints[task.id]?.length ? "Încă un indiciu" : "Arată indiciu"}
+                    </button>
+                  )}
                 </div>
 
                 {/* CODING TASK */}
@@ -933,18 +1005,12 @@ parent.postMessage({logs:_log},'*');
                           </button>
                         )}
                       </div>
-                      <textarea
+                      <CodeEditor
                         value={codeValue !== "" ? codeValue : (task.starterCode || "")}
-                        onChange={e => { setCodeValue(e.target.value); setCodeResult(null); }}
-                        onKeyDown={handleCodeKeyDown}
-                        spellCheck={false}
-                        autoCapitalize="off"
-                        autoCorrect="off"
-                        autoComplete="off"
+                        onChange={val => { setCodeValue(val); setCodeResult(null); }}
+                        language={task.language}
                         disabled={codeResult?.correct}
-                        rows={10}
-                        className="w-full bg-gray-900 text-green-300 font-mono text-xs sm:text-sm p-3 sm:p-4 focus:outline-none resize-y leading-relaxed disabled:opacity-70 min-h-[200px]"
-                        placeholder="// scrie codul tău aici"
+                        minHeight="200px"
                       />
                     </div>
 
@@ -1079,6 +1145,59 @@ parent.postMessage({logs:_log},'*');
                       </button>
                     )}
                   </>
+                ) : task.type === "fillblank" ? (
+                  <>
+                    {/* FILL-IN-BLANK */}
+                    <div className="mb-4">
+                      <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${fillSubmitted ? (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "border-red-400 bg-red-50 dark:bg-red-900/30") : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"}`}>
+                        <PenLine className="w-4 h-4 text-slate-400 flex-shrink-0"/>
+                        <input
+                          type="text"
+                          value={fillValue}
+                          onChange={e => { if (!fillSubmitted) setFillValue(e.target.value); }}
+                          onKeyDown={e => { if (e.key === "Enter" && !fillSubmitted && fillValue.trim()) submitFillBlank(task); }}
+                          disabled={fillSubmitted}
+                          placeholder="Scrie răspunsul tău..."
+                          className="flex-1 bg-transparent text-sm font-mono text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none disabled:opacity-70"
+                          autoComplete="off" autoCorrect="off" spellCheck={false}
+                        />
+                        {fillSubmitted && (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()
+                          ? <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0"/>
+                          : <XCircle className="w-5 h-5 text-red-500 flex-shrink-0"/>)}
+                      </div>
+                    </div>
+
+                    {fillSubmitted && (
+                      <div className={`rounded-2xl p-4 mb-4 border-2 ${fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "bg-emerald-50 border-emerald-300" : "bg-red-50 border-red-300"}`}>
+                        <p className={`font-black text-sm mb-1 flex items-center gap-1.5 ${fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "text-emerald-700" : "text-red-700"}`}>
+                          {fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()
+                            ? <><CheckCircle className="w-4 h-4"/> Corect! Exact!</>
+                            : <><XCircle className="w-4 h-4"/> Greșit. Răspuns corect: <code className="bg-emerald-100 px-1.5 py-0.5 rounded font-mono text-emerald-800">{task.answer}</code></>}
+                        </p>
+                        {task.explanation && <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">{task.explanation}</p>}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between gap-2 sm:gap-3">
+                      <button onClick={prev} disabled={taskIdx === 0}
+                        className="flex items-center gap-1.5 px-3 sm:px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 min-h-[48px]">
+                        <ChevronLeft className="w-4 h-4"/> Anterior
+                      </button>
+                      <div className="flex flex-col items-end gap-1 flex-1 max-w-[60%]">
+                        {!fillSubmitted ? (
+                          <button onClick={() => fillValue.trim() && submitFillBlank(task)} disabled={!fillValue.trim()}
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 sm:px-6 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-md active:scale-95 min-h-[48px]">
+                            <Send className="w-4 h-4"/> Verifică
+                          </button>
+                        ) : (
+                          <button onClick={next}
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-4 sm:px-6 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity shadow-md active:scale-95 min-h-[48px]">
+                            {taskIdx + 1 >= totalTasks ? <><Trophy className="w-4 h-4"/> Finalizează</> : <>Următoarea <ChevronRight className="w-4 h-4"/></>}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <>
                     {/* QUIZ OPTIONS */}
@@ -1164,13 +1283,83 @@ parent.postMessage({logs:_log},'*');
   );
 }
 
+function TheoryCodeBlock({ code, lang }) {
+  const [copied, setCopied] = useState(false);
+  const [output, setOutput] = useState(null);
+  const [running, setRunning] = useState(false);
+
+  async function runJs() {
+    setRunning(true);
+    setOutput(null);
+    const result = await new Promise((resolve) => {
+      const iframe = document.createElement("iframe");
+      iframe.setAttribute("sandbox", "allow-scripts");
+      iframe.style.cssText = "display:none;position:absolute;";
+      document.body.appendChild(iframe);
+      const timer = setTimeout(() => { try { document.body.removeChild(iframe); } catch {} resolve("Timeout (>3s)"); }, 3000);
+      function handler(e) {
+        if (e.source !== iframe.contentWindow) return;
+        clearTimeout(timer); window.removeEventListener("message", handler);
+        try { document.body.removeChild(iframe); } catch {}
+        resolve((e.data?.logs ?? []).join("\n") || "(fără output)");
+      }
+      window.addEventListener("message", handler);
+      const setup = `const _l=[];window.console={log:(...a)=>_l.push(a.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join(' ')),error:(...a)=>_l.push('ERR: '+a.join(' ')),warn:(...a)=>_l.push('WARN: '+a.join(' '))};try{${code}}catch(e){_l.push('Eroare: '+e.message);}parent.postMessage({logs:_l},'*');`;
+      const blob = new Blob([`<!DOCTYPE html><html><body><script>${setup}<\/script></body></html>`], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      iframe.src = url; iframe.onload = () => URL.revokeObjectURL(url);
+    });
+    setOutput(result);
+    setRunning(false);
+  }
+
+  function copy() {
+    navigator.clipboard?.writeText(code).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  const isJs = !lang || lang === "js" || lang === "javascript";
+
+  return (
+    <div className="rounded-2xl overflow-hidden border border-gray-700 dark:border-gray-600 my-2 shadow-md">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800">
+        {lang && <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{lang}</span>}
+        <div className="flex items-center gap-2 ml-auto">
+          {isJs && (
+            <button onClick={runJs} disabled={running}
+              className="flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300 font-bold transition-colors disabled:opacity-50">
+              {running ? <RefreshCw className="w-3 h-3 animate-spin"/> : <Play className="w-3 h-3 fill-current"/>}
+              {running ? "..." : "Run"}
+            </button>
+          )}
+          <button onClick={copy}
+            className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-200 font-bold transition-colors">
+            <Copy className="w-3 h-3"/>
+            {copied ? "Copiat!" : "Copy"}
+          </button>
+        </div>
+      </div>
+      <pre className="bg-gray-900 dark:bg-black/70 text-green-300 p-4 text-xs font-mono overflow-x-auto leading-relaxed whitespace-pre">
+        {code}
+      </pre>
+      {output !== null && (
+        <div className="bg-gray-950 border-t border-gray-700 px-4 py-2.5">
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-wide mb-1">Output</p>
+          <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap">{output}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TheoryContent({ content }) {
   const parts = [];
-  const re = /```(?:\w*)\n?([\s\S]*?)```/g;
+  const re = /```(\w*)\n?([\s\S]*?)```/g;
   let last = 0, m;
   while ((m = re.exec(content)) !== null) {
     if (m.index > last) parts.push({ type: "text", text: content.slice(last, m.index) });
-    parts.push({ type: "code", text: m[1].trim() });
+    parts.push({ type: "code", lang: m[1] || "", text: m[2].trim() });
     last = m.index + m[0].length;
   }
   if (last < content.length) parts.push({ type: "text", text: content.slice(last) });
@@ -1178,9 +1367,7 @@ function TheoryContent({ content }) {
   return (
     <div className="space-y-3">
       {parts.map((p, i) => p.type === "code" ? (
-        <pre key={i} className="bg-gray-900 dark:bg-black/60 dark:ring-1 dark:ring-white/10 text-green-300 rounded-2xl p-4 text-xs font-mono overflow-x-auto leading-relaxed">
-          {p.text}
-        </pre>
+        <TheoryCodeBlock key={i} code={p.text} lang={p.lang}/>
       ) : (
         <div key={i} className="space-y-1.5">
           {p.text.split("\n").map((line, j) => {
