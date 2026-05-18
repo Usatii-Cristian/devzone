@@ -31,3 +31,13 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Prevent iOS/Android zoom on focus — browsers zoom when font-size < 16px */
+@media (hover: none) and (pointer: coarse) {
+  input, textarea, select {
+    font-size: max(16px, 1em) !important;
+  }
+}
+input, textarea {
+  touch-action: manipulation;
+}

@@ -184,6 +184,65 @@ export default function LessonPage() {
     setCodeResult(null);
   }
 
+  function handleCodeKeyDown(e) {
+    const ta = e.target;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const val = ta.value;
+
+    // Tab → 2 spaces
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const newVal = val.substring(0, start) + "  " + val.substring(end);
+      setCodeValue(newVal);
+      requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = start + 2; });
+      return;
+    }
+
+    // Enter → keep indentation + extra indent after { ( [
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const before = val.substring(0, start);
+      const lineStart = before.lastIndexOf("\n") + 1;
+      const indent = before.substring(lineStart).match(/^(\s*)/)[1];
+      const lastChar = before.trimEnd().slice(-1);
+      const extra = ["{", "[", "("].includes(lastChar) ? "  " : "";
+      const newVal = before + "\n" + indent + extra + val.substring(end);
+      setCodeValue(newVal);
+      const pos = start + 1 + indent.length + extra.length;
+      requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = pos; });
+      return;
+    }
+
+    // Auto-close pairs
+    const pairs = { '"': '"', "'": "'", "(": ")", "[": "]", "{": "}", "`": "`" };
+    const closers = new Set(['"', "'", ")", "]", "}", "`"]);
+
+    if (pairs[e.key]) {
+      const selected = val.substring(start, end);
+      const close = pairs[e.key];
+      // Wrap selection
+      if (selected) {
+        e.preventDefault();
+        const newVal = val.substring(0, start) + e.key + selected + close + val.substring(end);
+        setCodeValue(newVal);
+        requestAnimationFrame(() => { ta.selectionStart = start + 1; ta.selectionEnd = end + 1; });
+        return;
+      }
+      // Skip over existing closing char
+      if (closers.has(e.key) && val[end] === e.key) {
+        e.preventDefault();
+        requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = end + 1; });
+        return;
+      }
+      // Insert pair
+      e.preventDefault();
+      const newVal = val.substring(0, start) + e.key + close + val.substring(end);
+      setCodeValue(newVal);
+      requestAnimationFrame(() => { ta.selectionStart = ta.selectionEnd = start + 1; });
+    }
+  }
+
   function runInIframe(code) {
     return new Promise((resolve) => {
       const iframe = document.createElement("iframe");
@@ -836,6 +895,7 @@ parent.postMessage({logs:_log},'*');
                       <textarea
                         value={codeValue || task.starterCode || ""}
                         onChange={e => { setCodeValue(e.target.value); setCodeResult(null); }}
+                        onKeyDown={handleCodeKeyDown}
                         spellCheck={false}
                         autoCapitalize="off"
                         autoCorrect="off"

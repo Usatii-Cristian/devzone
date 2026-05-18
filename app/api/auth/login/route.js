@@ -3,14 +3,17 @@ import { NextResponse } from "next/server";
 
 const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
 
+const USERS = [
+  { email: process.env.AUTH_EMAIL, password: process.env.AUTH_PASSWORD },
+  { email: process.env.AUTH_EMAIL2, password: process.env.AUTH_PASSWORD2 },
+];
+
 export async function POST(request) {
   try {
     const { email, password } = await request.json();
 
-    if (
-      email !== process.env.AUTH_EMAIL ||
-      password !== process.env.AUTH_PASSWORD
-    ) {
+    const user = USERS.find(u => u.email && u.email === email && u.password === password);
+    if (!user) {
       return NextResponse.json({ error: "Email sau parolă incorecte." }, { status: 401 });
     }
 

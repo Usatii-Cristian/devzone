@@ -2,6 +2,26 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, Bot, Minimize2, Sparkles } from "lucide-react";
 
+function MessageContent({ text, isUser }) {
+  if (isUser) return <span>{text}</span>;
+  const parts = text.split(/(```[\s\S]*?```)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("```")) {
+          const lines = part.replace(/^```\w*\n?/, "").replace(/```$/, "");
+          return (
+            <pre key={i} className="bg-gray-900 text-green-300 rounded-lg p-2 my-1.5 text-[10px] font-mono overflow-x-auto whitespace-pre-wrap">
+              {lines}
+            </pre>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </>
+  );
+}
+
 export default function AIAssistant({ task, lessonTitle }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([{
@@ -67,7 +87,7 @@ export default function AIAssistant({ task, lessonTitle }) {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-white dark:bg-slate-800">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.role === "assistant" && (
@@ -75,11 +95,11 @@ export default function AIAssistant({ task, lessonTitle }) {
                     <Bot className="w-3 h-3 text-purple-600" />
                   </div>
                 )}
-                <div className={`max-w-[84%] px-3 py-2 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap
+                <div className={`max-w-[84%] px-3 py-2 rounded-2xl text-xs leading-relaxed
                   ${msg.role === "user"
                     ? "bg-indigo-500 text-white rounded-br-sm"
-                    : "bg-slate-100 text-slate-800 rounded-bl-sm"}`}>
-                  {msg.content}
+                    : "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-bl-sm"}`}>
+                  <MessageContent text={msg.content} isUser={msg.role === "user"} />
                 </div>
               </div>
             ))}
@@ -88,7 +108,7 @@ export default function AIAssistant({ task, lessonTitle }) {
                 <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mr-1.5">
                   <Bot className="w-3 h-3 text-purple-600" />
                 </div>
-                <div className="bg-slate-100 px-3 py-2.5 rounded-2xl rounded-bl-sm flex gap-1 items-center">
+                <div className="bg-slate-100 dark:bg-slate-700 px-3 py-2.5 rounded-2xl rounded-bl-sm flex gap-1 items-center">
                   <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                   <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
                   <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
@@ -98,7 +118,7 @@ export default function AIAssistant({ task, lessonTitle }) {
             <div ref={bottomRef} />
           </div>
 
-          <div className="p-3 border-t border-slate-100 flex-shrink-0">
+          <div className="p-3 border-t border-slate-100 dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-800">
             <div className="flex gap-2">
               <input
                 ref={inputRef}
@@ -107,7 +127,7 @@ export default function AIAssistant({ task, lessonTitle }) {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && send()}
                 placeholder="Întreabă ceva…"
-                className="flex-1 bg-slate-100 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-purple-300 text-slate-800 placeholder:text-slate-400"
+                className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-purple-300 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
               <button
                 onClick={send}

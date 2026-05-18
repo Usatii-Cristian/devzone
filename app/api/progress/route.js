@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-const DEFAULT_USER_ID = "local-user";
+function getUserId(request) {
+  return request.headers.get("x-user-id") || "local-user";
+}
 
 export async function GET(request) {
   try {
+    const userId = getUserId(request);
     const { searchParams } = new URL(request.url);
     const lessonId = searchParams.get("lessonId");
 
@@ -12,13 +15,13 @@ export async function GET(request) {
 
     if (lessonId) {
       const progress = await prisma.lessonProgress.findUnique({
-        where: { userId_lessonId: { userId: DEFAULT_USER_ID, lessonId } },
+        where: { userId_lessonId: { userId, lessonId } },
       });
       return NextResponse.json(progress || null, { headers });
     }
 
     const allProgress = await prisma.lessonProgress.findMany({
-      where: { userId: DEFAULT_USER_ID },
+      where: { userId },
     });
     return NextResponse.json(allProgress, { headers });
   } catch {
@@ -28,6 +31,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const userId = getUserId(request);
     const body = await request.json();
     const { lessonId, completedTasks, wrongTasks, currentTaskIdx, currentTheoryIdx, completed } = body;
 
@@ -39,10 +43,10 @@ export async function POST(request) {
     if (completed !== undefined) data.completed = completed;
 
     const progress = await prisma.lessonProgress.upsert({
-      where: { userId_lessonId: { userId: DEFAULT_USER_ID, lessonId } },
+      where: { userId_lessonId: { userId, lessonId } },
       update: data,
       create: {
-        userId: DEFAULT_USER_ID,
+        userId,
         lessonId,
         completedTasks: completedTasks || [],
         wrongTasks: wrongTasks || [],

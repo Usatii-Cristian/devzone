@@ -24,8 +24,10 @@ export async function proxy(request) {
   }
 
   try {
-    await jwtVerify(token, SECRET);
-    return NextResponse.next();
+    const { payload } = await jwtVerify(token, SECRET);
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-user-id", payload.email || "local-user");
+    return NextResponse.next({ request: { headers: requestHeaders } });
   } catch {
     const res = NextResponse.redirect(new URL("/login", request.url));
     res.cookies.delete("auth_token");

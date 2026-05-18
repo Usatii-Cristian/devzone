@@ -39,10 +39,11 @@ Cum răspunzi:
 - EXPLICI conceptul din spatele întrebării fără să dai direct litera/opțiunea corectă
 - Dai o analogie scurtă din viața reală dacă ajută
 - Dacă studentul e complet blocat și cere insistent, poți da un hint progresiv
-- Includezi un exemplu scurt de cod când e relevant (în backticks)
+- Când dai exemple de cod, pune-le între triple backticks cu limbajul: \`\`\`javascript ... \`\`\`
 - Răspunsurile: scurte și clare, max 4-5 propoziții + eventual un snippet
 - Ton: prietenos, ca un coleg mai experimentat, nu ca un profesor formal
-- Răspunzi ÎNTOTDEAUNA în română`;
+- Răspunzi ÎNTOTDEAUNA în română
+- IMPORTANT: NU folosi formatare Markdown în text normal! Fara **bold**, fara *italic*, fara # headings, fara - liste cu cratime. Scrie text simplu, natural, ca un mesaj normal. Codul merge DOAR în blocuri de cod cu backticks triple.`;
 
   // Convert messages to Gemini format (role: "user" | "model")
   const contents = messages.map((m) => ({

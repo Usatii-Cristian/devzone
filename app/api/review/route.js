@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-const DEFAULT_USER_ID = "local-user";
+function getUserId(request) {
+  return request.headers.get("x-user-id") || "local-user";
+}
 
 export async function GET(request) {
   try {
+    const userId = getUserId(request);
     const { searchParams } = new URL(request.url);
     const currentModuleSlug = searchParams.get("moduleSlug");
     const count = Math.min(parseInt(searchParams.get("count") || "3"), 5);
@@ -24,7 +27,7 @@ export async function GET(request) {
     // Completed lessons from those modules
     const completedProgress = await prisma.lessonProgress.findMany({
       where: {
-        userId: DEFAULT_USER_ID,
+        userId,
         completed: true,
         lesson: { moduleId: { in: prevModules.map(m => m.id) } },
       },

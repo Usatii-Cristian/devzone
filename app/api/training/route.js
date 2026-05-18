@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 
-const DEFAULT_USER_ID = "local-user";
+function getUserId(request) {
+  return request.headers.get("x-user-id") || "local-user";
+}
 
 export async function POST(request) {
   const limit = rateLimit(`training:${clientKey(request)}`, 8);
@@ -13,6 +15,7 @@ export async function POST(request) {
     );
   }
   try {
+    const userId = getUserId(request);
     const body = await request.json();
     const { moduleSlug, difficulty, count, scope } = body;
     const effectiveScope = scope || "completed-current";
@@ -23,7 +26,7 @@ export async function POST(request) {
       const mod = await prisma.module.findUnique({ where: { slug: moduleSlug } });
       if (!mod) return NextResponse.json({ error: "Modul negăsit." }, { status: 404 });
       const completed = await prisma.lessonProgress.findMany({
-        where: { userId: DEFAULT_USER_ID, completed: true },
+        where: { userId, completed: true },
         select: { lessonId: true },
       });
       const completedIds = completed.map(p => p.lessonId);
@@ -33,7 +36,7 @@ export async function POST(request) {
       });
     } else if (effectiveScope === "completed-all") {
       const completed = await prisma.lessonProgress.findMany({
-        where: { userId: DEFAULT_USER_ID, completed: true },
+        where: { userId, completed: true },
         select: { lessonId: true },
       });
       const completedIds = completed.map(p => p.lessonId);
