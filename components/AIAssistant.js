@@ -26,7 +26,7 @@ export default function AIAssistant({ task, lessonTitle }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([{
     role: "assistant",
-    content: `Bună! Sunt asistentul tău AI ✨\n\nTe ajut cu indicii și explicații — fără să îți dau răspunsul direct. Gânditul singur e cel mai bun antrenament!\n\nCe nelămuriri ai?`,
+    content: `Bună! Sunt asistentul tău AI\n\nTe ajut cu indicii și explicații — fără să îți dau răspunsul direct. Gânditul singur e cel mai bun antrenament!\n\nCe nelămuriri ai?`,
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);

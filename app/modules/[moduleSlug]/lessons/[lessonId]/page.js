@@ -6,7 +6,7 @@ import AIAssistant from "@/components/AIAssistant";
 import {
   ChevronLeft, BookOpen, ClipboardList, ChevronRight,
   CheckCircle, Menu, Send, ArrowRight, RotateCcw, Trophy, Zap, Lightbulb, Brain, XCircle, Wand2, Play, RefreshCw,
-  Copy, Sparkles, PenLine
+  Copy, Sparkles, PenLine, ArrowDown
 } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
 
@@ -858,7 +858,7 @@ parent.postMessage({logs:_log},'*');
                       <Brain className="w-5 h-5"/>
                     </div>
                     <div className="flex-1">
-                      <p className="font-black text-sm">Hai să ne aducem aminte ce-am învățat! 🧠</p>
+                      <p className="font-black text-sm flex items-center gap-1.5">Hai să ne aducem aminte ce-am învățat! <Brain className="w-4 h-4 inline-block"/></p>
                       <p className="text-violet-200 text-xs mt-0.5">{reviewIdx + 1} din {reviewTasks.length} · din modulul <span className="font-bold text-white">{rt?.lesson?.module?.title}</span></p>
                     </div>
                     <button onClick={() => setReviewDone(true)} className="text-white/60 hover:text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0">
@@ -944,7 +944,7 @@ parent.postMessage({logs:_log},'*');
                   <Brain className="w-8 h-8 text-violet-500 flex-shrink-0"/>
                   <div className="flex-1">
                     <p className="font-black text-violet-800 text-sm">Recapitulare completă!</p>
-                    <p className="text-violet-600 text-xs mt-0.5">{reviewScore}/{reviewTasks.length} răspunsuri corecte din memorie · Continuă cu lecția nouă 👇</p>
+                    <p className="text-violet-600 text-xs mt-0.5 flex items-center gap-1">{reviewScore}/{reviewTasks.length} răspunsuri corecte din memorie · Continuă cu lecția nouă <ArrowDown className="w-3 h-3 inline-block"/></p>
                   </div>
                 </div>
               </div>

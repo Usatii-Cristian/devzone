@@ -2,7 +2,16 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search, BookOpen, Trophy, X } from "lucide-react";
+import {
+  Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search, BookOpen, Trophy, X,
+  Sprout, Briefcase, GraduationCap, Wrench, Monitor, Zap, Rocket, Target, Crown,
+  Microscope, Building2, Cog, Wand2, Shield, Swords, Gem, Sparkles, Lock,
+} from "lucide-react";
+
+const LEVEL_ICONS = {
+  Sprout, Briefcase, GraduationCap, Wrench, Monitor, Zap, Rocket, Target, Trophy,
+  Crown, Microscope, Building2, Star, Award, Cog, Wand2, Shield, Swords, Gem, Sparkles,
+};
 import Navbar from "@/components/Navbar";
 import ThemeToggle from "@/components/ThemeToggle";
 import SearchModal from "@/components/SearchModal";
@@ -111,8 +120,8 @@ export default function Home() {
                       ${isCurrent ? "ring-2 ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 shadow-md scale-[1.02]"
                         : isUnlocked ? "bg-slate-50 dark:bg-slate-800"
                         : "bg-slate-50/50 dark:bg-slate-800/40 opacity-50"}`}>
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 bg-gradient-to-br ${lvl.color} shadow-sm`}>
-                      <span>{lvl.icon}</span>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${lvl.color} shadow-sm`}>
+                      {(() => { const Ic = LEVEL_ICONS[lvl.icon]; return Ic ? <Ic className="w-4 h-4 text-white"/> : null; })()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -135,7 +144,7 @@ export default function Home() {
                       )}
                     </div>
                     {isUnlocked && !isCurrent && <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0"/>}
-                    {!isUnlocked && <span className="text-slate-300 dark:text-slate-600 text-lg flex-shrink-0">🔒</span>}
+                    {!isUnlocked && <Lock className="w-4 h-4 text-slate-300 dark:text-slate-600 flex-shrink-0"/>}
                   </div>
                 );
               })}
@@ -198,7 +207,7 @@ export default function Home() {
                   Niv. {level.level}
                 </span>
                 <span className="text-white/90 text-xs font-black">{level.label}</span>
-                <span className="text-white/50 text-[10px]">{level.icon}</span>
+                {(() => { const Ic = LEVEL_ICONS[level.icon]; return Ic ? <Ic className="w-3 h-3 text-white/50"/> : null; })()}
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-yellow-300 text-xs font-black">{xp} XP</span>
