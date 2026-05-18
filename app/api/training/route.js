@@ -17,8 +17,9 @@ export async function POST(request) {
   try {
     const userId = getUserId(request);
     const body = await request.json();
-    const { moduleSlug, difficulty, count, scope } = body;
+    const { moduleSlug, difficulty, count, scope, taskType } = body;
     const effectiveScope = scope || "completed-current";
+    const effectiveTaskType = taskType || "mixed";
 
     let lessonsForContext = [];
 
@@ -57,11 +58,12 @@ export async function POST(request) {
     }
 
     const apiKey = process.env.GOOGLE_AI_KEY;
-    if (!apiKey) {
+    if (!apiKey || effectiveTaskType === "coding") {
       const allTasks = await prisma.task.findMany({
         where: {
           lessonId: { in: lessonsForContext.map(l => l.id) },
           difficulty: difficulty === "all" ? undefined : difficulty,
+          ...(effectiveTaskType !== "mixed" ? { type: effectiveTaskType } : {}),
         },
         include: { lesson: { select: { title: true } } },
       });
