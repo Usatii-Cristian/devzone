@@ -1,7 +1,7 @@
 "use client";
 import { useReducer, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X, BookOpen, Code2, Star } from "lucide-react";
+import { Search, X, BookOpen, Code2, Star, Settings, Dumbbell } from "lucide-react";
 
 export default function SearchModal({ open, onClose, modules = [] }) {
   return open ? <SearchModalBody key="modal" onClose={onClose} modules={modules}/> : null;
@@ -45,10 +45,11 @@ function SearchModalBody({ onClose, modules }) {
       }
     }
     items.push(
-      { type: "page", title: "Antrenament", sub: "Exersează AI", href: "/antrenament", icon: Star },
-      { type: "page", title: "Proiecte", sub: "20 proiecte practice", href: "/proiecte", icon: Star },
-      { type: "page", title: "Editor", sub: "VS Code în browser", href: "/editor", icon: Code2 },
-      { type: "page", title: "Setări", sub: "Preferințe + export", href: "/settings", icon: Star },
+      { type: "pagină", title: "Antrenament", sub: "Exersează cu AI", href: "/antrenament", icon: Dumbbell },
+      { type: "pagină", title: "Proiecte", sub: "20 proiecte practice", href: "/proiecte", icon: Star },
+      { type: "pagină", title: "Editor", sub: "VS Code în browser", href: "/editor", icon: Code2 },
+      { type: "pagină", title: "Dicționar Dev", sub: "Termeni și slang", href: "/dictionar", icon: BookOpen },
+      { type: "pagină", title: "Setări", sub: "Preferințe + export", href: "/settings", icon: Settings },
     );
     return items;
   }, [modules]);

@@ -2,10 +2,11 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search } from "lucide-react";
+import { Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search, BookOpen } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import ThemeToggle from "@/components/ThemeToggle";
 import SearchModal from "@/components/SearchModal";
+import AchievementIcon from "@/components/AchievementIcon";
 import { computeStreak, computeAchievements } from "@/lib/stats";
 import { ModIcon, MOD_BG } from "@/lib/moduleIcons";
 
@@ -188,11 +189,12 @@ export default function Home() {
               {achievements.map(a => (
                 <div key={a.id}
                   title={`${a.title} — ${a.desc}`}
-                  className={`flex-shrink-0 w-[68px] h-[78px] sm:w-20 sm:h-20 rounded-2xl flex flex-col items-center justify-center text-center transition-all px-1
+                  className={`flex-shrink-0 w-[68px] h-[78px] sm:w-20 sm:h-20 rounded-2xl flex flex-col items-center justify-center text-center transition-all px-1 gap-1
                     ${a.unlocked
                       ? "bg-gradient-to-br from-pink-100 to-yellow-100 dark:from-pink-900/40 dark:to-yellow-900/40 shadow-sm"
                       : "bg-slate-100 dark:bg-slate-700/50 opacity-50"}`}>
-                  <span className="text-2xl mb-0.5">{a.icon}</span>
+                  <AchievementIcon iconKey={a.iconKey}
+                    className={`w-6 h-6 sm:w-7 sm:h-7 ${a.unlocked ? "text-pink-600 dark:text-pink-300" : "text-slate-400 dark:text-slate-500"}`}/>
                   <span className={`text-[9px] sm:text-[10px] font-bold leading-tight
                     ${a.unlocked ? "text-pink-700 dark:text-pink-300" : "text-slate-400 dark:text-slate-500"}`}>{a.title}</span>
                 </div>
@@ -202,7 +204,7 @@ export default function Home() {
         )}
 
         {/* Quick actions — bigger touch targets on mobile */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-5 sm:mb-6">
           <Link href="/antrenament"
             className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:shadow-md transition-all min-h-[88px] active:scale-95">
             <div className="w-10 h-10 sm:w-11 sm:h-11 bg-white/25 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -223,6 +225,13 @@ export default function Home() {
               <Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-white"/>
             </div>
             <p className="font-black text-white text-xs sm:text-sm leading-tight">Editor</p>
+          </Link>
+          <Link href="/dictionar"
+            className="bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:shadow-md transition-all min-h-[88px] active:scale-95">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-white/25 rounded-xl flex items-center justify-center flex-shrink-0">
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white"/>
+            </div>
+            <p className="font-black text-white text-xs sm:text-sm leading-tight">Dicționar</p>
           </Link>
         </div>
 
