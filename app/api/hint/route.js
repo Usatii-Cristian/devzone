@@ -34,7 +34,7 @@ Indiciu ${hintIndex + 1}:`;
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 150, temperature: 0.7 },
+          generationConfig: { maxOutputTokens: 150, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
@@ -42,7 +42,9 @@ Indiciu ${hintIndex + 1}:`;
     if (!response.ok) return NextResponse.json({ hint: "Indiciu indisponibil momentan." });
 
     const data = await response.json();
-    const hint = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim()
+    const parts = data.candidates?.[0]?.content?.parts ?? [];
+    const textPart = parts.find(p => !p.thought) || parts[0];
+    const hint = (textPart?.text ?? "").trim()
       .replace(/^Indiciu \d+:\s*/i, "");
 
     return NextResponse.json({ hint: hint || "Încearcă să te gândești la conceptele din teorie." });

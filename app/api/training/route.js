@@ -122,7 +122,7 @@ Returnează STRICT array-ul JSON, nimic altceva.`;
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-          generationConfig: { maxOutputTokens: 4096, temperature: 0.9 },
+          generationConfig: { maxOutputTokens: 4096, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
@@ -132,7 +132,9 @@ Returnează STRICT array-ul JSON, nimic altceva.`;
     }
 
     const data = await response.json();
-    let text = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
+    const parts = data.candidates?.[0]?.content?.parts ?? [];
+    const textPart = parts.find(p => !p.thought) || parts[0];
+    let text = (textPart?.text ?? "").trim();
     text = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
 
     // Sometimes the model wraps in object instead of array

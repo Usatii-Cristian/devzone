@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Play, RotateCcw, Trophy, ChevronRight, Zap, CheckCircle, Sparkles, Globe, Library, ArrowLeft, RefreshCw, Send, XCircle, Wand2, Terminal, Lightbulb, PenLine } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
@@ -83,6 +83,23 @@ export default function AntrenamentPage() {
   // Fill-in-blank state
   const [fillValue, setFillValue] = useState("");
   const [fillSubmitted, setFillSubmitted] = useState(false);
+
+  // Shuffle quiz options once when tasks load
+  const shuffledOptionsMap = useMemo(() => {
+    if (!tasks) return {};
+    const map = {};
+    for (const t of tasks) {
+      if (t.options?.length) {
+        const arr = [...t.options];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        map[t.id] = arr;
+      }
+    }
+    return map;
+  }, [tasks]);
 
   useEffect(() => {
     fetch("/api/modules")
@@ -697,7 +714,7 @@ parent.postMessage({logs:_log},'*');
               <>
                 {/* ── QUIZ OPTIONS ── */}
                 <div className="space-y-2.5 mb-4">
-                  {task.options.map(opt => {
+                  {(shuffledOptionsMap[task.id] || task.options).map(opt => {
                     const isSel = selected === opt;
                     const isCorrect = opt === task.answer;
                     let cls = "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer";

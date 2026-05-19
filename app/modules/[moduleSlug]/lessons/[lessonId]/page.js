@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import AIAssistant from "@/components/AIAssistant";
@@ -54,6 +54,23 @@ export default function LessonPage() {
   // Fill-in-blank state
   const [fillValue, setFillValue] = useState("");
   const [fillSubmitted, setFillSubmitted] = useState(false);
+
+  // Shuffle options once per lesson load so correct answer isn't always in same slot
+  const shuffledOptionsMap = useMemo(() => {
+    if (!lesson?.tasks) return {};
+    const map = {};
+    for (const t of lesson.tasks) {
+      if (t.options?.length) {
+        const arr = [...t.options];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        map[t.id] = arr;
+      }
+    }
+    return map;
+  }, [lesson?.id]);
 
   useEffect(() => {
     if (!lesson) return;
@@ -701,35 +718,42 @@ parent.postMessage({logs:_log},'*');
             {view === "tasks" && finished && !retryMode && (() => {
               const correctCount = completed.length;
               const wrongCount = wrong.length;
-              const score = correctCount * 10 - wrongCount * 3;
+              const xpTasks = correctCount * 10;
+              const xpBonus = 50;
+              const xpTotal = xpTasks + xpBonus;
               const percent = totalTasks > 0 ? Math.round((correctCount / totalTasks) * 100) : 0;
               const allCorrect = wrongCount === 0;
               return (
                 <div className="max-w-lg mx-auto text-center py-10">
-                  <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-5 ${allCorrect ? "bg-yellow-100" : "bg-orange-100"}`}>
-                    <Trophy className={`w-12 h-12 ${allCorrect ? "text-yellow-500" : "text-orange-500"}`}/>
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-5 ${allCorrect ? "bg-yellow-100" : "bg-indigo-100"}`}>
+                    <Trophy className={`w-12 h-12 ${allCorrect ? "text-yellow-500" : "text-indigo-500"}`}/>
                   </div>
                   <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
                     {allCorrect ? "Lecție finalizată perfect!" : "Lecție finalizată!"}
                   </h2>
                   <p className="text-slate-500 dark:text-slate-300 mb-1">
-                    <span className="font-black text-emerald-600 dark:text-emerald-400">{correctCount}</span> corecte ·{" "}
+                    <span className="font-black text-emerald-600 dark:text-emerald-400">{correctCount}/{totalTasks}</span> corecte ·{" "}
                     {wrongCount > 0 && <span className="font-black text-red-500">{wrongCount} greșite · </span>}
                     <span className="font-black text-slate-700 dark:text-slate-200">{percent}%</span>
                   </p>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mb-5">
-                    {allCorrect ? "Excelent! Toate răspunsurile corecte din prima!" : "Poți corecta răspunsurile greșite pentru puncte bonus."}
+                    {allCorrect ? "Excelent! Toate răspunsurile corecte din prima!" : "Corectează greșelile pentru a câștiga XP complet."}
                   </p>
-                  <div className={`bg-gradient-to-r ${allCorrect ? "from-yellow-50 to-amber-50 border-yellow-200" : "from-orange-50 to-red-50 border-orange-200"} border rounded-2xl p-4 mb-6 flex items-center justify-center gap-3`}>
-                    <Zap className={`w-5 h-5 flex-shrink-0 ${allCorrect ? "text-yellow-500" : "text-orange-500"}`}/>
-                    <div className="text-left">
-                      <p className={`font-black text-sm ${allCorrect ? "text-yellow-800" : "text-orange-800"}`}>
-                        Scor: {Math.max(0, score)} puncte
-                      </p>
-                      <p className={`text-xs ${allCorrect ? "text-yellow-600" : "text-orange-600"}`}>
-                        +{correctCount * 10} corecte {wrongCount > 0 && `· -${wrongCount * 3} greșeli`}
-                      </p>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4 mb-6">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Zap className="w-5 h-5 text-yellow-500"/>
+                      <p className="font-black text-lg text-indigo-800 dark:text-indigo-200">+{xpTotal} XP câștigate</p>
                     </div>
+                    <div className="flex items-center justify-center gap-4 text-xs text-indigo-600 dark:text-indigo-400">
+                      <span>+{xpTasks} XP din {correctCount} exerciții</span>
+                      <span className="text-indigo-300">·</span>
+                      <span>+{xpBonus} XP bonus lecție</span>
+                    </div>
+                    {wrongCount > 0 && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        Corectând cele {wrongCount} greșeli câștigi încă +{wrongCount * 10} XP
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-3 justify-center flex-wrap">
                     {wrongCount > 0 && (
@@ -787,7 +811,7 @@ parent.postMessage({logs:_log},'*');
                   </div>
 
                   <div className="space-y-2.5 mb-4">
-                    {t.options.map(opt => {
+                    {(shuffledOptionsMap[t.id] || t.options).map(opt => {
                       const isSel = selected === opt;
                       const isCorr = opt === t.answer;
                       const isDisabled = disabled.includes(opt);
@@ -883,7 +907,7 @@ parent.postMessage({logs:_log},'*');
 
                   {/* Options */}
                   <div className="space-y-2.5 mb-4">
-                    {rt?.options.map(opt => {
+                    {(rt ? (shuffledOptionsMap[rt.id] || rt.options) : []).map(opt => {
                       const isSel = reviewSel === opt;
                       const isCorr = opt === rt.answer;
                       let cls = "border-slate-200 bg-white hover:border-violet-300 hover:bg-violet-50 cursor-pointer";
@@ -1202,7 +1226,7 @@ parent.postMessage({logs:_log},'*');
                   <>
                     {/* QUIZ OPTIONS */}
                     <div className="space-y-2.5 mb-5">
-                      {task.options.map(opt => {
+                      {(shuffledOptionsMap[task.id] || task.options).map(opt => {
                         const isSel = selected === opt;
                         const isCorrect = opt === task.answer;
                         let cls = "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer active:scale-[0.99]";
