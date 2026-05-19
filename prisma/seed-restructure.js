@@ -29,7 +29,7 @@ const providerState = {
   geminiCooldown: 0,
 };
 
-const REQUEST_DELAY = 350; // ms între cereri (Groq permite mult mai mult)
+const REQUEST_DELAY = 2200; // ms între cereri (llama-3.3-70b: 30 RPM → 1 req/2s)
 
 const MODULE_LANG = {
   python:            "python",
@@ -47,6 +47,25 @@ const MODULE_LANG = {
   cybersecurity:     "javascript",
   sql:               "sql",
   php:               "php",
+};
+
+// Caracterul de comentariu pentru fiecare limbaj (pentru starterCode)
+const COMMENT_CHAR = {
+  python:            "#",
+  javascript:        "//",
+  html:              "<!--",
+  css:               "/*",
+  tailwind:          "<!--",
+  react:             "//",
+  "nextjs-frontend": "//",
+  "nextjs-backend":  "//",
+  c:                 "//",
+  cpp:               "//",
+  csharp:            "//",
+  java:              "//",
+  cybersecurity:     "//",
+  sql:               "--",
+  php:               "//",
 };
 
 const LANG_HINT = {
@@ -83,7 +102,7 @@ async function callGroqRaw(prompt) {
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 3500,
+      max_tokens: 2200,
       temperature: 0.7,
     }),
   });
@@ -156,36 +175,42 @@ async function callAIRaw(prompt) {
 // Generează un singur prompt care produce AMBELE tipuri (fillblank + coding)
 // Returnează { fillblank: [...], coding: [...] }
 async function generateBoth(lessonTitle, moduleTitle, slug, fillNeeded, codingNeeded) {
-  const lang = LANG_HINT[slug] || "JavaScript";
-  const langId = MODULE_LANG[slug] || "javascript";
+  const lang    = LANG_HINT[slug]    || "JavaScript";
+  const langId  = MODULE_LANG[slug]  || "javascript";
+  const comment = COMMENT_CHAR[slug] || "//";
   const isRunnable = HAS_RUNNABLE_OUTPUT.has(slug);
 
   const fillSection = fillNeeded > 0 ? `
 === SECȚIUNEA A: ${fillNeeded} exerciții FILLBLANK ===
 ${isRunnable ? `
 Tipul "prezice output-ul":
-- Arată un snippet de cod scurt (4-10 linii) care demonstrează conceptul lecției
-- Codul trebuie să producă OUTPUT DETERMINISTIC (fără random, fără input(), fără Date)
-- Output-ul e scurt: 1-4 linii
-- question: "Ce va afișa codul următor?\\n\`\`\`${langId}\\n<cod>\\n\`\`\`"
-- answer: output-ul exact, linie cu linie
+- Scrie un snippet de cod SCURT (4-10 linii) care demonstrează EXACT conceptul lecției
+- OBLIGATORIU: codul produce OUTPUT COMPLET DETERMINIST
+  ✗ INTERZIS: random(), randint(), choice(), Math.random(), Date, time(), seed nedefinit
+  ✓ PERMIS: variabile fixe, bucle, condiții, funcții cu valori hardcodate
+- Output-ul să fie SCURT: 1-4 linii de text simplu (nu obiecte mari)
+- question: "Ce va afișa codul următor?\\n\`\`\`${langId}\\n<cod_complet_here>\\n\`\`\`"
+- answer: EXACT output-ul, fără spații extra, fără newline la final
 ` : `
 Tipul "completează valoarea":
-- Arată cod cu un element/proprietate/valoare lipsă sau un ___
+- Arată un snippet de cod cu o valoare/proprietate/tag lipsă (marcată cu ___ sau comentariu)
 - Studentul scrie EXACT valoarea corectă (1-5 cuvinte)
-- question: include codul cu blank în markdown
-- answer: valoarea/proprietatea/tagul corect
+- question include codul în markdown \`\`\`${langId}...\`\`\`
+- answer: valoarea exactă fără spații extra
 `}
 Returnează sub cheia "fillblank": array de ${fillNeeded} obiecte cu: name, question, answer, explanation, difficulty` : "";
 
   const codingSection = codingNeeded > 0 ? `
 === SECȚIUNEA B: ${codingNeeded} exerciții CODING ===
 Tipul "scrie cod de la zero":
-- Studentul scrie cod real care rezolvă o problemă practică
-- Cerință contextualizată (ex: cafenea, magazin, blog, studenți)
-- starterCode: comentarii // TODO care ghidează (max 12 linii)
-- expectedOutput: output-ul exact sau "" pentru HTML/CSS/React/Next.js
-- Nu face Hello World sau exerciții banale
+- Cerință practică, concretă, contextualizată (cafenea, magazin, studenți, etc.)
+- OBLIGATORIU: legat direct de conceptul lecției
+- starterCode: ghid cu comentarii ${comment} TODO (max 10 linii, sintaxă ${langId} corectă!)
+  ✗ NU folosi // TODO în Python — folosește # TODO
+  ✗ NU folosi # TODO în JavaScript/C/Java — folosește // TODO
+- expectedOutput: output EXACT și DETERMINISTIC — sau "" pentru HTML/CSS/React/Next.js
+  ✗ INTERZIS output din random/time — pune valori fixe în cerință
+- Nu face Hello World, nu face exerciții triviale
 Returnează sub cheia "coding": array de ${codingNeeded} obiecte cu: name, question, starterCode, expectedOutput, difficulty` : "";
 
   const diffHint = (n) => n >= 5 ? "2 easy, 2 medium, 1 hard" : n >= 3 ? "1 easy, 1 medium, 1 hard" : "mix easy/medium";
@@ -194,7 +219,7 @@ Returnează sub cheia "coding": array de ${codingNeeded} obiecte cu: name, quest
 
 Modul: ${moduleTitle}
 Lecție: ${lessonTitle}
-Limbaj: ${lang}
+Limbaj: ${lang} (caracter comentariu: ${comment})
 ${fillSection}
 ${codingSection}
 
@@ -202,25 +227,25 @@ REGULI GENERALE:
 - Toate textele (name, question, cerințe) în ROMÂNĂ
 - Exercițiile să fie legate DIRECT de subiectul lecției
 - Dificultăți: ${diffHint(Math.max(fillNeeded, codingNeeded))}
-- Nu repeta exerciții similare
+- Nu repeta exerciții similare între ele
 
 FORMAT RĂSPUNS — STRICT JSON obiect (fără text în afara JSON):
 {
   ${fillNeeded > 0 ? `"fillblank": [
     {
       "name": "Titlu 3-5 cuvinte",
-      "question": "text cu cod markdown inclus",
-      "answer": "răspunsul exact",
-      "explanation": "de ce e corect",
+      "question": "Ce va afișa codul următor?\\n\`\`\`${langId}\\ncodul_here\\n\`\`\`",
+      "answer": "output_exact_fara_newline_la_final",
+      "explanation": "de ce produce acel output",
       "difficulty": "easy"
     }
   ]${codingNeeded > 0 ? "," : ""}` : ""}
   ${codingNeeded > 0 ? `"coding": [
     {
       "name": "Titlu 3-5 cuvinte",
-      "question": "cerință clară cu context real",
-      "starterCode": "// TODO comentarii\\n",
-      "expectedOutput": "output exact sau empty string",
+      "question": "Cerință clară cu context real. Max 200 caractere.",
+      "starterCode": "${comment} TODO pasul 1\\n${comment} TODO pasul 2\\n",
+      "expectedOutput": "output_deterministic_exact sau empty string",
       "difficulty": "easy"
     }
   ]` : ""}
@@ -324,8 +349,8 @@ async function main() {
                 difficulty:  ["easy","medium","hard"].includes(t.difficulty) ? t.difficulty : "medium",
                 name:        (t.name || "Completează răspunsul").slice(0, 100),
                 question:    (t.question || "Ce va afișa codul?").slice(0, 2000),
-                answer:      (t.answer || "").slice(0, 500),
-                explanation: t.explanation ? t.explanation.slice(0, 500) : null,
+                answer:      (t.answer || "").trim().slice(0, 500),
+                explanation: t.explanation ? t.explanation.trim().slice(0, 500) : null,
                 options:     [],
                 language:    lang,
               },
