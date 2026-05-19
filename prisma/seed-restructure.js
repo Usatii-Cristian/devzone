@@ -29,7 +29,7 @@ const providerState = {
   geminiCooldown: 0,
 };
 
-const REQUEST_DELAY = 2200; // ms între cereri (llama-3.3-70b: 30 RPM → 1 req/2s)
+const REQUEST_DELAY = 6000; // ms între cereri — evită 429 pe ambele API-uri
 
 const MODULE_LANG = {
   python:            "python",
