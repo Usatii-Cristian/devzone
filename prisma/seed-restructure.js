@@ -1,16 +1,35 @@
 /**
  * seed-restructure.js
  * Restructurează TOATE lecțiile la 5 quiz + 5 fillblank + 5 coding = 15 tasks total.
- * - Șterge task-urile în exces (păstrează primele 5 din fiecare tip, sortate după number)
- * - Generează fillblank lipsă (cod dat → studentul scrie output-ul)
- * - Generează coding lipsă (studentul scrie cod de la zero)
+ *
+ * Configurare AI (în .env) — folosește ambele dacă sunt disponibile:
+ *   GROQ_API_KEY=gsk_xxx    ← primar, rapid (14400 req/zi)  — console.groq.com
+ *   GOOGLE_AI_KEY=xxx        ← fallback automat (250 req/zi) — aistudio.google.com
+ *
+ * Strategia combo: Groq → dacă 429/eroare → Gemini → dacă 429 → așteaptă → Groq
  * Run: node prisma/seed-restructure.js
  */
 require("dotenv").config({ path: ".env" });
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const API_KEY = process.env.GOOGLE_AI_KEY;
+const GROQ_KEY   = process.env.GROQ_API_KEY;
+const GEMINI_KEY = process.env.GOOGLE_AI_KEY;
+
+if (!GROQ_KEY && !GEMINI_KEY) {
+  console.error("ERROR: Adaugă GROQ_API_KEY și/sau GOOGLE_AI_KEY în .env");
+  process.exit(1);
+}
+
+console.log(`AI disponibil: ${[GROQ_KEY && "Groq(primar)", GEMINI_KEY && "Gemini(fallback)"].filter(Boolean).join(" + ")}`);
+
+// Stare internă pentru comutare automată
+const providerState = {
+  groqCooldown:   0,  // timestamp până când Groq e în cooldown
+  geminiCooldown: 0,
+};
+
+const REQUEST_DELAY = 350; // ms între cereri (Groq permite mult mai mult)
 
 const MODULE_LANG = {
   python:            "python",
@@ -30,195 +49,209 @@ const MODULE_LANG = {
   php:               "php",
 };
 
-// Limbaj afișat în prompt pentru generare
 const LANG_HINT = {
-  python:      "Python 3",
+  python:      "Python 3 — print(), fără input()",
   javascript:  "JavaScript (Node.js) — console.log(), fără DOM",
   html:        "HTML5",
   css:         "CSS3",
   tailwind:    "HTML cu Tailwind CSS",
-  react:       "React / JSX",
-  "nextjs-frontend": "Next.js / React",
-  "nextjs-backend":  "Next.js API / Server Action",
-  c:           "C standard — gcc, include <stdio.h>",
-  cpp:         "C++ standard — include <iostream>",
-  csharp:      "C# — Console.WriteLine",
-  java:        "Java — System.out.println",
+  react:       "React / JSX — componentă funcțională",
+  "nextjs-frontend": "Next.js / React — componentă sau pagină",
+  "nextjs-backend":  "Next.js API Route / Server Action",
+  c:           "C standard — gcc, include <stdio.h>, fără input interactiv",
+  cpp:         "C++ — include <iostream>, using namespace std",
+  csharp:      "C# — Console.WriteLine, fără input interactiv",
+  java:        "Java — System.out.println, fără input interactiv",
   cybersecurity: "JavaScript (Node.js) — demo concept de securitate",
-  sql:         "SQL (SQLite / MySQL)",
+  sql:         "SQL (SQLite / MySQL) — SELECT/INSERT/UPDATE etc.",
   php:         "PHP 8 — echo, fără input interactiv",
 };
 
-// Limbaje cu output determinist (pot face fillblank "predict output")
+// Limbaje cu output determinist (pot face "predict the output")
 const HAS_RUNNABLE_OUTPUT = new Set([
-  "python","javascript","c","cpp","csharp","java","sql","php","cybersecurity"
+  "python","javascript","c","cpp","csharp","java","sql","php","cybersecurity",
 ]);
 
 async function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
-async function callGemini(prompt) {
-  if (!API_KEY) throw new Error("GOOGLE_AI_KEY missing în .env");
+async function callGroqRaw(prompt) {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 3500,
+      temperature: 0.7,
+    }),
+  });
+  if (res.status === 429) { providerState.groqCooldown = Date.now() + 60_000; throw new Error("Groq 429"); }
+  if (!res.ok) throw new Error(`Groq ${res.status}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content ?? "";
+}
+
+async function callGeminiRaw(prompt) {
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          maxOutputTokens: 3000,
-          temperature: 0.7,
-          thinkingConfig: { thinkingBudget: 0 },
-        },
+        generationConfig: { maxOutputTokens: 3500, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
       }),
     }
   );
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini ${res.status}: ${err.slice(0, 200)}`);
-  }
+  if (res.status === 429) { providerState.geminiCooldown = Date.now() + 70_000; throw new Error("Gemini 429"); }
+  if (!res.ok) throw new Error(`Gemini ${res.status}`);
   const data = await res.json();
   const parts = data.candidates?.[0]?.content?.parts ?? [];
   const textPart = parts.find(p => !p.thought) || parts[0];
-  let text = (textPart?.text ?? "").trim();
-  text = text
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
-  if (text.startsWith("{")) {
-    try {
-      const obj = JSON.parse(text);
-      const key = Object.keys(obj).find(k => Array.isArray(obj[k]));
-      if (key) text = JSON.stringify(obj[key]);
-    } catch {}
-  }
-  const tasks = JSON.parse(text);
-  if (!Array.isArray(tasks)) throw new Error("Răspuns nu e array JSON");
-  return tasks;
+  return (textPart?.text ?? "").trim();
 }
 
-// Generează exerciții fillblank: cod dat → studentul scrie output-ul exact
-async function generateFillBlank(lessonTitle, moduleTitle, slug, count) {
+// Apelează AI cu fallback automat: Groq → Gemini → wait → retry
+async function callAIRaw(prompt) {
+  const now = Date.now();
+  const groqOk   = GROQ_KEY   && now >= providerState.groqCooldown;
+  const geminiOk = GEMINI_KEY && now >= providerState.geminiCooldown;
+
+  // Încearcă Groq prima dată
+  if (groqOk) {
+    try {
+      return await callGroqRaw(prompt);
+    } catch (e) {
+      const msg = e.message.includes("429") ? "429↑" : e.message.slice(0, 20);
+      process.stdout.write(` [Groq ${msg}→Gemini]`);
+    }
+  }
+
+  // Fallback pe Gemini
+  if (geminiOk) {
+    try {
+      return await callGeminiRaw(prompt);
+    } catch (e) {
+      const msg = e.message.includes("429") ? "429↑" : e.message.slice(0, 20);
+      process.stdout.write(` [Gemini ${msg}]`);
+    }
+  }
+
+  // Ambele în cooldown — calculăm cel mai scurt timp de așteptare
+  const wait = Math.max(0, Math.min(
+    GROQ_KEY   ? providerState.groqCooldown   - Date.now() : Infinity,
+    GEMINI_KEY ? providerState.geminiCooldown - Date.now() : Infinity,
+  ));
+  process.stdout.write(` [wait ${Math.ceil(wait/1000)}s]`);
+  await sleep(wait + 500);
+
+  // Retry după cooldown (fără fallback recursiv — dacă eșuează, propagăm eroarea)
+  if (GROQ_KEY && Date.now() >= providerState.groqCooldown)   return callGroqRaw(prompt);
+  if (GEMINI_KEY && Date.now() >= providerState.geminiCooldown) return callGeminiRaw(prompt);
+  throw new Error("Ambele API-uri în cooldown");
+}
+
+// Generează un singur prompt care produce AMBELE tipuri (fillblank + coding)
+// Returnează { fillblank: [...], coding: [...] }
+async function generateBoth(lessonTitle, moduleTitle, slug, fillNeeded, codingNeeded) {
   const lang = LANG_HINT[slug] || "JavaScript";
   const langId = MODULE_LANG[slug] || "javascript";
   const isRunnable = HAS_RUNNABLE_OUTPUT.has(slug);
 
-  let prompt;
+  const fillSection = fillNeeded > 0 ? `
+=== SECȚIUNEA A: ${fillNeeded} exerciții FILLBLANK ===
+${isRunnable ? `
+Tipul "prezice output-ul":
+- Arată un snippet de cod scurt (4-10 linii) care demonstrează conceptul lecției
+- Codul trebuie să producă OUTPUT DETERMINISTIC (fără random, fără input(), fără Date)
+- Output-ul e scurt: 1-4 linii
+- question: "Ce va afișa codul următor?\\n\`\`\`${langId}\\n<cod>\\n\`\`\`"
+- answer: output-ul exact, linie cu linie
+` : `
+Tipul "completează valoarea":
+- Arată cod cu un element/proprietate/valoare lipsă sau un ___
+- Studentul scrie EXACT valoarea corectă (1-5 cuvinte)
+- question: include codul cu blank în markdown
+- answer: valoarea/proprietatea/tagul corect
+`}
+Returnează sub cheia "fillblank": array de ${fillNeeded} obiecte cu: name, question, answer, explanation, difficulty` : "";
 
-  if (isRunnable) {
-    prompt = `Ești un creator expert de exerciții pentru o platformă de e-learning în ROMÂNĂ.
+  const codingSection = codingNeeded > 0 ? `
+=== SECȚIUNEA B: ${codingNeeded} exerciții CODING ===
+Tipul "scrie cod de la zero":
+- Studentul scrie cod real care rezolvă o problemă practică
+- Cerință contextualizată (ex: cafenea, magazin, blog, studenți)
+- starterCode: comentarii // TODO care ghidează (max 12 linii)
+- expectedOutput: output-ul exact sau "" pentru HTML/CSS/React/Next.js
+- Nu face Hello World sau exerciții banale
+Returnează sub cheia "coding": array de ${codingNeeded} obiecte cu: name, question, starterCode, expectedOutput, difficulty` : "";
 
-Creează exact ${count} exerciții de tip "prezice output-ul" pentru:
-- Modul: ${moduleTitle}
-- Lecție: ${lessonTitle}
-- Limbaj: ${lang}
+  const diffHint = (n) => n >= 5 ? "2 easy, 2 medium, 1 hard" : n >= 3 ? "1 easy, 1 medium, 1 hard" : "mix easy/medium";
 
-REGULI OBLIGATORII:
-1. Fiecare exercițiu conține un SNIPPET DE COD complet și scurt (4-12 linii)
-2. Codul demonstrează DIRECT conceptul din lecție
-3. Codul produce OUTPUT DETERMINISTIC — fără random(), fără input(), fără Date/Time
-4. Output-ul trebuie să fie scurt: 1-5 linii de text exact
-5. Studentul trebuie să scrie EXACT output-ul (inclusiv spații, newlines)
-6. Pune codul în câmpul "question" ca bloc markdown cu limbajul corect
-7. Dificultate: ${count >= 3 ? "primul easy, al doilea medium, restul mix" : "mix easy/medium/hard"}
+  const prompt = `Ești un expert în crearea de exerciții educaționale pentru o platformă de e-learning în ROMÂNĂ.
 
-FORMAT JSON STRICT (array, fără text în afară):
-[
-  {
-    "name": "Titlu scurt 3-5 cuvinte",
-    "question": "Ce va afișa codul următor?\\n\`\`\`${langId}\\ncodul_aici\\n\`\`\`",
-    "answer": "output exact linie cu linie",
-    "explanation": "Explicație scurtă de ce produce acel output",
-    "difficulty": "easy"
-  }
-]
+Modul: ${moduleTitle}
+Lecție: ${lessonTitle}
+Limbaj: ${lang}
+${fillSection}
+${codingSection}
 
-RETURNEAZĂ STRICT JSON ARRAY, nimic altceva.`;
-  } else {
-    // HTML/CSS/React/Next.js — fill in the blank în cod/concepte
-    prompt = `Ești un creator expert de exerciții pentru o platformă de e-learning în ROMÂNĂ.
+REGULI GENERALE:
+- Toate textele (name, question, cerințe) în ROMÂNĂ
+- Exercițiile să fie legate DIRECT de subiectul lecției
+- Dificultăți: ${diffHint(Math.max(fillNeeded, codingNeeded))}
+- Nu repeta exerciții similare
 
-Creează exact ${count} exerciții de tip "completează răspunsul" pentru:
-- Modul: ${moduleTitle}
-- Lecție: ${lessonTitle}
-- Limbaj/Framework: ${lang}
-
-REGULI OBLIGATORII:
-1. Fiecare exercițiu arată un SNIPPET DE COD cu un element/proprietate/valoare lipsă
-2. Studentul trebuie să scrie EXACT valoarea/proprietatea/tagul corect
-3. Codul e legat DIRECT de topicul lecției
-4. Răspunsul e scurt: 1-5 cuvinte sau o valoare CSS/HTML/JSX
-5. Pune codul în câmpul "question" ca bloc markdown
-6. Dificultate: ${count >= 3 ? "primul easy, al doilea medium, restul mix" : "mix easy/medium/hard"}
-
-Exemple de format întrebare:
-"Completează: ce proprietate CSS face textul aldine?\\n\`\`\`css\\np { ___: bold; }\\n\`\`\`"
-"Ce tag HTML creează un link?\\n\`\`\`html\\n<___>Click</___>\\n\`\`\`"
-
-FORMAT JSON STRICT (array, fără text în afară):
-[
-  {
-    "name": "Titlu scurt 3-5 cuvinte",
-    "question": "Completează sau răspunde:\\n\`\`\`${langId}\\ncodul_cu_blank\\n\`\`\`",
-    "answer": "răspunsul corect exact",
-    "explanation": "Explicație scurtă",
-    "difficulty": "easy"
-  }
-]
-
-RETURNEAZĂ STRICT JSON ARRAY, nimic altceva.`;
-  }
-
-  return callGemini(prompt);
+FORMAT RĂSPUNS — STRICT JSON obiect (fără text în afara JSON):
+{
+  ${fillNeeded > 0 ? `"fillblank": [
+    {
+      "name": "Titlu 3-5 cuvinte",
+      "question": "text cu cod markdown inclus",
+      "answer": "răspunsul exact",
+      "explanation": "de ce e corect",
+      "difficulty": "easy"
+    }
+  ]${codingNeeded > 0 ? "," : ""}` : ""}
+  ${codingNeeded > 0 ? `"coding": [
+    {
+      "name": "Titlu 3-5 cuvinte",
+      "question": "cerință clară cu context real",
+      "starterCode": "// TODO comentarii\\n",
+      "expectedOutput": "output exact sau empty string",
+      "difficulty": "easy"
+    }
+  ]` : ""}
 }
 
-// Generează exerciții coding: studentul scrie cod de la zero
-async function generateCoding(lessonTitle, moduleTitle, slug, count) {
-  const lang = LANG_HINT[slug] || "JavaScript";
+RETURNEAZĂ STRICT JSON, nimic altceva.`;
 
-  const prompt = `Ești un creator expert de exerciții de programare pentru o platformă de e-learning în ROMÂNĂ.
+  const raw = await callAIRaw(prompt);
 
-Generează exact ${count} exerciții de CODARE pentru:
-- Modul: ${moduleTitle}
-- Lecție: ${lessonTitle}
-- Limbaj: ${lang}
+  // Parse JSON object
+  let text = raw.trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
 
-CERINȚE OBLIGATORII:
-1. Studentul scrie COD REAL de la zero (nu explică, nu alege din liste)
-2. Exercițiul e DIRECT legat de topicul lecției — aplică exact conceptul predat
-3. Dificultate: ${count >= 5 ? "2 easy, 2 medium, 1 hard" : count >= 3 ? "1 easy, 1 medium, 1 hard" : "mix"}
-4. starterCode: cod de pornire cu comentarii // TODO (max 15 linii, clar și util)
-5. expectedOutput: output-ul EXACT pe care îl produce programul — sau "" pentru HTML/CSS/React/Next.js
-6. Cerința să fie concretă și contextualizată (ex: "cafenea", "magazin", "clasă de studenți")
-7. Nu repeta concepte banale (nu face Hello World)
-
-FORMAT JSON STRICT (array, fără text în afară):
-[
-  {
-    "name": "Titlu scurt 3-5 cuvinte",
-    "question": "Cerință clară și detaliată. Context real. Max 250 caractere.",
-    "starterCode": "// TODO comentarii clare\\n",
-    "expectedOutput": "output exact sau empty string",
-    "difficulty": "easy"
-  }
-]
-
-RETURNEAZĂ STRICT JSON ARRAY, nimic altceva.`;
-
-  return callGemini(prompt);
+  const obj = JSON.parse(text);
+  return {
+    fillblank: Array.isArray(obj.fillblank) ? obj.fillblank : [],
+    coding:    Array.isArray(obj.coding)    ? obj.coding    : [],
+  };
 }
 
-async function withRetry(fn, label, maxRetries = 3) {
+async function withRetry(fn, maxRetries = 3) {
   for (let i = 1; i <= maxRetries; i++) {
     try {
       return await fn();
     } catch (e) {
       if (i === maxRetries) throw e;
       process.stdout.write(` retry${i}...`);
-      await sleep(2000 * i);
+      await sleep(3000 * i);
     }
   }
 }
@@ -246,24 +279,15 @@ async function main() {
     console.log(`\n=== ${mod.title} [${mod.slug}] ===`);
 
     for (const lesson of mod.lessons) {
-      const quiz   = lesson.tasks.filter(t => t.type === "quiz").sort((a,b) => a.number - b.number);
+      const quiz   = lesson.tasks.filter(t => t.type === "quiz")     .sort((a,b) => a.number - b.number);
       const fill   = lesson.tasks.filter(t => t.type === "fillblank").sort((a,b) => a.number - b.number);
-      const coding = lesson.tasks.filter(t => t.type === "coding").sort((a,b) => a.number - b.number);
+      const coding = lesson.tasks.filter(t => t.type === "coding")   .sort((a,b) => a.number - b.number);
 
-      const quizKeep   = quiz.slice(0, 5);
-      const fillKeep   = fill.slice(0, 5);
-      const codingKeep = coding.slice(0, 5);
+      const toDelete    = [...quiz.slice(5), ...fill.slice(5), ...coding.slice(5)];
+      const fillNeeded  = 5 - Math.min(5, fill.length);
+      const codingNeeded= 5 - Math.min(5, coding.length);
 
-      const toDelete = [
-        ...quiz.slice(5),
-        ...fill.slice(5),
-        ...coding.slice(5),
-      ];
-
-      const fillNeeded   = 5 - fillKeep.length;
-      const codingNeeded = 5 - codingKeep.length;
-
-      const label = `L${lesson.order}. ${lesson.title.slice(0, 40)}`;
+      const label = `L${lesson.order}. ${lesson.title.slice(0, 38)}`;
 
       if (toDelete.length === 0 && fillNeeded === 0 && codingNeeded === 0) {
         process.stdout.write(`  . ${label} — OK\n`);
@@ -271,26 +295,27 @@ async function main() {
         continue;
       }
 
-      process.stdout.write(`  ${label} [q:${quiz.length}→${quizKeep.length} f:+${fillNeeded} c:+${codingNeeded}]`);
+      process.stdout.write(`  ${label} [q:${quiz.length}→${Math.min(5,quiz.length)} f:+${fillNeeded} c:+${codingNeeded}]`);
 
-      // 1. Șterge task-urile în exces
+      // 1. Șterge excesul
       if (toDelete.length > 0) {
         await prisma.task.deleteMany({ where: { id: { in: toDelete.map(t => t.id) } } });
         stats.deleted += toDelete.length;
-        process.stdout.write(` del${toDelete.length}`);
+        process.stdout.write(` -${toDelete.length}`);
       }
 
-      const maxNum = lesson.tasks.reduce((m, t) => Math.max(m, t.number), 0);
-      let nextNum = maxNum + 1;
-
-      // 2. Generează fillblank lipsă
-      if (fillNeeded > 0) {
+      // 2. Generează ce lipsește (un singur apel AI per lecție)
+      if (fillNeeded > 0 || codingNeeded > 0) {
         try {
-          const tasks = await withRetry(
-            () => generateFillBlank(lesson.title, mod.title, mod.slug, fillNeeded),
-            label
+          const generated = await withRetry(() =>
+            generateBoth(lesson.title, mod.title, mod.slug, fillNeeded, codingNeeded)
           );
-          for (const t of tasks.slice(0, fillNeeded)) {
+
+          const maxNum = lesson.tasks.reduce((m, t) => Math.max(m, t.number), 0);
+          let nextNum = maxNum + 1;
+
+          // Insert fillblank
+          for (const t of (generated.fillblank || []).slice(0, fillNeeded)) {
             await prisma.task.create({
               data: {
                 lessonId:    lesson.id,
@@ -303,28 +328,13 @@ async function main() {
                 explanation: t.explanation ? t.explanation.slice(0, 500) : null,
                 options:     [],
                 language:    lang,
-                starterCode: null,
-                expectedOutput: null,
               },
             });
             stats.fillAdded++;
           }
-          process.stdout.write(` fill+${tasks.slice(0, fillNeeded).length}`);
-        } catch (e) {
-          process.stdout.write(` FILL_ERR:${e.message.slice(0, 50)}`);
-          stats.errors++;
-        }
-        await sleep(700);
-      }
 
-      // 3. Generează coding lipsă
-      if (codingNeeded > 0) {
-        try {
-          const tasks = await withRetry(
-            () => generateCoding(lesson.title, mod.title, mod.slug, codingNeeded),
-            label
-          );
-          for (const t of tasks.slice(0, codingNeeded)) {
+          // Insert coding
+          for (const t of (generated.coding || []).slice(0, codingNeeded)) {
             await prisma.task.create({
               data: {
                 lessonId:      lesson.id,
@@ -342,12 +352,14 @@ async function main() {
             });
             stats.codingAdded++;
           }
-          process.stdout.write(` code+${tasks.slice(0, codingNeeded).length}`);
+
+          process.stdout.write(` fill+${Math.min(fillNeeded, generated.fillblank?.length || 0)} code+${Math.min(codingNeeded, generated.coding?.length || 0)}`);
         } catch (e) {
-          process.stdout.write(` CODE_ERR:${e.message.slice(0, 50)}`);
+          process.stdout.write(` ERR:${e.message.slice(0, 60)}`);
           stats.errors++;
         }
-        await sleep(700);
+
+        await sleep(REQUEST_DELAY);
       }
 
       process.stdout.write(" ✓\n");
