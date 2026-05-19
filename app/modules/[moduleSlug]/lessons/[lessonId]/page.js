@@ -1309,33 +1309,6 @@ parent.postMessage({logs:_log},'*');
 
 function TheoryCodeBlock({ code, lang }) {
   const [copied, setCopied] = useState(false);
-  const [output, setOutput] = useState(null);
-  const [running, setRunning] = useState(false);
-
-  async function runJs() {
-    setRunning(true);
-    setOutput(null);
-    const result = await new Promise((resolve) => {
-      const iframe = document.createElement("iframe");
-      iframe.setAttribute("sandbox", "allow-scripts");
-      iframe.style.cssText = "display:none;position:absolute;";
-      document.body.appendChild(iframe);
-      const timer = setTimeout(() => { try { document.body.removeChild(iframe); } catch {} resolve("Timeout (>3s)"); }, 3000);
-      function handler(e) {
-        if (e.source !== iframe.contentWindow) return;
-        clearTimeout(timer); window.removeEventListener("message", handler);
-        try { document.body.removeChild(iframe); } catch {}
-        resolve((e.data?.logs ?? []).join("\n") || "(fără output)");
-      }
-      window.addEventListener("message", handler);
-      const setup = `const _l=[];window.console={log:(...a)=>_l.push(a.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join(' ')),error:(...a)=>_l.push('ERR: '+a.join(' ')),warn:(...a)=>_l.push('WARN: '+a.join(' '))};try{${code}}catch(e){_l.push('Eroare: '+e.message);}parent.postMessage({logs:_l},'*');`;
-      const blob = new Blob([`<!DOCTYPE html><html><body><script>${setup}<\/script></body></html>`], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      iframe.src = url; iframe.onload = () => URL.revokeObjectURL(url);
-    });
-    setOutput(result);
-    setRunning(false);
-  }
 
   function copy() {
     navigator.clipboard?.writeText(code).catch(() => {});
@@ -1343,36 +1316,19 @@ function TheoryCodeBlock({ code, lang }) {
     setTimeout(() => setCopied(false), 1500);
   }
 
-  const isJs = !lang || lang === "js" || lang === "javascript";
-
   return (
     <div className="rounded-2xl overflow-hidden border border-gray-700 dark:border-gray-600 my-2 shadow-md">
       <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800">
         {lang && <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{lang}</span>}
-        <div className="flex items-center gap-2 ml-auto">
-          {isJs && (
-            <button onClick={runJs} disabled={running}
-              className="flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300 font-bold transition-colors disabled:opacity-50">
-              {running ? <RefreshCw className="w-3 h-3 animate-spin"/> : <Play className="w-3 h-3 fill-current"/>}
-              {running ? "..." : "Run"}
-            </button>
-          )}
-          <button onClick={copy}
-            className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-200 font-bold transition-colors">
-            <Copy className="w-3 h-3"/>
-            {copied ? "Copiat!" : "Copy"}
-          </button>
-        </div>
+        <button onClick={copy}
+          className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-200 font-bold transition-colors ml-auto">
+          <Copy className="w-3 h-3"/>
+          {copied ? "Copiat!" : "Copy"}
+        </button>
       </div>
       <pre className="bg-gray-900 dark:bg-black/70 text-green-300 p-4 text-xs font-mono overflow-x-auto leading-relaxed whitespace-pre">
         {code}
       </pre>
-      {output !== null && (
-        <div className="bg-gray-950 border-t border-gray-700 px-4 py-2.5">
-          <p className="text-[10px] font-black text-gray-500 uppercase tracking-wide mb-1">Output</p>
-          <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap">{output}</pre>
-        </div>
-      )}
     </div>
   );
 }
