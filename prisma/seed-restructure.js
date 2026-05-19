@@ -180,78 +180,95 @@ async function generateBoth(lessonTitle, moduleTitle, slug, fillNeeded, codingNe
   const comment = COMMENT_CHAR[slug] || "//";
   const isRunnable = HAS_RUNNABLE_OUTPUT.has(slug);
 
-  const fillSection = fillNeeded > 0 ? `
-=== SECȚIUNEA A: ${fillNeeded} exerciții FILLBLANK ===
-${isRunnable ? `
-Tipul "prezice output-ul":
-- Scrie un snippet de cod SCURT (4-10 linii) care demonstrează EXACT conceptul lecției
-- OBLIGATORIU: codul produce OUTPUT COMPLET DETERMINIST
-  ✗ INTERZIS: random(), randint(), choice(), Math.random(), Date, time(), seed nedefinit
-  ✓ PERMIS: variabile fixe, bucle, condiții, funcții cu valori hardcodate
-- Output-ul să fie SCURT: 1-4 linii de text simplu (nu obiecte mari)
-- question: "Ce va afișa codul următor?\\n\`\`\`${langId}\\n<cod_complet_here>\\n\`\`\`"
-- answer: EXACT output-ul, fără spații extra, fără newline la final
-` : `
-Tipul "completează valoarea":
-- Arată un snippet de cod cu o valoare/proprietate/tag lipsă (marcată cu ___ sau comentariu)
-- Studentul scrie EXACT valoarea corectă (1-5 cuvinte)
-- question include codul în markdown \`\`\`${langId}...\`\`\`
-- answer: valoarea exactă fără spații extra
-`}
-Returnează sub cheia "fillblank": array de ${fillNeeded} obiecte cu: name, question, answer, explanation, difficulty` : "";
-
-  const codingSection = codingNeeded > 0 ? `
-=== SECȚIUNEA B: ${codingNeeded} exerciții CODING ===
-Tipul "scrie cod de la zero":
-- Cerință practică, concretă, contextualizată (cafenea, magazin, studenți, etc.)
-- OBLIGATORIU: legat direct de conceptul lecției
-- starterCode: ghid cu comentarii ${comment} TODO (max 10 linii, sintaxă ${langId} corectă!)
-  ✗ NU folosi // TODO în Python — folosește # TODO
-  ✗ NU folosi # TODO în JavaScript/C/Java — folosește // TODO
-- expectedOutput: output EXACT și DETERMINISTIC — sau "" pentru HTML/CSS/React/Next.js
-  ✗ INTERZIS output din random/time — pune valori fixe în cerință
-- Nu face Hello World, nu face exerciții triviale
-Returnează sub cheia "coding": array de ${codingNeeded} obiecte cu: name, question, starterCode, expectedOutput, difficulty` : "";
-
   const diffHint = (n) => n >= 5 ? "2 easy, 2 medium, 1 hard" : n >= 3 ? "1 easy, 1 medium, 1 hard" : "mix easy/medium";
 
-  const prompt = `Ești un expert în crearea de exerciții educaționale pentru o platformă de e-learning în ROMÂNĂ.
+  // Exemple de calitate înaltă pentru fiecare tip
+  const fillExample = isRunnable ? `
+EXEMPLU FILLBLANK BUN (urmează acest nivel de calitate):
+{
+  "name": "Scoping funcție",
+  "question": "Ce va afișa codul următor?\\n\`\`\`${langId}\\nx = 5\\ndef dublu(n):\\n    return n * 2\\nrezultat = dublu(x) + 3\\nprint(rezultat)\\n\`\`\`",
+  "answer": "13",
+  "explanation": "dublu(5) = 10, apoi 10 + 3 = 13. Funcția nu modifică x global.",
+  "difficulty": "easy"
+}
+EXEMPLU FILLBLANK MEDIUM (urmează acest nivel):
+{
+  "name": "Iterare cu acumulare",
+  "question": "Ce va afișa codul următor?\\n\`\`\`${langId}\\nnumere = [3, 7, 2, 8]\\ntotal = 0\\nfor n in numere:\\n    if n > 4:\\n        total += n\\nprint(total)\\n\`\`\`",
+  "answer": "15",
+  "explanation": "Doar 7 și 8 sunt > 4. 7 + 8 = 15.",
+  "difficulty": "medium"
+}` : `
+EXEMPLU FILLBLANK BUN (urmează acest nivel de calitate):
+{
+  "name": "Flexbox centrare",
+  "question": "Ce proprietate CSS lipsește pentru a centra elementele pe axa principală?\\n\`\`\`css\\n.container {\\n  display: flex;\\n  ___: center;\\n}\\n\`\`\`",
+  "answer": "justify-content",
+  "explanation": "justify-content controlează alinierea pe axa principală a flexbox-ului.",
+  "difficulty": "easy"
+}`;
 
+  const codingExample = `
+EXEMPLU CODING BUN (urmează acest nivel de calitate):
+{
+  "name": "Statistici vânzări",
+  "question": "O librărie a vândut în 3 zile: 12, 8, 15 cărți. Calculează totalul, media zilnică și ziua cu cele mai multe vânzări.",
+  "starterCode": "${comment} Lista cu vânzările pe 3 zile\\nvanzari = [12, 8, 15]\\n\\n${comment} TODO: calculează totalul\\n${comment} TODO: calculează media (rotunjit 2 zecimale)\\n${comment} TODO: găsește indexul zilei cu max vânzări (ziua 1, 2 sau 3)\\n${comment} TODO: afișează toate cele 3 rezultate\\n",
+  "expectedOutput": "Total: 35\\nMedie: 11.67\\nCea mai buna zi: 3",
+  "difficulty": "medium"
+}`;
+
+  const prompt = `Ești un creator expert de exerciții de programare pentru o platformă de e-learning în ROMÂNĂ.
+Generezi conținut pentru studenți care învață să programeze — exercițiile trebuie să fie clare, concrete și să testeze ÎNȚELEGEREA reală, nu memorarea.
+
+CONTEXT:
 Modul: ${moduleTitle}
 Lecție: ${lessonTitle}
-Limbaj: ${lang} (caracter comentariu: ${comment})
-${fillSection}
-${codingSection}
+Limbaj: ${lang}
+Caracter comentariu: "${comment}" (FOLOSEȘTE EXACT ASTA în starterCode, nu alt caracter!)
 
-REGULI GENERALE:
-- Toate textele (name, question, cerințe) în ROMÂNĂ
-- Exercițiile să fie legate DIRECT de subiectul lecției
-- Dificultăți: ${diffHint(Math.max(fillNeeded, codingNeeded))}
-- Nu repeta exerciții similare între ele
+${fillNeeded > 0 ? `━━━ SECȚIUNEA A: ${fillNeeded} exerciții FILLBLANK ━━━
+${isRunnable ? `Tipul: studentul PREZICE OUTPUT-UL unui cod dat.
+REGULI STRICTE:
+• Codul demonstrează EXACT conceptul din lecție — nu cod generic
+• OUTPUT DETERMINIST: ZERO random(), Date, input(), seed aleatoriu
+• Output scurt (1-5 linii), dar NON-TRIVIAL — răspunsul nu trebuie să fie evident la prima vedere
+• question: "Ce va afișa codul următor?\\n\`\`\`${langId}\\n...cod 5-12 linii...\\n\`\`\`"
+• answer: output-ul EXACT, fără spații/newline extra la final` : `Tipul: studentul COMPLETEAZĂ valoarea/proprietatea lipsă dintr-un snippet de cod.
+REGULI STRICTE:
+• Arată cod real cu un ___ sau comentariu care indică ce lipsește
+• Răspunsul e concis (1-8 cuvinte), dar necesită cunoașterea conceptului
+• question include codul în bloc markdown \`\`\`${langId}\`\`\``}
 
-FORMAT RĂSPUNS — STRICT JSON obiect (fără text în afara JSON):
-{
-  ${fillNeeded > 0 ? `"fillblank": [
-    {
-      "name": "Titlu 3-5 cuvinte",
-      "question": "Ce va afișa codul următor?\\n\`\`\`${langId}\\ncodul_here\\n\`\`\`",
-      "answer": "output_exact_fara_newline_la_final",
-      "explanation": "de ce produce acel output",
-      "difficulty": "easy"
-    }
-  ]${codingNeeded > 0 ? "," : ""}` : ""}
-  ${codingNeeded > 0 ? `"coding": [
-    {
-      "name": "Titlu 3-5 cuvinte",
-      "question": "Cerință clară cu context real. Max 200 caractere.",
-      "starterCode": "${comment} TODO pasul 1\\n${comment} TODO pasul 2\\n",
-      "expectedOutput": "output_deterministic_exact sau empty string",
-      "difficulty": "easy"
-    }
-  ]` : ""}
-}
+${fillExample}
 
-RETURNEAZĂ STRICT JSON, nimic altceva.`;
+Generează ${fillNeeded} obiecte cu: name, question, answer, explanation, difficulty` : ""}
+
+${codingNeeded > 0 ? `━━━ SECȚIUNEA B: ${codingNeeded} exerciții CODING ━━━
+Tipul: studentul SCRIE COD de la zero, pornind de la un schelet cu TODO-uri.
+REGULI STRICTE:
+• Cerința e CONTEXTUALIZATĂ cu date reale (nu "scrie o funcție", ci "librăria X a vândut Y cărți")
+• starterCode are ${comment} TODO comentarii UTILE care ghidează studentul pas cu pas
+• FOLOSEȘTE EXACT "${comment}" ca prefix pentru comentarii — NU alt caracter!
+• expectedOutput: OUTPUT EXACT și DETERMINISTIC cu valori fixe din cerință — sau "" dacă e HTML/CSS/React
+• INTERZIS: exerciții triviale (Hello World, print simplu), output aleatoriu, import()-uri complexe
+
+${codingExample}
+
+Generează ${codingNeeded} obiecte cu: name, question, starterCode, expectedOutput, difficulty` : ""}
+
+CERINȚE CALITATE:
+• Dificultăți: ${diffHint(Math.max(fillNeeded, codingNeeded))}
+• Exercițiile să fie DISTINCTE — nu variații ale aceluiași lucru
+• Fiecare exercițiu testează un ASPECT DIFERIT al conceptului din lecție
+• Toate textele în ROMÂNĂ (cod în limbajul specificat)
+
+RĂSPUNS: JSON obiect STRICT, fără text în afara JSON:
+{${fillNeeded > 0 ? `
+  "fillblank": [ /* ${fillNeeded} obiecte */ ]${codingNeeded > 0 ? "," : ""}` : ""}${codingNeeded > 0 ? `
+  "coding": [ /* ${codingNeeded} obiecte */ ]` : ""}
+}`;
 
   const raw = await callAIRaw(prompt);
 
