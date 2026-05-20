@@ -1,12 +1,17 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+﻿"use strict";
+require("dotenv").config({ path: ".env" });
+const { PrismaClient } = require("@prisma/client");
+const p = new PrismaClient();
 async function main() {
-  const slug = process.argv[2];
-  const mod = await prisma.module.findUnique({ where: { slug }, include: { lessons: { orderBy: { order: 'asc' } } } });
-  if (!mod) { console.log('Module not found'); return; }
-  for (const l of mod.lessons) {
-    console.log(l.order, l.slug, '|', l.title);
+  const slugs = ["cpp","java","csharp","php","tailwind","cybersecurity","nextjs-frontend","nextjs-backend","c","sql","react","javascript"];
+  for (const slug of slugs) {
+    const mod = await p.module.findFirst({
+      where: { slug },
+      include: { lessons: { orderBy: { order: "asc" }, select: { order: true, title: true } } },
+    });
+    if (!mod) continue;
+    console.log("\n=== " + slug + " (" + mod.lessons.length + " lessons) ===");
+    mod.lessons.forEach(l => console.log("  " + l.order + ". " + l.title));
   }
-  await prisma.$disconnect();
 }
-main().catch(console.error);
+main().catch(console.error).finally(() => p["$disconnect"]());
