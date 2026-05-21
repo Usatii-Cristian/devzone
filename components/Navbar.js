@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Home, Dumbbell, Star, Code2, Settings, BookOpen } from "lucide-react";
+import { Home, Dumbbell, Star, Code2, Settings, BookOpen, Compass } from "lucide-react";
 import SearchModal from "@/components/SearchModal";
 
 export default function Navbar() {
@@ -29,6 +29,7 @@ export default function Navbar() {
     { href: "/", icon: Home, label: "Acasă" },
     { href: "/antrenament", icon: Dumbbell, label: "Exersează" },
     { href: "/proiecte", icon: Star, label: "Proiecte" },
+    { href: "/trasee", icon: Compass, label: "Trasee" },
     { href: "/editor", icon: Code2, label: "Editor" },
     { href: "/dictionar", icon: BookOpen, label: "Dicționar" },
     { href: "/settings", icon: Settings, label: "Setări" },
