@@ -4,8 +4,8 @@ const { PrismaClient } = require("@prisma/client");
 
 const API_KEY = process.env.GOOGLE_AI_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-const MIN_CHARS = 450; // sections shorter than this get enhanced
-const DELAY_MS = 800;  // polite delay between API calls
+const MIN_CHARS = 1500; // sections shorter than this get enhanced (raised for full quality pass)
+const DELAY_MS = 7000;  // 7s between calls — free tier limit is 10 RPM
 
 const prisma = new PrismaClient();
 
@@ -57,13 +57,13 @@ function buildPrompt(moduleTitle, moduleSlug, lessonTitle, sectionTitle, existin
 
   const userPrompt = `Scrie conținutul pentru secțiunea "${sectionTitle}" din lecția "${lessonTitle}" (modulul ${lang}).
 
-Conținut existent (extinde și îmbunătățește considerabil):
+Conținut existent (rescrie și îmbunătățește la nivel expert):
 ---
 ${existingContent}
 ---
 
 CERINȚE:
-• Între 600-900 caractere total
+• Între 700-1000 caractere total
 • Include 1-2 blocuri de cod: \`\`\`${codeLang}\\n...\\n\`\`\`
 • Cod real, corect, comentat unde e nevoie
 • Folosește **bold** pentru concepte cheie
@@ -77,7 +77,16 @@ CERINȚE:
 }
 
 async function main() {
-  // Get all theory sections that are too short
+  const args = process.argv.slice(2);
+  const dryRun = args.includes("--dry");
+  const allMode = args.includes("--all"); // process ALL sections, not just short ones
+  const moduleFilter = args.find(a => a.startsWith("--module="))?.split("=")[1];
+  const skipModules = args.filter(a => a.startsWith("--skip=")).map(a => a.split("=")[1]);
+  const limitArg = args.find(a => a.startsWith("--limit="))?.split("=")[1];
+  const limit = limitArg ? parseInt(limitArg) : Infinity;
+
+  const threshold = allMode ? Infinity : MIN_CHARS;
+
   const allTheory = await prisma.theory.findMany({
     where: { content: { not: undefined } },
     include: { lesson: { include: { module: true } } },
@@ -88,38 +97,37 @@ async function main() {
     ],
   });
 
-  const weak = allTheory.filter(t => t.content.length < MIN_CHARS);
-  console.log(`Found ${weak.length} weak sections (< ${MIN_CHARS} chars) out of ${allTheory.length} total`);
+  const needsWork = allTheory.filter(t => {
+    if (skipModules.includes(t.lesson.module.slug)) return false;
+    if (moduleFilter && t.lesson.module.slug !== moduleFilter) return false;
+    return t.content.length < threshold;
+  });
+
+  const label = allMode ? "all sections" : `sections < ${MIN_CHARS} chars`;
+  console.log(`\nMode: ${allMode ? "--all (full quality pass)" : "weak-only"}`);
+  console.log(`Found ${needsWork.length} ${label} out of ${allTheory.length} total`);
+  if (skipModules.length) console.log(`Skipping: ${skipModules.join(", ")}`);
 
   // Group by module for reporting
   const byModule = {};
-  for (const t of weak) {
+  for (const t of needsWork) {
     const name = t.lesson.module.title;
     byModule[name] = (byModule[name] || 0) + 1;
   }
   for (const [mod, cnt] of Object.entries(byModule)) {
-    console.log(`  ${mod}: ${cnt} weak sections`);
+    console.log(`  ${mod}: ${cnt} sections`);
   }
 
-  const args = process.argv.slice(2);
-  const dryRun = args.includes("--dry");
-  const moduleFilter = args.find(a => a.startsWith("--module="))?.split("=")[1];
-  const limitArg = args.find(a => a.startsWith("--limit="))?.split("=")[1];
-  const limit = limitArg ? parseInt(limitArg) : Infinity;
-
-  const toProcess = weak.filter(t =>
-    !moduleFilter || t.lesson.module.slug === moduleFilter
-  ).slice(0, limit);
-
+  const toProcess = needsWork.slice(0, limit);
   console.log(`\nProcessing ${toProcess.length} sections${dryRun ? " (DRY RUN)" : ""}...`);
-  if (moduleFilter) console.log(`Module filter: ${moduleFilter}`);
 
   let done = 0, failed = 0;
 
-  for (const section of toProcess) {
+  for (let i = 0; i < toProcess.length; i++) {
+    const section = toProcess[i];
     const mod = section.lesson.module;
     const lesson = section.lesson;
-    const prefix = `[${done + 1}/${toProcess.length}] ${mod.title} / ${lesson.title} / "${section.title}"`;
+    const prefix = `[${i + 1}/${toProcess.length}] ${mod.title} / ${lesson.title} / "${section.title}"`;
 
     if (dryRun) {
       console.log(`  WOULD enhance: ${prefix} (${section.content.length} chars)`);
@@ -132,20 +140,18 @@ async function main() {
       const enhanced = await callGemini(systemInstr, userPrompt);
 
       if (!enhanced || enhanced.length < 300) {
-        console.log(`  ⚠ SHORT response for: ${prefix} (got ${enhanced.length} chars)`);
+        console.log(`  ⚠ SHORT response for: ${prefix} (got ${enhanced?.length ?? 0} chars)`);
         failed++;
-        continue;
+      } else {
+        await prisma.theory.update({
+          where: { id: section.id },
+          data: { content: enhanced },
+        });
+        console.log(`  ✓ ${prefix}: ${section.content.length} → ${enhanced.length} chars`);
+        done++;
       }
-
-      await prisma.theory.update({
-        where: { id: section.id },
-        data: { content: enhanced },
-      });
-
-      console.log(`  ✓ ${prefix}: ${section.content.length} → ${enhanced.length} chars`);
-      done++;
     } catch (err) {
-      console.error(`  ✗ FAILED: ${prefix}: ${err.message}`);
+      console.error(`  ✗ FAILED: ${prefix}: ${err.message.slice(0, 120)}`);
       failed++;
     }
 
