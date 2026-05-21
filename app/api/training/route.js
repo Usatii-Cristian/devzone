@@ -174,7 +174,7 @@ Returnează STRICT array-ul JSON, nimic altceva.`;
         name: q.name || `Problema ${i + 1}`,
         question: q.question,
         options: q.options.slice(0, 4),
-        answer: q.answer,
+        answer: q.options.find(o => o === q.answer) ?? q.options[0],
         explanation: q.explanation || `Răspunsul corect este: ${q.answer}`,
         difficulty: ["easy", "medium", "hard"].includes(q.difficulty) ? q.difficulty : "medium",
         lesson: { title: "Generat AI" },

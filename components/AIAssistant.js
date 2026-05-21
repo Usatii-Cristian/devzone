@@ -22,16 +22,22 @@ function MessageContent({ text, isUser }) {
   );
 }
 
+const INITIAL_MESSAGE = {
+  role: "assistant",
+  content: `Bună! Sunt asistentul tău AI\n\nTe ajut cu indicii și explicații — fără să îți dau răspunsul direct. Gânditul singur e cel mai bun antrenament!\n\nCe nelămuriri ai?`,
+};
+
 export default function AIAssistant({ task, lessonTitle }) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([{
-    role: "assistant",
-    content: `Bună! Sunt asistentul tău AI\n\nTe ajut cu indicii și explicații — fără să îți dau răspunsul direct. Gânditul singur e cel mai bun antrenament!\n\nCe nelămuriri ai?`,
-  }]);
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    setMessages([INITIAL_MESSAGE]);
+  }, [task?.id]);
 
   useEffect(() => {
     if (open) {
@@ -59,7 +65,7 @@ export default function AIAssistant({ task, lessonTitle }) {
         }),
       });
       const data = await res.json();
-      setMessages(p => [...p, { role: "assistant", content: data.reply }]);
+      setMessages(p => [...p, { role: "assistant", content: data.reply || "Fără răspuns." }]);
     } catch {
       setMessages(p => [...p, { role: "assistant", content: "Eroare de conexiune. Încearcă din nou." }]);
     } finally {
@@ -79,7 +85,7 @@ export default function AIAssistant({ task, lessonTitle }) {
             <div className="flex-1 min-w-0">
               <p className="font-black text-sm">Asistent AI</p>
               <p className="text-xs text-purple-200 truncate">
-                {task ? (task.question.length > 45 ? task.question.slice(0, 45) + "…" : task.question) : (lessonTitle || "Gata să te ajut")}
+                {task ? (task.question?.length > 45 ? task.question.slice(0, 45) + "…" : task.question) : (lessonTitle || "Gata să te ajut")}
               </p>
             </div>
             <button onClick={() => setOpen(false)} className="text-white/70 hover:text-white transition-colors ml-1 flex-shrink-0">

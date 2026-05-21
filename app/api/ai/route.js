@@ -11,7 +11,12 @@ export async function POST(request) {
   }
 
   const body = await request.json();
-  const { messages, taskQuestion, taskOptions, lessonTitle } = body;
+  const { messages: rawMessages, taskQuestion, taskOptions, lessonTitle } = body;
+  if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
+    return NextResponse.json({ reply: "Mesaje invalide." }, { status: 400 });
+  }
+  // Keep only last 12 messages to limit token usage
+  const messages = rawMessages.slice(-12);
 
   const apiKey = process.env.GOOGLE_AI_KEY;
 
@@ -60,7 +65,7 @@ Cum răspunzi:
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents,
-          generationConfig: { maxOutputTokens: 600, temperature: 0.7 },
+          generationConfig: { maxOutputTokens: 600, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
@@ -72,7 +77,9 @@ Cum răspunzi:
     }
 
     const data = await response.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "Fără răspuns.";
+    const parts = data.candidates?.[0]?.content?.parts ?? [];
+    const textPart = parts.find(p => !p.thought) || parts[0];
+    const reply = textPart?.text ?? "Fără răspuns.";
     return NextResponse.json({ reply });
   } catch {
     return NextResponse.json({ reply: "Eroare de rețea. Încearcă din nou." });

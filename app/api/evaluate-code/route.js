@@ -60,7 +60,7 @@ Evaluează și returnează JSON-ul complet.`;
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: "user", parts: [{ text: userMsg }] }],
-          generationConfig: { maxOutputTokens: 800, temperature: 0.3 },
+          generationConfig: { maxOutputTokens: 800, temperature: 0.3, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
@@ -70,7 +70,9 @@ Evaluează și returnează JSON-ul complet.`;
     }
 
     const data = await response.json();
-    let text = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
+    const parts = data.candidates?.[0]?.content?.parts ?? [];
+    const textPart = parts.find(p => !p.thought) || parts[0];
+    let text = (textPart?.text ?? "").trim();
     text = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
