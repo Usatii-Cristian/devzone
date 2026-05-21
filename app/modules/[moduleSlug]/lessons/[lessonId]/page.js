@@ -1362,7 +1362,7 @@ function TheoryContent({ content }) {
               <h2 key={j} className="text-lg font-black text-slate-900 dark:text-white mt-4 mb-2">{line.slice(2)}</h2>
             );
             if (line.startsWith("• ") || line.startsWith("- ")) {
-              const content = line.startsWith("• ") ? line.slice(2) : line.slice(2);
+              const content = line.slice(2);
               return (
                 <div key={j} className="flex gap-2 text-sm text-slate-700 dark:text-slate-200">
                   <span className="text-indigo-500 dark:text-indigo-400 flex-shrink-0 font-black mt-0.5">•</span>

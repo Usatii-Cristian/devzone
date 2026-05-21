@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
+import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 export async function POST(request) {
+  const limit = rateLimit(`hint:${clientKey(request)}`, 20);
+  if (!limit.ok) {
+    return NextResponse.json({ hint: "Prea multe indicii într-un minut. Așteaptă puțin." });
+  }
   try {
     const { question, language, type, lessonTitle, hintIndex = 0 } = await request.json();
-    if (!question) return NextResponse.json({ error: "Lipsește întrebarea." }, { status: 400 });
+    if (!question || question.length > 2000) return NextResponse.json({ error: "Lipsește întrebarea." }, { status: 400 });
 
     const apiKey = process.env.GOOGLE_AI_KEY;
     if (!apiKey) {

@@ -14,7 +14,6 @@ const LEVEL_ICONS = {
 };
 import Navbar from "@/components/Navbar";
 import ThemeToggle from "@/components/ThemeToggle";
-import SearchModal from "@/components/SearchModal";
 import AchievementIcon from "@/components/AchievementIcon";
 import { computeStreak, computeAchievements, computeXP, computeLevel, XP_LEVELS } from "@/lib/stats";
 import { ModIcon, MOD_BG } from "@/lib/moduleIcons";
@@ -23,7 +22,6 @@ export default function Home() {
   const [modules, setModules] = useState([]);
   const [progress, setProgress] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [ranksOpen, setRanksOpen] = useState(false);
   const [user, setUser] = useState({ name: "", initial: "" });
 
@@ -91,8 +89,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 pb-28">
-      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} modules={modules}/>
-
       {/* Ranks Modal */}
       {ranksOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setRanksOpen(false)}>
@@ -166,7 +162,7 @@ export default function Home() {
             <span className="font-black text-base tracking-tight truncate">DevZone</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <button onClick={() => setSearchOpen(true)} title="Caută (Ctrl+K)"
+            <button onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }))} title="Caută (Ctrl+K)"
               className="p-2 rounded-xl bg-white/15 hover:bg-white/25 transition-colors text-white active:scale-95">
               <Search className="w-4 h-4"/>
             </button>
