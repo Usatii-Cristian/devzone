@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 import prisma from "@/lib/prisma";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 
-function getUserId(request) {
-  return request.headers.get("x-user-id") || "local-user";
+const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
+
+async function getUserId(request) {
+  try {
+    const token = request.cookies.get("auth_token")?.value;
+    if (!token) return "local-user";
+    const { payload } = await jwtVerify(token, SECRET);
+    return String(payload.email || "local-user");
+  } catch {
+    return "local-user";
+  }
 }
 
 export async function POST(request) {
@@ -15,7 +25,7 @@ export async function POST(request) {
     );
   }
   try {
-    const userId = getUserId(request);
+    const userId = await getUserId(request);
     const body = await request.json();
     const { moduleSlug, difficulty, count, scope, taskType } = body;
     const effectiveScope = scope || "completed-current";

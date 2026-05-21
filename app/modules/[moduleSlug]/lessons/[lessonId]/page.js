@@ -489,7 +489,7 @@ parent.postMessage({logs:_log},'*');
     let out = "";
     try {
       const lang = (language || "javascript").toLowerCase();
-      if (lang === "javascript" || !lang) {
+      if (lang === "javascript" || lang === "jsx" || !lang) {
         out = await runInIframe(code);
       } else {
         out = await runWithPiston(code, lang);

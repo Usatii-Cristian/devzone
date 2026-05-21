@@ -1,13 +1,23 @@
 import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 import prisma from "@/lib/prisma";
 
-function getUserId(request) {
-  return request.headers.get("x-user-id") || "local-user";
+const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
+
+async function getUserId(request) {
+  try {
+    const token = request.cookies.get("auth_token")?.value;
+    if (!token) return "local-user";
+    const { payload } = await jwtVerify(token, SECRET);
+    return String(payload.email || "local-user");
+  } catch {
+    return "local-user";
+  }
 }
 
 export async function GET(request) {
   try {
-    const userId = getUserId(request);
+    const userId = await getUserId(request);
     const { searchParams } = new URL(request.url);
     const lessonId = searchParams.get("lessonId");
 
@@ -31,7 +41,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const userId = getUserId(request);
+    const userId = await getUserId(request);
     const body = await request.json();
     const { lessonId, completedTasks, wrongTasks, currentTaskIdx, currentTheoryIdx, completed } = body;
 

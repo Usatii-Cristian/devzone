@@ -265,7 +265,7 @@ parent.postMessage({logs:_log},'*');
     let out = "";
     try {
       const lang = (language || "javascript").toLowerCase();
-      out = (lang === "javascript" || lang === "html" || lang === "css" || lang === "sql" || !lang)
+      out = (lang === "javascript" || lang === "jsx" || lang === "html" || lang === "css" || lang === "sql" || !lang)
         ? await runInIframe(codeStr)
         : await runWithPiston(codeStr, lang);
       setCodeOutput(out);

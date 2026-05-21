@@ -1,13 +1,23 @@
 import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 import prisma from "@/lib/prisma";
 
-function getUserId(request) {
-  return request.headers.get("x-user-id") || "local-user";
+const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
+
+async function getUserId(request) {
+  try {
+    const token = request.cookies.get("auth_token")?.value;
+    if (!token) return "local-user";
+    const { payload } = await jwtVerify(token, SECRET);
+    return String(payload.email || "local-user");
+  } catch {
+    return "local-user";
+  }
 }
 
 export async function GET(request) {
   try {
-    const userId = getUserId(request);
+    const userId = await getUserId(request);
     const { searchParams } = new URL(request.url);
     const currentModuleSlug = searchParams.get("moduleSlug");
     const count = Math.min(parseInt(searchParams.get("count") || "3"), 5);
@@ -37,9 +47,9 @@ export async function GET(request) {
 
     const completedLessonIds = completedProgress.map(p => p.lessonId);
 
-    // Sample tasks from completed lessons (limit to avoid heavy queries)
+    // Sample tasks from completed lessons — quiz only (review UI only handles options)
     const allTasks = await prisma.task.findMany({
-      where: { lessonId: { in: completedLessonIds } },
+      where: { lessonId: { in: completedLessonIds }, type: "quiz" },
       include: {
         lesson: { include: { module: { select: { title: true, slug: true } } } },
       },
