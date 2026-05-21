@@ -1,7 +1,8 @@
 "use client";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { useLocalStorage } from "@/lib/hooks";
 import {
@@ -259,8 +260,18 @@ ReactDOM.createRoot(document.getElementById('root')).render(<Counter />);
 const PISTON_URL = "https://emkc.org/api/v2/piston/execute";
 
 export default function EditorPage() {
-  const [langId, setLangId] = useState("python");
-  const [code, setCode] = useState(LANGUAGES[0].default);
+  return (
+    <Suspense fallback={null}>
+      <EditorContent />
+    </Suspense>
+  );
+}
+
+function EditorContent() {
+  const searchParams = useSearchParams();
+  const initialLang = LANGUAGES.find(l => l.id === searchParams.get("lang")) ?? LANGUAGES[0];
+  const [langId, setLangId] = useState(initialLang.id);
+  const [code, setCode] = useState(initialLang.default);
   const [output, setOutput] = useState(null);
   const [running, setRunning] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -269,8 +280,18 @@ export default function EditorPage() {
   const [editorFontRaw] = useLocalStorage("editor-font", "14");
   const editorFont = Number(editorFontRaw) || 14;
   const iframeRef = useRef(null);
+  const langDropdownRef = useRef(null);
 
   const lang = LANGUAGES.find(l => l.id === langId);
+
+  useEffect(() => {
+    if (!langOpen) return;
+    function onOutside(e) {
+      if (!langDropdownRef.current?.contains(e.target)) setLangOpen(false);
+    }
+    document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [langOpen]);
 
   function selectLang(l) {
     setLangId(l.id);
@@ -373,7 +394,7 @@ ${code}
           </div>
 
           {/* Language selector */}
-          <div className="relative flex-shrink-0">
+          <div className="relative flex-shrink-0" ref={langDropdownRef}>
             <button onClick={() => setLangOpen(o => !o)}
               className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 transition-colors px-2.5 py-2 rounded-lg text-white text-xs font-bold active:scale-95">
               <lang.Icon className="w-4 h-4" style={{ color: lang.color }}/>

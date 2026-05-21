@@ -47,8 +47,10 @@ export default function SettingsPage() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `devzone-progress-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
       alert("Eroare la export. Încearcă din nou.");
     }
@@ -61,8 +63,8 @@ export default function SettingsPage() {
     try {
       const res = await fetch("/api/progress");
       const all = await res.json();
-      for (const p of all) {
-        await fetch("/api/progress", {
+      await Promise.all(all.map(p =>
+        fetch("/api/progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -73,8 +75,8 @@ export default function SettingsPage() {
             currentTheoryIdx: 0,
             completed: false,
           }),
-        });
-      }
+        })
+      ));
       alert("Tot progresul a fost resetat.");
       setResetConfirm(false);
     } catch {

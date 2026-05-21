@@ -681,7 +681,7 @@ function ProjectCard({ project, expanded, onToggle }) {
 
           {/* Editor button */}
           {project.editorLang && (
-            <Link href={`/editor`}
+            <Link href={`/editor?lang=${project.editorLang}`}
               className="mt-2 w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 transition-colors text-white text-sm font-black py-3 rounded-xl active:scale-[0.98] shadow-sm">
               <Code2 className="w-4 h-4"/> Deschide în Editor
             </Link>
