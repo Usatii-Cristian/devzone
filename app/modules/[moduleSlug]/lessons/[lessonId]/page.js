@@ -572,12 +572,12 @@ parent.postMessage({logs:_log},'*');
   const showReview = view === "tasks" && !finished && reviewTasks && reviewTasks.length > 0 && !reviewDone && rt;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-indigo-50 dark:from-slate-900 dark:to-slate-800 flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-slate-100 to-indigo-50 dark:from-slate-900 dark:to-slate-800 flex flex-col overflow-hidden">
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={() => setSidebarOpen(false)}/>
       )}
 
-      <div className="flex flex-1 overflow-hidden min-h-screen">
+      <div className="flex flex-1 overflow-hidden">
         {/* ── SIDEBAR ── */}
         <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-[85vw] max-w-[300px] lg:w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col shadow-xl lg:shadow-none transition-transform duration-200
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
