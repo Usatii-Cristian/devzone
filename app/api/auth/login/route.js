@@ -13,9 +13,9 @@ export async function POST(request) {
     const { email, password } = await request.json();
 
     const user = USERS.find(u =>
-      u.email &&
+      u.email && u.password &&
       u.email.trim().toLowerCase() === email.trim().toLowerCase() &&
-      u.password.trim() === password
+      u.password.trim() === password.trim()
     );
     if (!user) {
       return NextResponse.json({ error: "Email sau parolă incorecte." }, { status: 401 });
