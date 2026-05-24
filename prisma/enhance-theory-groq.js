@@ -2,10 +2,11 @@
 require("dotenv").config({ path: ".env" });
 const { PrismaClient } = require("@prisma/client");
 
-const API_KEY = process.env.GOOGLE_AI_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-const MIN_CHARS = 1500; // sections shorter than this get enhanced (raised for full quality pass)
-const DELAY_MS = 7000;  // 7s between calls — free tier limit is 10 RPM
+const API_KEY = process.env.GROQ_API_KEY;
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL = "llama-3.3-70b-versatile";
+const MIN_CHARS = 1500;
+const DELAY_MS = 2500; // Groq free tier: ~30 RPM
 
 const prisma = new PrismaClient();
 
@@ -13,18 +14,21 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
-async function callGemini(systemInstr, userPrompt) {
-  const res = await fetch(GEMINI_URL, {
+async function callGroq(systemInstr, userPrompt) {
+  const res = await fetch(GROQ_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${API_KEY}`,
+    },
     body: JSON.stringify({
-      system_instruction: { parts: [{ text: systemInstr }] },
-      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-      generationConfig: {
-        maxOutputTokens: 2500,
-        temperature: 0.4,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
+      model: MODEL,
+      messages: [
+        { role: "system", content: systemInstr },
+        { role: "user", content: userPrompt },
+      ],
+      max_tokens: 2500,
+      temperature: 0.4,
     }),
   });
   if (!res.ok) {
@@ -32,9 +36,7 @@ async function callGemini(systemInstr, userPrompt) {
     throw new Error(`HTTP ${res.status}: ${JSON.stringify(err).slice(0, 200)}`);
   }
   const data = await res.json();
-  const parts = data.candidates?.[0]?.content?.parts ?? [];
-  const textPart = parts.find(p => !p.thought) || parts[0];
-  return (textPart?.text ?? "").trim();
+  return (data.choices?.[0]?.message?.content ?? "").trim();
 }
 
 function buildPrompt(moduleTitle, moduleSlug, lessonTitle, sectionTitle, existingContent) {
@@ -64,7 +66,7 @@ ${existingContent}
 
 CERINȚE:
 • MINIM 1500 caractere total (important!)
-• Include 2-3 blocuri de cod: \`\`\`${codeLang}\\n...\\n\`\`\`
+• Include 2-3 blocuri de cod: \`\`\`${codeLang}\n...\n\`\`\`
 • Cod real, corect, comentat unde e nevoie
 • Folosește **bold** pentru concepte cheie
 • Folosește • pentru liste
@@ -79,13 +81,10 @@ CERINȚE:
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes("--dry");
-  const allMode = args.includes("--all"); // process ALL sections, not just short ones
   const moduleFilter = args.find(a => a.startsWith("--module="))?.split("=")[1];
   const skipModules = args.filter(a => a.startsWith("--skip=")).map(a => a.split("=")[1]);
   const limitArg = args.find(a => a.startsWith("--limit="))?.split("=")[1];
   const limit = limitArg ? parseInt(limitArg) : Infinity;
-
-  const threshold = allMode ? Infinity : MIN_CHARS;
 
   const allTheory = await prisma.theory.findMany({
     where: { content: { not: undefined } },
@@ -100,15 +99,14 @@ async function main() {
   const needsWork = allTheory.filter(t => {
     if (skipModules.includes(t.lesson.module.slug)) return false;
     if (moduleFilter && t.lesson.module.slug !== moduleFilter) return false;
-    return t.content.length < threshold;
+    return t.content.length < MIN_CHARS;
   });
 
-  const label = allMode ? "all sections" : `sections < ${MIN_CHARS} chars`;
-  console.log(`\nMode: ${allMode ? "--all (full quality pass)" : "weak-only"}`);
-  console.log(`Found ${needsWork.length} ${label} out of ${allTheory.length} total`);
+  console.log(`\nProvider: Groq (${MODEL})`);
+  console.log(`Found ${needsWork.length} sections < ${MIN_CHARS} chars`);
+  if (moduleFilter) console.log(`Module: ${moduleFilter}`);
   if (skipModules.length) console.log(`Skipping: ${skipModules.join(", ")}`);
 
-  // Group by module for reporting
   const byModule = {};
   for (const t of needsWork) {
     const name = t.lesson.module.title;
@@ -137,7 +135,7 @@ async function main() {
 
     try {
       const { systemInstr, userPrompt } = buildPrompt(mod.title, mod.slug, lesson.title, section.title, section.content);
-      const enhanced = await callGemini(systemInstr, userPrompt);
+      const enhanced = await callGroq(systemInstr, userPrompt);
 
       if (!enhanced || enhanced.length < 800) {
         console.log(`  ⚠ SHORT response for: ${prefix} (got ${enhanced?.length ?? 0} chars)`);
