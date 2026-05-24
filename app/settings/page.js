@@ -61,22 +61,8 @@ export default function SettingsPage() {
     if (!resetConfirm) { setResetConfirm(true); setTimeout(() => setResetConfirm(false), 5000); return; }
     setResetting(true);
     try {
-      const res = await fetch("/api/progress");
-      const all = await res.json();
-      await Promise.all(all.map(p =>
-        fetch("/api/progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lessonId: p.lessonId,
-            completedTasks: [],
-            wrongTasks: [],
-            currentTaskIdx: 0,
-            currentTheoryIdx: 0,
-            completed: false,
-          }),
-        })
-      ));
+      const res = await fetch("/api/progress", { method: "DELETE" });
+      if (!res.ok) throw new Error("delete failed");
       alert("Tot progresul a fost resetat.");
       setResetConfirm(false);
     } catch {

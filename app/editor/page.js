@@ -279,7 +279,7 @@ function EditorContent() {
   const [editorTheme] = useLocalStorage("editor-theme", "vs-dark");
   const [editorFontRaw] = useLocalStorage("editor-font", "14");
   const editorFont = Number(editorFontRaw) || 14;
-  const iframeRef = useRef(null);
+  const [iframeSrcDoc, setIframeSrcDoc] = useState("");
   const langDropdownRef = useRef(null);
 
   const lang = LANGUAGES.find(l => l.id === langId);
@@ -307,10 +307,8 @@ function EditorContent() {
 
     // HTML+CSS+JS — render in iframe
     if (lang.piston === null) {
-      if (iframeRef.current) {
-        if (lang.isReact) {
-          // Wrap with React + Babel CDN for JSX
-          iframeRef.current.srcdoc = `<!DOCTYPE html>
+      const html = lang.isReact
+        ? `<!DOCTYPE html>
 <html><head>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -325,11 +323,9 @@ ${code}
   document.getElementById('root').innerHTML = '<pre style="color:red;padding:20px;font-family:monospace">'+e.message+'</pre>';
 }
 </script>
-</body></html>`;
-        } else {
-          iframeRef.current.srcdoc = code;
-        }
-      }
+</body></html>`
+        : code;
+      setIframeSrcDoc(html);
       setOutput({ type: "html" });
       setRunning(false);
       return;
@@ -513,7 +509,7 @@ ${code}
             {/* HTML preview */}
             {output?.type === "html" && (
               <iframe
-                ref={iframeRef}
+                srcDoc={iframeSrcDoc}
                 className="w-full h-full bg-white"
                 sandbox="allow-scripts"
                 title="HTML Preview"

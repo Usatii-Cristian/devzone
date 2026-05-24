@@ -5,8 +5,17 @@ import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import CodeEditor from "@/components/CodeEditor";
 
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function fmt(t) {
-  return t
+  return escapeHtml(t)
     .replace(/\*\*(.+?)\*\*/g, "<strong class='text-slate-900 dark:text-white'>$1</strong>")
     .replace(/`(.+?)`/g, "<code class='bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono text-xs'>$1</code>");
 }
@@ -17,7 +26,7 @@ function fmtQuestion(text) {
   let last = 0, m;
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) parts.push(`<span>${fmt(text.slice(last, m.index))}</span>`);
-    parts.push(`<pre class="bg-gray-900 dark:bg-black/60 text-green-300 rounded-xl p-3 text-xs font-mono overflow-x-auto my-2 leading-relaxed whitespace-pre">${m[1].trim()}</pre>`);
+    parts.push(`<pre class="bg-gray-900 dark:bg-black/60 text-green-300 rounded-xl p-3 text-xs font-mono overflow-x-auto my-2 leading-relaxed whitespace-pre">${escapeHtml(m[1].trim())}</pre>`);
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push(`<span>${fmt(text.slice(last))}</span>`);
@@ -212,15 +221,22 @@ export default function AntrenamentPage() {
       iframe.setAttribute("sandbox", "allow-scripts");
       iframe.style.cssText = "display:none;width:0;height:0;border:none;position:absolute;";
       document.body.appendChild(iframe);
-      const timer = setTimeout(() => {
+
+      let url = null;
+      function cleanup() {
+        window.removeEventListener("message", handler);
         try { document.body.removeChild(iframe); } catch {}
+        if (url) { try { URL.revokeObjectURL(url); } catch {} }
+      }
+
+      const timer = setTimeout(() => {
+        cleanup();
         resolve("Timeout: codul a durat prea mult (>3s)");
       }, 3000);
       function handler(e) {
         if (e.source !== iframe.contentWindow) return;
         clearTimeout(timer);
-        window.removeEventListener("message", handler);
-        try { document.body.removeChild(iframe); } catch {}
+        cleanup();
         const logs = e.data?.logs ?? [];
         resolve(logs.length > 0 ? logs.join("\n") : "(fără output)");
       }
@@ -237,9 +253,8 @@ parent.postMessage({logs:_log},'*');
 `;
       const html = `<!DOCTYPE html><html><body><script>${setup}<\/script></body></html>`;
       const blob = new Blob([html], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
+      url = URL.createObjectURL(blob);
       iframe.src = url;
-      iframe.onload = () => URL.revokeObjectURL(url);
     });
   }
 

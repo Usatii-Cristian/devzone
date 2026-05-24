@@ -7,6 +7,15 @@ import {
   Star, Zap, ShieldCheck, Code2, BookOpen, Target, Wrench
 } from "lucide-react";
 
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const STACKS = [
   { v: "all", l: "Toate" },
   { v: "html-css-js", l: "HTML+CSS+JS" },
@@ -656,7 +665,7 @@ function ProjectCard({ project, expanded, onToggle }) {
               {project.steps.map((step, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm">
                   <span className="w-5 h-5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">{i + 1}</span>
-                  <span className="text-slate-600 dark:text-slate-300 leading-relaxed flex-1" dangerouslySetInnerHTML={{ __html: step.replace(/`([^`]+)`/g, "<code class='bg-slate-100 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono text-xs'>$1</code>") }}/>
+                  <span className="text-slate-600 dark:text-slate-300 leading-relaxed flex-1" dangerouslySetInnerHTML={{ __html: escapeHtml(step).replace(/`([^`]+)`/g, "<code class='bg-slate-100 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono text-xs'>$1</code>") }}/>
                 </li>
               ))}
             </ol>
@@ -704,7 +713,7 @@ function GuideSection({ title, icon: Icon, items, color }) {
             <div className="w-7 h-7 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-xs font-black text-slate-600 dark:text-slate-300 flex-shrink-0">{item.step}</div>
             <div className="min-w-0">
               <p className="font-bold text-slate-800 dark:text-white text-sm">{item.title}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: item.desc.replace(/`([^`]+)`/g, "<code class='bg-slate-100 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 px-1 rounded font-mono'>$1</code>") }}/>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: escapeHtml(item.desc).replace(/`([^`]+)`/g, "<code class='bg-slate-100 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 px-1 rounded font-mono'>$1</code>") }}/>
             </div>
           </div>
         ))}

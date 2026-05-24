@@ -1,5 +1,6 @@
 import { SignJWT } from "jose";
 import { NextResponse } from "next/server";
+import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
 
@@ -9,8 +10,18 @@ const USERS = [
 ];
 
 export async function POST(request) {
+  const limit = rateLimit(`login:${clientKey(request)}`, 8);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Prea multe încercări. Așteaptă un minut." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
+    );
+  }
   try {
     const { email, password } = await request.json();
+    if (typeof email !== "string" || typeof password !== "string") {
+      return NextResponse.json({ error: "Date invalide." }, { status: 400 });
+    }
 
     const user = USERS.find(u =>
       u.email && u.password &&

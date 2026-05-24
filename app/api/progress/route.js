@@ -71,3 +71,13 @@ export async function POST(request) {
     return NextResponse.json({ error: "DB error: " + e.message }, { status: 503 });
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const userId = await getUserId(request);
+    const result = await prisma.lessonProgress.deleteMany({ where: { userId } });
+    return NextResponse.json({ ok: true, deleted: result.count });
+  } catch (e) {
+    return NextResponse.json({ error: "DB error: " + e.message }, { status: 503 });
+  }
+}
