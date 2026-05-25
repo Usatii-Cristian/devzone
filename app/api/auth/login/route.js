@@ -1,6 +1,6 @@
 import { SignJWT } from "jose";
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
+import { timingSafeEqual, createHash } from "crypto";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 // Strip surrounding quotes and trim — handles env vars typed with quotes on Vercel.
@@ -25,12 +25,32 @@ function getSecret() {
   return new TextEncoder().encode("devzone-fallback-key-please-replace-in-production-32+chars");
 }
 
+// SHA-256 hashes of default passwords — safe to store in source.
+// Used only when env vars are missing/empty. Change via AUTH_EMAIL/AUTH_PASSWORD env vars.
+const DEFAULT_USERS = [
+  {
+    email: "cristiusa98@gmail.com",
+    passwordHash: "62b169e6f187bb1461bef2e611b8f83cee592671c4bcf08e03dac5826b829947",
+  },
+  {
+    email: "alexandrupopovschi36@gmail.com",
+    passwordHash: "cc9e2ccea28135fb689e07da3a266eaada7851a7a16b45fd60273720e87152cf",
+  },
+];
+
+function hashPassword(password) {
+  return createHash("sha256").update(password).digest("hex");
+}
+
 function getUsers() {
-  const users = [
+  const fromEnv = [
     { email: cleanEnv(process.env.AUTH_EMAIL), password: cleanEnv(process.env.AUTH_PASSWORD) },
     { email: cleanEnv(process.env.AUTH_EMAIL2), password: cleanEnv(process.env.AUTH_PASSWORD2) },
-  ];
-  return users.filter((u) => u.email && u.password);
+  ].filter((u) => u.email && u.password);
+
+  if (fromEnv.length > 0) return { users: fromEnv, mode: "env" };
+  console.warn("[auth] No env var users found — falling back to default hashed credentials.");
+  return { users: [], defaults: DEFAULT_USERS, mode: "hash" };
 }
 
 function safeEqual(a, b) {
@@ -65,30 +85,36 @@ export async function POST(request) {
     return NextResponse.json({ error: "Email și parolă obligatorii." }, { status: 400 });
   }
 
-  const users = getUsers();
-  if (users.length === 0) {
-    console.error("[auth] No users configured. Set AUTH_EMAIL + AUTH_PASSWORD env vars on Vercel.");
-    return NextResponse.json(
-      { error: "Configurare server incompletă. Contactează administratorul." },
-      { status: 503 }
-    );
-  }
+  const { users, defaults, mode } = getUsers();
 
   const emailNorm = email.trim().toLowerCase();
   const passwordNorm = password.trim();
 
-  let matched = null;
-  for (const u of users) {
-    const emailOk = safeEqual(u.email.toLowerCase(), emailNorm);
-    const passOk = safeEqual(u.password, passwordNorm);
-    if (emailOk && passOk) matched = u;
+  let matchedEmail = null;
+
+  if (mode === "env" && users.length > 0) {
+    // Normal mode: compare plaintext from env vars
+    for (const u of users) {
+      const emailOk = safeEqual(u.email.toLowerCase(), emailNorm);
+      const passOk = safeEqual(u.password, passwordNorm);
+      if (emailOk && passOk) matchedEmail = u.email;
+    }
+  } else {
+    // Fallback mode: compare SHA-256 hash of provided password
+    const providedHash = hashPassword(passwordNorm);
+    for (const u of defaults) {
+      const emailOk = safeEqual(u.email.toLowerCase(), emailNorm);
+      const passOk = safeEqual(u.passwordHash, providedHash);
+      if (emailOk && passOk) matchedEmail = u.email;
+    }
   }
-  if (!matched) {
+
+  if (!matchedEmail) {
     return NextResponse.json({ error: "Email sau parolă incorecte." }, { status: 401 });
   }
 
   try {
-    const token = await new SignJWT({ email: matched.email })
+    const token = await new SignJWT({ email: matchedEmail })
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime("365d")
       .sign(getSecret());
