@@ -103,21 +103,46 @@ export default function LessonPage() {
   }, [lesson, moduleSlug]);
 
   useEffect(() => {
+    let cancelled = false;
+    // Reset state when switching lessons so stale UI doesn't flash
+    setLesson(null);
+    setLoading(true);
+    setCompleted([]);
+    setWrong([]);
+    setTaskIdx(0);
+    setSelected(null);
+    setSubmitted(false);
+    setFinished(false);
+
     Promise.all([
       fetch(`/api/lessons/${lessonId}`),
       fetch(`/api/progress?lessonId=${lessonId}`)
     ])
       .then(([l, p]) => Promise.all([l.json(), p.json()]))
       .then(([les, prog]) => {
-        setLesson(les?.error ? null : les);
+        if (cancelled) return;
+        const lessonData = les?.error ? null : les;
+        setLesson(lessonData);
         if (prog) {
-          setCompleted(prog.completedTasks || []);
-          setWrong(prog.wrongTasks || []);
-          setTaskIdx(prog.currentTaskIdx || 0);
+          const c = prog.completedTasks || [];
+          const w = prog.wrongTasks || [];
+          const idx = prog.currentTaskIdx || 0;
+          setCompleted(c);
+          setWrong(w);
+          setTaskIdx(idx);
           if (prog.completed) setFinished(true);
+          // Restore submitted/selected for current task if already answered
+          const t = lessonData?.tasks?.[idx];
+          if (t && c.includes(t.id) && t.answer != null) {
+            setSelected(t.answer);
+            setSubmitted(true);
+          }
         }
       })
-      .finally(() => setLoading(false));
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [lessonId]);
 
   function save(patch = {}) {
@@ -250,8 +275,9 @@ export default function LessonPage() {
       save({ completedTasks: nc, wrongTasks: nw, completed: allDone });
     } else {
       if (!wrong.includes(task.id) && !completed.includes(task.id)) {
-        setWrong(nw => [...nw, task.id]);
-        save({ wrongTasks: [...wrong, task.id] });
+        const nw = [...wrong, task.id];
+        setWrong(nw);
+        save({ wrongTasks: nw });
       }
     }
   }
@@ -539,8 +565,9 @@ parent.postMessage({logs:_log},'*');
         save({ completedTasks: nc, wrongTasks: nw, completed: allDone });
       } else {
         if (!wrong.includes(task.id) && !completed.includes(task.id)) {
-          setWrong(nw => [...nw, task.id]);
-          save({ wrongTasks: [...wrong, task.id] });
+          const nw = [...wrong, task.id];
+          setWrong(nw);
+          save({ wrongTasks: nw });
         }
       }
     } catch {
