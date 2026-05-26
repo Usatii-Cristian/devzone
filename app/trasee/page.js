@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Compass, ChevronDown, ChevronUp, Rocket, Map, Clock, BookOpen } from "lucide-react";
+import { ArrowLeft, Compass, ChevronDown, ChevronUp, Rocket, Map, Clock, BookOpen, Zap, Timer } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { ModIcon, MOD_BG } from "@/lib/moduleIcons";
 
@@ -15,14 +15,20 @@ const PATHS = [
     border: "border-blue-200 dark:border-blue-800",
     accent: "text-blue-600 dark:text-blue-400",
     badge: "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300",
+    difficultyBadge: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700",
+    trendBadge: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400",
     category: "HTML · CSS · JS · React · Next.js",
     tagline: "Construiești aplicații web complete, de la design la server",
     languages: ["HTML", "CSS", "JavaScript", "React", "Next.js", "Node.js"],
-    description: "Cel mai căutat profil tech. Stăpânești atât frontend-ul (ce vede utilizatorul) cât și backend-ul (logica și baza de date). Poți construi orice produs web de unul singur.",
+    difficulty: "Mediu",
+    timeToJob: "9–15 luni",
+    trendLabel: "Cel mai angajat 🔥",
+    hotSkills: ["React 19 + hooks", "Next.js 15 App Router", "TypeScript", "Tailwind CSS"],
+    description: "Cel mai căutat profil tech în 2025. Stăpânești atât frontend-ul cât și backend-ul — construiești orice produs web singur. Moldova și România au zeci de companii care angajează full-stack devs, iar remote pentru Europa sau SUA este extrem de accesibil.",
     roles: [
-      { title: "Junior Full-Stack Dev", salary: "800–1.200€", demand: "Foarte mare" },
-      { title: "Mid Full-Stack Dev", salary: "1.500–2.500€", demand: "Foarte mare" },
-      { title: "Senior Full-Stack Dev", salary: "3.000–5.000€", demand: "Mare" },
+      { title: "Junior Full-Stack Dev", local: "700–1.200€", remote: "2.000–4.000€", demand: "Foarte mare" },
+      { title: "Mid Full-Stack Dev", local: "1.500–2.800€", remote: "4.000–8.000€", demand: "Foarte mare" },
+      { title: "Senior Full-Stack Dev", local: "3.000–5.500€", remote: "7.000–15.000€", demand: "Mare" },
     ],
     bigProject: {
       title: "Platformă E-Learning",
@@ -55,14 +61,20 @@ const PATHS = [
     border: "border-purple-200 dark:border-purple-800",
     accent: "text-purple-600 dark:text-purple-400",
     badge: "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300",
+    difficultyBadge: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700",
+    trendBadge: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
     category: "Python · TensorFlow · PyTorch",
     tagline: "Antrenezi modele care învață și iau decizii autonome",
     languages: ["Python", "TensorFlow", "PyTorch", "scikit-learn", "Pandas", "LangChain"],
-    description: "Domeniu cu cea mai rapidă creștere. Construiești sisteme care recunosc imagini, înțeleg text natural și prezic comportamente — de la recomandări Netflix la modele GPT.",
+    difficulty: "Avansat",
+    timeToJob: "18–30 luni",
+    trendLabel: "Exploziv 2025 🚀",
+    hotSkills: ["LangChain + RAG pipelines", "Fine-tuning LLMs", "MLOps (MLflow)", "Python + PyTorch"],
+    description: "Cel mai rapid domeniu în creștere — deficit global de specialiști. Construiești sisteme care recunosc imagini, înțeleg text natural și prezic comportamente. Necesită matematică solidă (liniară, statistică) și Python avansat. Aproape exclusiv remote pentru piețe de top.",
     roles: [
-      { title: "ML Engineer Junior", salary: "1.200–1.800€", demand: "Explozivă" },
-      { title: "ML Engineer Mid", salary: "2.500–4.000€", demand: "Explozivă" },
-      { title: "AI Research Scientist", salary: "5.000–10.000€", demand: "Mare" },
+      { title: "ML Engineer Junior", local: "1.200–2.000€", remote: "3.000–6.000€", demand: "Explozivă" },
+      { title: "ML Engineer Mid", local: "2.500–4.500€", remote: "6.000–12.000€", demand: "Explozivă" },
+      { title: "AI Research Scientist", local: "5.000–9.000€", remote: "12.000–25.000€", demand: "Mare" },
     ],
     bigProject: {
       title: "Asistent AI cu Memorie",
@@ -95,14 +107,20 @@ const PATHS = [
     border: "border-red-200 dark:border-red-800",
     accent: "text-red-600 dark:text-red-400",
     badge: "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300",
+    difficultyBadge: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-700",
+    trendBadge: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
     category: "Python · C · Bash · Linux",
     tagline: "Aperi sistemele și găsești vulnerabilitățile înainte de hackeri",
     languages: ["Python", "C", "Bash", "Wireshark", "Metasploit", "Nmap"],
-    description: "Protejezi companii de atacuri cibernetice. Există o criză globală de specialiști — cerere enormă, salarii mari, muncă mereu nouă și provocatoare.",
+    difficulty: "Dificil",
+    timeToJob: "12–24 luni",
+    trendLabel: "Cerere uriașă 📈",
+    hotSkills: ["Cloud Security (AWS/Azure)", "Bug Bounty", "Zero Trust Architecture", "SIEM + SOC analyst"],
+    description: "Deficit global de 4 milioane de specialiști cyber în 2025. Protejezi companii de atacuri, găsești vulnerabilități și câștigi prin bug bounty. Bănci, telco, instituții guvernamentale — toți recrutează permanent. Cerere enormă, salarii mari, muncă permanent nouă.",
     roles: [
-      { title: "Security Analyst", salary: "1.000–1.500€", demand: "Foarte mare" },
-      { title: "Penetration Tester", salary: "2.000–3.500€", demand: "Foarte mare" },
-      { title: "Security Architect", salary: "4.000–7.000€", demand: "Mare" },
+      { title: "Security Analyst", local: "800–1.400€", remote: "2.000–4.500€", demand: "Foarte mare" },
+      { title: "Penetration Tester", local: "1.800–3.500€", remote: "4.000–9.000€", demand: "Foarte mare" },
+      { title: "Security Architect", local: "4.000–7.500€", remote: "8.000–18.000€", demand: "Mare" },
     ],
     bigProject: {
       title: "Platformă CTF & Hacking Lab",
@@ -135,14 +153,20 @@ const PATHS = [
     border: "border-emerald-200 dark:border-emerald-800",
     accent: "text-emerald-600 dark:text-emerald-400",
     badge: "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300",
+    difficultyBadge: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-700",
+    trendBadge: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
     category: "Python · SQL · R",
     tagline: "Transformi datele brute în decizii de business de milioane",
     languages: ["Python", "SQL", "R", "Tableau", "Power BI", "Spark"],
-    description: "Analizezi milioane de rânduri de date pentru a descoperi pattern-uri ascunse. Ghidezi strategia companiei cu cifre, nu cu intuiție. Rol esențial în orice companie modernă.",
+    difficulty: "Mediu–Dificil",
+    timeToJob: "12–20 luni",
+    trendLabel: "Cerere în creștere 📊",
+    hotSkills: ["dbt + data pipelines", "Python + Polars", "LLM data analysis", "Apache Spark"],
+    description: "Analizezi milioane de rânduri de date pentru a descoperi pattern-uri și ghida decizii de business. Rol esențial în bănci, fintech, retail și e-commerce. Python + SQL + statistică este combinația câștigătoare. Multe companii remotă angajează analiști de date din Moldova.",
     roles: [
-      { title: "Data Analyst", salary: "900–1.400€", demand: "Foarte mare" },
-      { title: "Data Scientist", salary: "1.800–3.000€", demand: "Explozivă" },
-      { title: "ML/AI Data Scientist", salary: "3.000–6.000€", demand: "Explozivă" },
+      { title: "Data Analyst", local: "800–1.400€", remote: "2.000–4.500€", demand: "Foarte mare" },
+      { title: "Data Scientist", local: "1.800–3.200€", remote: "4.000–8.000€", demand: "Explozivă" },
+      { title: "ML/AI Data Scientist", local: "3.500–6.000€", remote: "7.000–15.000€", demand: "Explozivă" },
     ],
     bigProject: {
       title: "Dashboard Business Intelligence",
@@ -175,14 +199,20 @@ const PATHS = [
     border: "border-violet-200 dark:border-violet-800",
     accent: "text-violet-600 dark:text-violet-400",
     badge: "bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300",
+    difficultyBadge: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-700",
+    trendBadge: "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400",
     category: "C++ · C# · Unity · Unreal",
     tagline: "Creezi lumile virtuale în care milioane de oameni trăiesc aventuri",
     languages: ["C++", "C#", "Unity", "Unreal Engine 5", "GLSL/HLSL"],
-    description: "Combini programare, matematică 3D și creativitate. C# cu Unity domină dev-ul indie și mobile. C++ cu Unreal Engine 5 — jocuri AAA triple-A. Industrie globală de 200 miliarde $.",
+    difficulty: "Dificil",
+    timeToJob: "18–30 luni",
+    trendLabel: "Nișă premium 🎮",
+    hotSkills: ["Unreal Engine 5 + Nanite/Lumen", "Unity DOTS/ECS", "Shader Graph + HLSL", "C# Netcode multiplayer"],
+    description: "Combini programare, matematică 3D și creativitate. C# cu Unity domină indie și mobile; C++ cu Unreal Engine 5 pentru jocuri AAA. Piața locală e mică (Playtika, Ubisoft București), dar remote e frecvent și bine plătit. Industrie globală de 200 miliarde USD.",
     roles: [
-      { title: "Junior Game Developer", salary: "700–1.100€", demand: "Moderată" },
-      { title: "Game Developer", salary: "1.500–2.500€", demand: "Moderată" },
-      { title: "Senior / Lead Dev", salary: "2.500–5.000€", demand: "Moderată" },
+      { title: "Junior Game Developer", local: "600–1.100€", remote: "1.500–3.500€", demand: "Moderată" },
+      { title: "Game Developer", local: "1.400–2.500€", remote: "3.500–7.000€", demand: "Moderată" },
+      { title: "Senior / Lead Dev", local: "2.500–5.000€", remote: "6.000–14.000€", demand: "Moderată" },
     ],
     bigProject: {
       title: "Joc Roguelike 2D (Unity + C#)",
@@ -215,14 +245,20 @@ const PATHS = [
     border: "border-slate-200 dark:border-slate-700",
     accent: "text-slate-600 dark:text-slate-400",
     badge: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
-    category: "C · C++ · Assembly",
+    difficultyBadge: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700",
+    trendBadge: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+    category: "C · C++ · Assembly · Rust",
     tagline: "Programezi hardware real — de la microcontrollere la sisteme de operare",
     languages: ["C", "C++", "Assembly", "Linux", "FreeRTOS", "Rust"],
-    description: "Cel mai apropiat nivel de hardware. Controlezi memorie, procese și dispozitive fizice. Baza pe care rulează tot restul software-ului. Salarii mari, concurență mică.",
+    difficulty: "Avansat",
+    timeToJob: "18–30 luni",
+    trendLabel: "Salarii mari ⚙️",
+    hotSkills: ["Rust (borrow checker)", "RISC-V + WASM", "ESP32 + FreeRTOS", "Linux kernel modules"],
+    description: "Cel mai apropiat nivel de hardware. Controlezi memorie, procese și dispozitive fizice. Concurența e mică, cererea e constantă, salariile mari încă de la junior. Continental, Microchip și alte companii embedded au birouri în România și angajează permanent.",
     roles: [
-      { title: "Embedded Developer", salary: "1.000–1.600€", demand: "Mare" },
-      { title: "Systems Programmer", salary: "1.800–3.000€", demand: "Mare" },
-      { title: "Kernel / Driver Dev", salary: "3.000–6.000€", demand: "Moderată" },
+      { title: "Embedded Developer", local: "900–1.600€", remote: "2.500–5.000€", demand: "Mare" },
+      { title: "Systems Programmer", local: "1.800–3.200€", remote: "4.000–8.000€", demand: "Mare" },
+      { title: "Kernel / Driver Dev", local: "3.500–6.500€", remote: "7.000–15.000€", demand: "Moderată" },
     ],
     bigProject: {
       title: "Sistem IoT de Monitorizare",
@@ -255,14 +291,20 @@ const PATHS = [
     border: "border-amber-200 dark:border-amber-800",
     accent: "text-amber-600 dark:text-amber-400",
     badge: "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300",
+    difficultyBadge: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700",
+    trendBadge: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
     category: "Java · Kotlin · Spring Boot",
     tagline: "Construiești sisteme bancare, aplicații Android și microservicii la scară",
     languages: ["Java", "Kotlin", "Spring Boot", "Android SDK", "Hibernate", "Maven"],
-    description: "Java rămâne coloana vertebrală a enterprise-ului global. Banking, asigurări, guvern, Amazon backend — toate rulează pe Spring Boot. Kotlin a revolutionat Android dev.",
+    difficulty: "Mediu",
+    timeToJob: "10–18 luni",
+    trendLabel: "Enterprise stabil ☕",
+    hotSkills: ["Spring Boot 3 + Virtual Threads", "Kotlin + Jetpack Compose", "Reactive Streams (WebFlux)", "Kubernetes + Helm"],
+    description: "Java rămâne coloana vertebrală a enterprise-ului global în 2025 — banking, asigurări, guvern, Amazon backend. Endava și Pentalog, ambele active în Moldova și România, angajează permanent Java devs. Kotlin a revoluționat Android și e preferat de Google.",
     roles: [
-      { title: "Android Developer", salary: "1.000–1.600€", demand: "Mare" },
-      { title: "Java Backend Dev", salary: "1.500–2.500€", demand: "Mare" },
-      { title: "Java Architect", salary: "3.000–6.000€", demand: "Moderată" },
+      { title: "Android Developer", local: "900–1.600€", remote: "2.500–5.500€", demand: "Mare" },
+      { title: "Java Backend Dev", local: "1.500–2.800€", remote: "3.500–7.500€", demand: "Mare" },
+      { title: "Java Architect", local: "3.500–6.500€", remote: "7.000–16.000€", demand: "Moderată" },
     ],
     bigProject: {
       title: "Aplicație Bancară Mobile",
@@ -295,15 +337,21 @@ const PATHS = [
     border: "border-indigo-200 dark:border-indigo-800",
     accent: "text-indigo-600 dark:text-indigo-400",
     badge: "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300",
+    difficultyBadge: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700",
+    trendBadge: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400",
     category: "C# · ASP.NET · Unity",
     tagline: "De la aplicații enterprise Microsoft la jocuri indie/AAA cu Unity",
     languages: ["C#", "ASP.NET Core", "Unity", "LINQ", "Entity Framework", "Blazor"],
-    description: "C# este limbajul Microsoft cu dublă personalitate — backend enterprise robust cu ASP.NET Core și game development indie/AAA cu Unity, cel mai popular engine de jocuri din lume cu peste 50% cotă de piață.",
+    difficulty: "Mediu",
+    timeToJob: "10–16 luni",
+    trendLabel: "Microsoft stack 🔷",
     unityHighlight: true,
+    hotSkills: ["ASP.NET Core 9 + Minimal API", "Blazor WebAssembly", ".NET MAUI cross-platform", "Azure AI + Copilot"],
+    description: "C# este limbajul Microsoft cu dublă personalitate — backend enterprise cu ASP.NET Core și game dev cu Unity (50%+ cotă de piață indie/mobile). Companiile Microsoft-partner din Moldova și România angajează constant .NET devs. Azure e cloud-ul de facto pentru enterprise.",
     roles: [
-      { title: ".NET Developer", salary: "1.200–2.000€", demand: "Mare" },
-      { title: "Unity Developer", salary: "1.000–2.000€", demand: "Moderată" },
-      { title: "Senior .NET Architect", salary: "3.000–6.000€", demand: "Mare" },
+      { title: ".NET Developer", local: "900–1.700€", remote: "2.500–5.500€", demand: "Mare" },
+      { title: "Unity Developer", local: "900–2.000€", remote: "2.500–6.000€", demand: "Moderată" },
+      { title: "Senior .NET Architect", local: "3.000–6.000€", remote: "6.500–14.000€", demand: "Mare" },
     ],
     bigProject: {
       title: "Joc Multiplayer + Backend ASP.NET",
@@ -324,7 +372,7 @@ const PATHS = [
       { phase: "C# Fundații", duration: "2–3 luni", topics: ["C# avansat (delegates, events, LINQ)", "async/await + Task Parallel Library", "OOP + design patterns", "Visual Studio / JetBrains Rider"] },
       { phase: "ASP.NET Core", duration: "2–3 luni", topics: ["REST API + Minimal APIs", "Entity Framework Core", "Identity + JWT + OAuth", "SignalR real-time", "Testing (xUnit)"] },
       { phase: "Unity Game Dev", duration: "3–4 luni", topics: ["Unity Engine complet", "C# pentru jocuri + MonoBehaviour", "Physics + animations + particles", "Shader Graph + HDRP/URP", "Unity Netcode (multiplayer)"] },
-      { phase: "Azure & DevOps", duration: "2–3 luni", topics: ["Azure App Service + SQL", "Azure DevOps CI/CD", "Application Insights", "Blazor WebAssembly (optional)", ".NET MAUI pentru mobile"] },
+      { phase: "Azure & DevOps", duration: "2–3 luni", topics: ["Azure App Service + SQL", "Azure DevOps CI/CD", "Application Insights", "Blazor WebAssembly", ".NET MAUI pentru mobile"] },
     ],
   },
   {
@@ -336,14 +384,20 @@ const PATHS = [
     border: "border-fuchsia-200 dark:border-fuchsia-800",
     accent: "text-fuchsia-600 dark:text-fuchsia-400",
     badge: "bg-fuchsia-100 dark:bg-fuchsia-900/50 text-fuchsia-700 dark:text-fuchsia-300",
+    difficultyBadge: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-700",
+    trendBadge: "bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400",
     category: "PHP · Laravel · MySQL",
-    tagline: "Alimentează 79% din web-ul global — de la WordPress la produse SaaS moderne",
+    tagline: "Alimentează 79% din web-ul global — de la WordPress la SaaS modern",
     languages: ["PHP", "Laravel", "MySQL", "Blade", "Livewire", "Composer"],
-    description: "PHP 8+ modern este surprinzător de elegant și productiv. Laravel este unul din cele mai apreciate framework-uri web — ideal pentru produse SaaS, e-commerce și aplicații business rapid.",
+    difficulty: "Ușor–Mediu",
+    timeToJob: "7–12 luni",
+    trendLabel: "79% din web 🐘",
+    hotSkills: ["Laravel 11 + Livewire 3", "Filament Admin Panel", "PHP 8.3 Fibers + Enums", "Pest testing framework"],
+    description: "PHP 8.3 modern este surprinzător de elegant și productiv. Laravel 11 este printre cele mai apreciate framework-uri. Cel mai rapid drum spre primul job. WordPress alimentează 43% din internet, agențiile web angajează permanent, iar freelance-ul este extrem de accesibil.",
     roles: [
-      { title: "PHP/Laravel Developer", salary: "900–1.400€", demand: "Mare" },
-      { title: "Senior Laravel Dev", salary: "1.800–2.800€", demand: "Mare" },
-      { title: "WordPress Dev/Architect", salary: "700–1.500€", demand: "Foarte mare" },
+      { title: "PHP/Laravel Developer", local: "600–1.200€", remote: "1.500–3.500€", demand: "Mare" },
+      { title: "Senior Laravel Dev", local: "1.500–2.800€", remote: "3.500–7.000€", demand: "Mare" },
+      { title: "WordPress Dev/Architect", local: "600–1.500€", remote: "1.500–4.000€", demand: "Foarte mare" },
     ],
     bigProject: {
       title: "SaaS de Facturare",
@@ -420,16 +474,33 @@ export default function TraseePage() {
             </div>
             <div className="min-w-0">
               <h1 className="font-black text-base leading-tight">Trasee de Carieră</h1>
-              <p className="text-indigo-200 text-xs leading-tight">9 drumuri clare în tech</p>
+              <p className="text-indigo-200 text-xs leading-tight">9 drumuri clare în tech · salarii 2025–2026</p>
             </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-5">
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
-          Alege un limbaj, descoperă ce poți construi cu el și urmează roadmap-ul pas cu pas până la primul job.
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 leading-relaxed">
+          Alege un traseu, descoperă ce poți construi cu el și urmează roadmap-ul pas cu pas până la primul job.
         </p>
+        <div className="flex flex-wrap gap-2 mb-5">
+          <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Ușor–Mediu
+          </span>
+          <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-yellow-500 inline-block"></span> Mediu
+          </span>
+          <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-orange-500 inline-block"></span> Dificil
+          </span>
+          <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span> Avansat
+          </span>
+          <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <Timer className="w-3 h-3"/> Timp până la primul job
+          </span>
+        </div>
 
         <div className="space-y-3">
           {PATHS.map(path => {
@@ -437,7 +508,7 @@ export default function TraseePage() {
             const currentTab = tabs[path.id] || "project";
 
             return (
-              <div key={path.id} className={`${path.bg} border-2 ${path.border} rounded-2xl overflow-hidden`}>
+              <div key={path.id} className={`${path.bg} border-2 ${path.border} rounded-2xl overflow-hidden transition-shadow ${open ? "shadow-md" : ""}`}>
                 <button className="w-full text-left p-4" onClick={() => toggle(path.id)}>
                   <div className="flex items-start gap-3">
                     <div className={`w-11 h-11 bg-gradient-to-br ${path.color} rounded-xl flex items-center justify-center text-xl flex-shrink-0 shadow-sm`}>
@@ -449,16 +520,22 @@ export default function TraseePage() {
                         {path.unityHighlight && (
                           <span className="text-[10px] bg-violet-200 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-full font-black">Unity ✨</span>
                         )}
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${path.difficultyBadge}`}>{path.difficulty}</span>
                       </div>
-                      <p className={`text-xs font-bold ${path.accent} mb-1.5`}>{path.category}</p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-snug">{path.tagline}</p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {path.languages.slice(0, 4).map(l => (
-                          <span key={l} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${path.badge}`}>{l}</span>
-                        ))}
-                        {path.languages.length > 4 && (
-                          <span className="text-[10px] text-slate-400 self-center font-medium">+{path.languages.length - 4}</span>
-                        )}
+                      <p className={`text-xs font-bold ${path.accent} mb-1`}>{path.category}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-snug mb-2">{path.tagline}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex flex-wrap gap-1">
+                          {path.languages.slice(0, 4).map(l => (
+                            <span key={l} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${path.badge}`}>{l}</span>
+                          ))}
+                          {path.languages.length > 4 && (
+                            <span className="text-[10px] text-slate-400 self-center font-medium">+{path.languages.length - 4}</span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-400 flex items-center gap-0.5 ml-auto flex-shrink-0">
+                          <Timer className="w-2.5 h-2.5"/> {path.timeToJob}
+                        </span>
                       </div>
                     </div>
                     <div className={`flex-shrink-0 mt-1 ${path.accent}`}>
@@ -469,23 +546,58 @@ export default function TraseePage() {
 
                 {open && (
                   <div className="border-t border-slate-200/60 dark:border-slate-700/60 px-4 pb-4">
-                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed py-3">{path.description}</p>
 
+                    {/* Trend + time */}
+                    <div className="flex items-center gap-2 flex-wrap pt-3 pb-2">
+                      <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full ${path.trendBadge}`}>{path.trendLabel}</span>
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                        <Timer className="w-3 h-3"/> Primul job în ~{path.timeToJob}
+                      </span>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">{path.description}</p>
+
+                    {/* Hot skills 2025 */}
                     <div className="mb-4">
-                      <p className={`text-[10px] font-black uppercase tracking-wider ${path.accent} mb-2`}>Roluri & Salarii</p>
-                      <div className="space-y-1.5">
-                        {path.roles.map(r => (
-                          <div key={r.title} className="flex items-center justify-between bg-white/60 dark:bg-slate-800/50 rounded-xl px-3 py-2">
-                            <div className="min-w-0">
-                              <span className="text-xs font-bold text-slate-700 dark:text-white">{r.title}</span>
-                              <span className="text-[10px] text-slate-400 ml-2">Cerere: {r.demand}</span>
-                            </div>
-                            <span className={`text-xs font-black ${path.accent} flex-shrink-0 ml-2`}>{r.salary}</span>
-                          </div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-yellow-500"/> Skills căutate în 2025
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {path.hotSkills.map(skill => (
+                          <span key={skill} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${path.badge}`}>{skill}</span>
                         ))}
                       </div>
                     </div>
 
+                    {/* Salary table */}
+                    <div className="mb-4">
+                      <p className={`text-[10px] font-black uppercase tracking-wider ${path.accent} mb-2`}>
+                        Salarii 2025–2026 (€/lună net)
+                      </p>
+                      <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                        <div className="grid grid-cols-4 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 gap-1">
+                          <span className="text-[10px] font-black text-slate-500 col-span-2">Rol</span>
+                          <span className="text-[10px] font-black text-slate-500">🇲🇩 Local</span>
+                          <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500">🌍 Remote</span>
+                        </div>
+                        {path.roles.map((r, ri) => (
+                          <div key={ri} className="grid grid-cols-4 items-center bg-white dark:bg-slate-800/40 px-3 py-2 border-t border-slate-100 dark:border-slate-700/50 gap-1">
+                            <div className="col-span-2">
+                              <span className="text-xs font-bold text-slate-700 dark:text-white block leading-tight">{r.title}</span>
+                              <span className="text-[10px] text-slate-400">Cerere: {r.demand}</span>
+                            </div>
+                            <span className={`text-xs font-black ${path.accent} leading-tight`}>{r.local}</span>
+                            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 leading-tight">{r.remote}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1.5 leading-tight">
+                        Local = angajator în Moldova/România. Remote = companii EU/US.
+                      </p>
+                    </div>
+
+                    {/* Tabs */}
                     <div className="flex gap-2 mb-3">
                       <button
                         onClick={() => setTab(path.id, "project")}
