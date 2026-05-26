@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Compass, ChevronDown, ChevronUp, Rocket, Map, Clock } from "lucide-react";
+import { ArrowLeft, Compass, ChevronDown, ChevronUp, Rocket, Map, Clock, BookOpen } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { ModIcon, MOD_BG } from "@/lib/moduleIcons";
 
 const PATHS = [
   {
@@ -368,9 +369,34 @@ const PATHS = [
   },
 ];
 
+const MODULE_LINKS = {
+  fullstack:     [["html","css","javascript"], ["react","tailwind"], ["nextjs-backend","sql"], ["nextjs-frontend","nextjs-backend"]],
+  "ai-ml":       [["python"], ["python"], ["python"], ["python"]],
+  cybersecurity: [["python","cybersecurity"], ["cybersecurity"], ["cybersecurity"], ["cybersecurity"]],
+  "data-science":[["python","sql"], ["python","sql"], ["python"], ["sql"]],
+  gamedev:       [["csharp"], ["csharp"], ["csharp"], ["cpp"]],
+  systems:       [["c"], ["cpp"], ["c","cpp"], ["c","cpp"]],
+  java:          [["java"], ["java"], ["java"], []],
+  dotnet:        [["csharp"], ["csharp"], ["csharp"], []],
+  php:           [["php"], ["php","sql"], ["php"], ["php"]],
+};
+
 export default function TraseePage() {
   const [expanded, setExpanded] = useState(null);
   const [tabs, setTabs] = useState({});
+  const [modulesMap, setModulesMap] = useState({});
+
+  useEffect(() => {
+    fetch("/api/modules")
+      .then(r => r.json())
+      .then(data => {
+        if (!Array.isArray(data)) return;
+        const map = {};
+        data.forEach(m => { map[m.slug] = m; });
+        setModulesMap(map);
+      })
+      .catch(() => {});
+  }, []);
 
   function toggle(id) {
     setExpanded(e => (e === id ? null : id));
@@ -538,6 +564,34 @@ export default function TraseePage() {
                                 <span key={t} className="text-[10px] bg-white dark:bg-slate-700/80 border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 rounded-md text-slate-600 dark:text-slate-300 font-medium">{t}</span>
                               ))}
                             </div>
+                            {(MODULE_LINKS[path.id]?.[i]?.length > 0) && (
+                              <div className="ml-8 mt-2.5">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                  <BookOpen className="w-3 h-3"/> Pe DevZone
+                                </p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {MODULE_LINKS[path.id][i].map(slug => {
+                                    const mod = modulesMap[slug];
+                                    const name = mod?.title || slug;
+                                    const count = mod?.lessons?.length || 0;
+                                    return (
+                                      <Link
+                                        key={slug}
+                                        href={`/modules/${slug}`}
+                                        className="flex items-center gap-1.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-sm transition-all group"
+                                        onClick={e => e.stopPropagation()}
+                                      >
+                                        <div className={`w-4 h-4 rounded-md bg-gradient-to-br ${MOD_BG[slug] || "from-slate-400 to-slate-500"} flex items-center justify-center flex-shrink-0`}>
+                                          <ModIcon slug={slug} className="w-2.5 h-2.5 text-white"/>
+                                        </div>
+                                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{name}</span>
+                                        {count > 0 && <span className="text-[10px] text-slate-400 font-medium">{count}L</span>}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
