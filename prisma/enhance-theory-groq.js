@@ -4,9 +4,9 @@ const { PrismaClient } = require("@prisma/client");
 
 const API_KEY = process.env.GROQ_API_KEY;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL = "llama-3.3-70b-versatile";
+const MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 const MIN_CHARS = 1500;
-const DELAY_MS = 2500; // Groq free tier: ~30 RPM
+const DELAY_MS = parseInt(process.env.GROQ_DELAY || "4000"); // Groq free tier: ~30 RPM
 
 const prisma = new PrismaClient();
 
@@ -27,8 +27,8 @@ async function callGroq(systemInstr, userPrompt) {
         { role: "system", content: systemInstr },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 2500,
-      temperature: 0.4,
+      max_tokens: 4000,
+      temperature: 0.5,
     }),
   });
   if (!res.ok) {
@@ -55,25 +55,30 @@ function buildPrompt(moduleTitle, moduleSlug, lessonTitle, sectionTitle, existin
     cybersecurity: "bash",
   }[moduleSlug] || "javascript";
 
-  const systemInstr = `Ești un profesor expert în ${lang} care scrie lecții clare și detaliate pentru o platformă de învățare online. Scrii ÎNTOTDEAUNA în română. Răspunzi NUMAI cu conținutul secțiunii cerute — nici un cuvânt înainte sau după.`;
+  const systemInstr = `Ești un profesor expert în ${lang} care scrie lecții detaliate și complete ca un manual universitar pentru o platformă de învățare online. Scrii ÎNTOTDEAUNA în română. Răspunzi NUMAI cu conținutul secțiunii cerute — nici un cuvânt înainte sau după. Scrii conținut LUNG, COMPLET și EXHAUSTIV.`;
 
-  const userPrompt = `Scrie conținutul pentru secțiunea "${sectionTitle}" din lecția "${lessonTitle}" (modulul ${lang}).
+  const userPrompt = `Scrie conținutul COMPLET și DETALIAT pentru secțiunea "${sectionTitle}" din lecția "${lessonTitle}" (modulul ${lang}).
 
-Conținut existent (rescrie și îmbunătățește la nivel expert):
+Conținut existent (rescrie și îmbunătățește masiv):
 ---
 ${existingContent}
 ---
 
-CERINȚE:
-• MINIM 1500 caractere total (important!)
-• Include 2-3 blocuri de cod: \`\`\`${codeLang}\n...\n\`\`\`
-• Cod real, corect, comentat unde e nevoie
-• Folosește **bold** pentru concepte cheie
-• Folosește • pentru liste
-• Explicații clare cu analogii sau exemple din viața reală
+CERINȚE OBLIGATORII:
+• MINIM 3000 caractere total — scrie MULT, nu te opri devreme
+• Include CEL PUȚIN 3-4 blocuri de cod funcționale: \`\`\`${codeLang}\n...\n\`\`\`
+• Fiecare bloc de cod trebuie să fie COMPLET și să poată rula (nu trunchia cu "...")
+• Cod real, corect, cu comentarii explicative inline
+• Folosește **bold** pentru TOATE conceptele cheie și termenii tehnici
+• Folosește • pentru liste de caracteristici, avantaje, pași
+• Explică FIECARE concept cu minim 2-3 paragrafe
+• Adaugă o sub-secțiune "**Greșeli comune și cum să le eviți**" cu 3-5 example reale
+• Adaugă exemple concrete din aplicații reale sau proiecte
+• Explică DE CE funcționează lucrurile, nu doar CUM
+• Analogii din viața reală pentru concepte abstracte
 • NU include titlul secțiunii
 • NU folosi ## sau ### headings
-• Numai conținutul secțiunii, nimic altceva`;
+• Numai conținutul secțiunii, nimic altceva — dar MULT și DETALIAT`;
 
   return { systemInstr, userPrompt };
 }
