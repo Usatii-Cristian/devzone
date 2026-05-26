@@ -1,7 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Compass, ChevronDown, ChevronUp, Rocket, Map, Clock, BookOpen, Zap, Timer } from "lucide-react";
+import {
+  ArrowLeft, Compass, ChevronDown, ChevronUp, Rocket, Map, Clock, BookOpen, Zap, Timer,
+  Globe, Brain, ShieldCheck, BarChart2, Gamepad2, Cpu, Coffee, Layers, Server,
+  Flame, TrendingUp, Sparkles,
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { ModIcon, MOD_BG } from "@/lib/moduleIcons";
 
@@ -9,7 +13,8 @@ const PATHS = [
   {
     id: "fullstack",
     title: "Full-Stack Web",
-    icon: "🌐",
+    Icon: Globe,
+    TrendIcon: Flame,
     color: "from-blue-500 to-cyan-500",
     bg: "bg-blue-50 dark:bg-blue-950/30",
     border: "border-blue-200 dark:border-blue-800",
@@ -22,7 +27,7 @@ const PATHS = [
     languages: ["HTML", "CSS", "JavaScript", "React", "Next.js", "Node.js"],
     difficulty: "Mediu",
     timeToJob: "9–15 luni",
-    trendLabel: "Cel mai angajat 🔥",
+    trendLabel: "Cel mai angajat",
     hotSkills: ["React 19 + hooks", "Next.js 15 App Router", "TypeScript", "Tailwind CSS"],
     description: "Cel mai căutat profil tech în 2025. Stăpânești atât frontend-ul cât și backend-ul — construiești orice produs web singur. Moldova și România au zeci de companii care angajează full-stack devs, iar remote pentru Europa sau SUA este extrem de accesibil.",
     roles: [
@@ -55,7 +60,8 @@ const PATHS = [
   {
     id: "ai-ml",
     title: "AI & Machine Learning",
-    icon: "🤖",
+    Icon: Brain,
+    TrendIcon: Rocket,
     color: "from-purple-500 to-pink-500",
     bg: "bg-purple-50 dark:bg-purple-950/30",
     border: "border-purple-200 dark:border-purple-800",
@@ -68,7 +74,7 @@ const PATHS = [
     languages: ["Python", "TensorFlow", "PyTorch", "scikit-learn", "Pandas", "LangChain"],
     difficulty: "Avansat",
     timeToJob: "18–30 luni",
-    trendLabel: "Exploziv 2025 🚀",
+    trendLabel: "Exploziv 2025",
     hotSkills: ["LangChain + RAG pipelines", "Fine-tuning LLMs", "MLOps (MLflow)", "Python + PyTorch"],
     description: "Cel mai rapid domeniu în creștere — deficit global de specialiști. Construiești sisteme care recunosc imagini, înțeleg text natural și prezic comportamente. Necesită matematică solidă (liniară, statistică) și Python avansat. Aproape exclusiv remote pentru piețe de top.",
     roles: [
@@ -101,7 +107,8 @@ const PATHS = [
   {
     id: "cybersecurity",
     title: "Cybersecurity",
-    icon: "🛡️",
+    Icon: ShieldCheck,
+    TrendIcon: TrendingUp,
     color: "from-red-500 to-orange-500",
     bg: "bg-red-50 dark:bg-red-950/30",
     border: "border-red-200 dark:border-red-800",
@@ -114,7 +121,7 @@ const PATHS = [
     languages: ["Python", "C", "Bash", "Wireshark", "Metasploit", "Nmap"],
     difficulty: "Dificil",
     timeToJob: "12–24 luni",
-    trendLabel: "Cerere uriașă 📈",
+    trendLabel: "Cerere uriașă",
     hotSkills: ["Cloud Security (AWS/Azure)", "Bug Bounty", "Zero Trust Architecture", "SIEM + SOC analyst"],
     description: "Deficit global de 4 milioane de specialiști cyber în 2025. Protejezi companii de atacuri, găsești vulnerabilități și câștigi prin bug bounty. Bănci, telco, instituții guvernamentale — toți recrutează permanent. Cerere enormă, salarii mari, muncă permanent nouă.",
     roles: [
@@ -147,7 +154,8 @@ const PATHS = [
   {
     id: "data-science",
     title: "Data Science",
-    icon: "📊",
+    Icon: BarChart2,
+    TrendIcon: TrendingUp,
     color: "from-emerald-500 to-teal-500",
     bg: "bg-emerald-50 dark:bg-emerald-950/30",
     border: "border-emerald-200 dark:border-emerald-800",
@@ -160,9 +168,9 @@ const PATHS = [
     languages: ["Python", "SQL", "R", "Tableau", "Power BI", "Spark"],
     difficulty: "Mediu–Dificil",
     timeToJob: "12–20 luni",
-    trendLabel: "Cerere în creștere 📊",
+    trendLabel: "Cerere în creștere",
     hotSkills: ["dbt + data pipelines", "Python + Polars", "LLM data analysis", "Apache Spark"],
-    description: "Analizezi milioane de rânduri de date pentru a descoperi pattern-uri și ghida decizii de business. Rol esențial în bănci, fintech, retail și e-commerce. Python + SQL + statistică este combinația câștigătoare. Multe companii remotă angajează analiști de date din Moldova.",
+    description: "Analizezi milioane de rânduri de date pentru a descoperi pattern-uri și ghida decizii de business. Rol esențial în bănci, fintech, retail și e-commerce. Python + SQL + statistică este combinația câștigătoare. Multe companii remote angajează analiști de date din Moldova.",
     roles: [
       { title: "Data Analyst", local: "800–1.400€", remote: "2.000–4.500€", demand: "Foarte mare" },
       { title: "Data Scientist", local: "1.800–3.200€", remote: "4.000–8.000€", demand: "Explozivă" },
@@ -193,7 +201,8 @@ const PATHS = [
   {
     id: "gamedev",
     title: "Game Development",
-    icon: "🎮",
+    Icon: Gamepad2,
+    TrendIcon: TrendingUp,
     color: "from-violet-500 to-purple-600",
     bg: "bg-violet-50 dark:bg-violet-950/30",
     border: "border-violet-200 dark:border-violet-800",
@@ -206,7 +215,7 @@ const PATHS = [
     languages: ["C++", "C#", "Unity", "Unreal Engine 5", "GLSL/HLSL"],
     difficulty: "Dificil",
     timeToJob: "18–30 luni",
-    trendLabel: "Nișă premium 🎮",
+    trendLabel: "Nișă premium",
     hotSkills: ["Unreal Engine 5 + Nanite/Lumen", "Unity DOTS/ECS", "Shader Graph + HLSL", "C# Netcode multiplayer"],
     description: "Combini programare, matematică 3D și creativitate. C# cu Unity domină indie și mobile; C++ cu Unreal Engine 5 pentru jocuri AAA. Piața locală e mică (Playtika, Ubisoft București), dar remote e frecvent și bine plătit. Industrie globală de 200 miliarde USD.",
     roles: [
@@ -239,7 +248,8 @@ const PATHS = [
   {
     id: "systems",
     title: "Systems & Embedded",
-    icon: "⚙️",
+    Icon: Cpu,
+    TrendIcon: TrendingUp,
     color: "from-slate-500 to-zinc-600",
     bg: "bg-slate-50 dark:bg-slate-900/50",
     border: "border-slate-200 dark:border-slate-700",
@@ -252,7 +262,7 @@ const PATHS = [
     languages: ["C", "C++", "Assembly", "Linux", "FreeRTOS", "Rust"],
     difficulty: "Avansat",
     timeToJob: "18–30 luni",
-    trendLabel: "Salarii mari ⚙️",
+    trendLabel: "Salarii mari",
     hotSkills: ["Rust (borrow checker)", "RISC-V + WASM", "ESP32 + FreeRTOS", "Linux kernel modules"],
     description: "Cel mai apropiat nivel de hardware. Controlezi memorie, procese și dispozitive fizice. Concurența e mică, cererea e constantă, salariile mari încă de la junior. Continental, Microchip și alte companii embedded au birouri în România și angajează permanent.",
     roles: [
@@ -285,7 +295,8 @@ const PATHS = [
   {
     id: "java",
     title: "Enterprise & Android",
-    icon: "☕",
+    Icon: Coffee,
+    TrendIcon: TrendingUp,
     color: "from-amber-500 to-orange-500",
     bg: "bg-amber-50 dark:bg-amber-950/30",
     border: "border-amber-200 dark:border-amber-800",
@@ -298,7 +309,7 @@ const PATHS = [
     languages: ["Java", "Kotlin", "Spring Boot", "Android SDK", "Hibernate", "Maven"],
     difficulty: "Mediu",
     timeToJob: "10–18 luni",
-    trendLabel: "Enterprise stabil ☕",
+    trendLabel: "Enterprise stabil",
     hotSkills: ["Spring Boot 3 + Virtual Threads", "Kotlin + Jetpack Compose", "Reactive Streams (WebFlux)", "Kubernetes + Helm"],
     description: "Java rămâne coloana vertebrală a enterprise-ului global în 2025 — banking, asigurări, guvern, Amazon backend. Endava și Pentalog, ambele active în Moldova și România, angajează permanent Java devs. Kotlin a revoluționat Android și e preferat de Google.",
     roles: [
@@ -331,7 +342,8 @@ const PATHS = [
   {
     id: "dotnet",
     title: ".NET & Unity (C#)",
-    icon: "🔷",
+    Icon: Layers,
+    TrendIcon: TrendingUp,
     color: "from-indigo-500 to-blue-600",
     bg: "bg-indigo-50 dark:bg-indigo-950/30",
     border: "border-indigo-200 dark:border-indigo-800",
@@ -344,7 +356,7 @@ const PATHS = [
     languages: ["C#", "ASP.NET Core", "Unity", "LINQ", "Entity Framework", "Blazor"],
     difficulty: "Mediu",
     timeToJob: "10–16 luni",
-    trendLabel: "Microsoft stack 🔷",
+    trendLabel: "Microsoft stack",
     unityHighlight: true,
     hotSkills: ["ASP.NET Core 9 + Minimal API", "Blazor WebAssembly", ".NET MAUI cross-platform", "Azure AI + Copilot"],
     description: "C# este limbajul Microsoft cu dublă personalitate — backend enterprise cu ASP.NET Core și game dev cu Unity (50%+ cotă de piață indie/mobile). Companiile Microsoft-partner din Moldova și România angajează constant .NET devs. Azure e cloud-ul de facto pentru enterprise.",
@@ -378,7 +390,8 @@ const PATHS = [
   {
     id: "php",
     title: "PHP Web Backend",
-    icon: "🐘",
+    Icon: Server,
+    TrendIcon: TrendingUp,
     color: "from-fuchsia-500 to-violet-500",
     bg: "bg-fuchsia-50 dark:bg-fuchsia-950/30",
     border: "border-fuchsia-200 dark:border-fuchsia-800",
@@ -391,7 +404,7 @@ const PATHS = [
     languages: ["PHP", "Laravel", "MySQL", "Blade", "Livewire", "Composer"],
     difficulty: "Ușor–Mediu",
     timeToJob: "7–12 luni",
-    trendLabel: "79% din web 🐘",
+    trendLabel: "79% din web",
     hotSkills: ["Laravel 11 + Livewire 3", "Filament Admin Panel", "PHP 8.3 Fibers + Enums", "Pest testing framework"],
     description: "PHP 8.3 modern este surprinzător de elegant și productiv. Laravel 11 este printre cele mai apreciate framework-uri. Cel mai rapid drum spre primul job. WordPress alimentează 43% din internet, agențiile web angajează permanent, iar freelance-ul este extrem de accesibil.",
     roles: [
@@ -485,18 +498,16 @@ export default function TraseePage() {
           Alege un traseu, descoperă ce poți construi cu el și urmează roadmap-ul pas cu pas până la primul job.
         </p>
         <div className="flex flex-wrap gap-2 mb-5">
-          <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Ușor–Mediu
-          </span>
-          <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-yellow-500 inline-block"></span> Mediu
-          </span>
-          <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-orange-500 inline-block"></span> Dificil
-          </span>
-          <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span> Avansat
-          </span>
+          {[
+            { color: "bg-green-500", label: "Ușor–Mediu" },
+            { color: "bg-yellow-500", label: "Mediu" },
+            { color: "bg-orange-500", label: "Dificil" },
+            { color: "bg-red-500", label: "Avansat" },
+          ].map(({ color, label }) => (
+            <span key={label} className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${color} inline-block`}></span> {label}
+            </span>
+          ))}
           <span className="text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
             <Timer className="w-3 h-3"/> Timp până la primul job
           </span>
@@ -511,14 +522,16 @@ export default function TraseePage() {
               <div key={path.id} className={`${path.bg} border-2 ${path.border} rounded-2xl overflow-hidden transition-shadow ${open ? "shadow-md" : ""}`}>
                 <button className="w-full text-left p-4" onClick={() => toggle(path.id)}>
                   <div className="flex items-start gap-3">
-                    <div className={`w-11 h-11 bg-gradient-to-br ${path.color} rounded-xl flex items-center justify-center text-xl flex-shrink-0 shadow-sm`}>
-                      {path.icon}
+                    <div className={`w-11 h-11 bg-gradient-to-br ${path.color} rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                      <path.Icon className="w-6 h-6 text-white drop-shadow-sm"/>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-0.5">
                         <span className="font-black text-slate-800 dark:text-white text-base leading-tight">{path.title}</span>
                         {path.unityHighlight && (
-                          <span className="text-[10px] bg-violet-200 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-full font-black">Unity ✨</span>
+                          <span className="text-[10px] bg-violet-200 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-full font-black flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5"/> Unity
+                          </span>
                         )}
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${path.difficultyBadge}`}>{path.difficulty}</span>
                       </div>
@@ -549,7 +562,9 @@ export default function TraseePage() {
 
                     {/* Trend + time */}
                     <div className="flex items-center gap-2 flex-wrap pt-3 pb-2">
-                      <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full ${path.trendBadge}`}>{path.trendLabel}</span>
+                      <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full ${path.trendBadge} flex items-center gap-1`}>
+                        <path.TrendIcon className="w-3 h-3"/> {path.trendLabel}
+                      </span>
                       <span className="text-[11px] text-slate-400 flex items-center gap-1">
                         <Timer className="w-3 h-3"/> Primul job în ~{path.timeToJob}
                       </span>
@@ -617,12 +632,10 @@ export default function TraseePage() {
                       <div className="bg-white/70 dark:bg-slate-800/60 rounded-2xl p-4">
                         <h3 className="font-black text-slate-800 dark:text-white text-sm mb-1">{path.bigProject.title}</h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug mb-3">{path.bigProject.desc}</p>
-
                         <div className="flex items-center gap-1.5 mb-3">
                           <Clock className="w-3.5 h-3.5 text-slate-400" />
                           <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">{path.bigProject.hours} de lucru</span>
                         </div>
-
                         <div className="mb-3">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tech Stack</p>
                           <div className="flex flex-wrap gap-1">
@@ -631,7 +644,6 @@ export default function TraseePage() {
                             ))}
                           </div>
                         </div>
-
                         <div className="mb-3">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Funcționalități</p>
                           <div className="grid grid-cols-2 gap-x-3 gap-y-1">
@@ -643,7 +655,6 @@ export default function TraseePage() {
                             ))}
                           </div>
                         </div>
-
                         <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Pași de Implementare</p>
                           <div className="space-y-2">
