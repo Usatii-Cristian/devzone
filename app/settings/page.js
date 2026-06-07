@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import { useLocalStorage } from "@/lib/hooks";
 import {
   ArrowLeft, Settings, Moon, Sun, Download, Type, Palette, Code2, Trash2,
-  AlertTriangle, LogOut, User
+  AlertTriangle, LogOut, User, Shield
 } from "lucide-react";
 
 const EDITOR_THEMES = [
@@ -190,6 +190,19 @@ export default function SettingsPage() {
             <LogOut className="w-4 h-4"/> Ieși din cont
           </button>
         </section>
+
+        {/* Admin panel shortcut */}
+        <Link href="/admin"
+          className="flex items-center gap-3 bg-slate-800 dark:bg-slate-700 rounded-2xl p-4 hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors group">
+          <div className="w-9 h-9 bg-indigo-500 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Shield className="w-4 h-4 text-white"/>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-black text-white text-sm">Admin Panel</p>
+            <p className="text-slate-400 text-xs">Vizualizează și resetează progresul utilizatorilor</p>
+          </div>
+          <ArrowLeft className="w-4 h-4 text-slate-400 rotate-180 group-hover:text-white transition-colors"/>
+        </Link>
 
         {/* Danger zone */}
         <section className="bg-red-50 dark:bg-red-950/30 rounded-2xl p-4 sm:p-5 border-2 border-red-200 dark:border-red-900">
