@@ -1,20 +1,8 @@
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import prisma from "@/lib/prisma";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
-
-const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
-
-async function getUserId(request) {
-  try {
-    const token = request.cookies.get("auth_token")?.value;
-    if (!token) return "local-user";
-    const { payload } = await jwtVerify(token, SECRET);
-    return String(payload.email || "local-user");
-  } catch {
-    return "local-user";
-  }
-}
+import { getUserId } from "@/lib/auth";
+import { shuffle } from "@/lib/random";
 
 export async function POST(request) {
   const limit = rateLimit(`training:${clientKey(request)}`, 8);
@@ -77,7 +65,7 @@ export async function POST(request) {
         },
         include: { lesson: { select: { title: true } } },
       });
-      const shuffled = allTasks.sort(() => Math.random() - 0.5);
+      const shuffled = shuffle(allTasks);
       return NextResponse.json(shuffled.slice(0, Math.min(count, shuffled.length)));
     }
 

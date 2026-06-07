@@ -70,7 +70,7 @@ export default function LessonPage() {
       }
     }
     return map;
-  }, [lesson?.id]);
+  }, [lesson]);
 
   useEffect(() => {
     if (!lesson) return;
@@ -102,9 +102,12 @@ export default function LessonPage() {
     return () => { cancelled = true; };
   }, [lesson, moduleSlug]);
 
-  useEffect(() => {
-    let cancelled = false;
-    // Reset state when switching lessons so stale UI doesn't flash
+  // Reset per-lesson state synchronously when the lesson changes, before the
+  // fetch effect runs — React's "adjust state during render" pattern so stale
+  // UI doesn't flash (instead of a setState-in-effect).
+  const [prevLessonId, setPrevLessonId] = useState(lessonId);
+  if (lessonId !== prevLessonId) {
+    setPrevLessonId(lessonId);
     setLesson(null);
     setLoading(true);
     setCompleted([]);
@@ -113,7 +116,10 @@ export default function LessonPage() {
     setSelected(null);
     setSubmitted(false);
     setFinished(false);
+  }
 
+  useEffect(() => {
+    let cancelled = false;
     Promise.all([
       fetch(`/api/lessons/${lessonId}`),
       fetch(`/api/progress?lessonId=${lessonId}`)
@@ -196,6 +202,8 @@ export default function LessonPage() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+    // submit/next are read via closure; the listener only needs the state below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, submitted, selected, finished, retryMode, taskIdx]);
 
   function submit() {

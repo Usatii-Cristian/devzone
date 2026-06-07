@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-
-const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
+import { getSecret } from "@/lib/auth";
 
 const NAME_MAP = {
   [process.env.AUTH_EMAIL]:  { name: "Cristi", initial: "C" },
@@ -13,7 +12,7 @@ export async function GET(request) {
   if (!token) return NextResponse.json({ email: null, name: "Utilizator", initial: "U" }, { status: 401 });
 
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, getSecret());
     const email = String(payload.email || "");
     const info = NAME_MAP[email] ?? { name: email.split("@")[0], initial: email[0]?.toUpperCase() ?? "U" };
     return NextResponse.json({ email, ...info });
