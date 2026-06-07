@@ -372,6 +372,8 @@ ${code}
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+    // runCode is read via closure; the listener only needs code/langId below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, langId]);
 
   return (

@@ -35,9 +35,13 @@ export default function AIAssistant({ task, lessonTitle }) {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  useEffect(() => {
+  // Reset the conversation when switching to a different task — React's
+  // "adjust state during render" pattern, instead of a setState-in-effect.
+  const [prevTaskId, setPrevTaskId] = useState(task?.id);
+  if (task?.id !== prevTaskId) {
+    setPrevTaskId(task?.id);
     setMessages([INITIAL_MESSAGE]);
-  }, [task?.id]);
+  }
 
   useEffect(() => {
     if (open) {

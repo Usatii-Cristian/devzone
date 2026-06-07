@@ -126,6 +126,8 @@ export default function AntrenamentPage() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+    // nextTask is read via closure; the listener only needs the state below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasks, done, submitted, idx]);
 
   function resetCodingState() {
@@ -678,7 +680,7 @@ parent.postMessage({logs:_log},'*');
                 )}
 
                 {!codeResult && (
-                  <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-2">Scrie codul și apasă "Trimite răspunsul" pentru evaluare AI</p>
+                  <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-2">Scrie codul și apasă „Trimite răspunsul” pentru evaluare AI</p>
                 )}
               </>
             ) : task.type === "fillblank" ? (

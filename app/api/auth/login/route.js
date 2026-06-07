@@ -2,28 +2,7 @@ import { SignJWT } from "jose";
 import { NextResponse } from "next/server";
 import { timingSafeEqual, createHash } from "crypto";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
-
-// Strip surrounding quotes and trim — handles env vars typed with quotes on Vercel.
-function cleanEnv(value) {
-  if (typeof value !== "string") return "";
-  let v = value.trim();
-  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-    v = v.slice(1, -1).trim();
-  }
-  return v;
-}
-
-// AUTH_SECRET must be at least 32 bytes for HS256. Fall back to a deterministic
-// dev key if missing so the route never crashes — production should always set it.
-function getSecret() {
-  const raw = cleanEnv(process.env.AUTH_SECRET);
-  if (raw.length >= 32) return new TextEncoder().encode(raw);
-  console.warn(
-    "[auth] AUTH_SECRET missing or too short (< 32 chars). Using insecure fallback. " +
-      "Set AUTH_SECRET in Vercel env vars to a 64-char random hex string."
-  );
-  return new TextEncoder().encode("devzone-fallback-key-please-replace-in-production-32+chars");
-}
+import { cleanEnv, getSecret } from "@/lib/auth";
 
 // SHA-256 hashes of default passwords — safe to store in source.
 // Used only when env vars are missing/empty. Change via AUTH_EMAIL/AUTH_PASSWORD env vars.

@@ -1,19 +1,6 @@
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import prisma from "@/lib/prisma";
-
-const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
-
-async function getUserId(request) {
-  try {
-    const token = request.cookies.get("auth_token")?.value;
-    if (!token) return "local-user";
-    const { payload } = await jwtVerify(token, SECRET);
-    return String(payload.email || "local-user");
-  } catch {
-    return "local-user";
-  }
-}
+import { getUserId } from "@/lib/auth";
 
 export async function GET(request) {
   try {

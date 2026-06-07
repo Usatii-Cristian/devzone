@@ -1,7 +1,6 @@
 import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
-
-const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
+import { getSecret } from "@/lib/auth";
 
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
@@ -24,7 +23,7 @@ export async function proxy(request) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, getSecret());
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-user-id", payload.email || "local-user");
     return NextResponse.next({ request: { headers: requestHeaders } });

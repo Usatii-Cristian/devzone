@@ -1,19 +1,7 @@
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import prisma from "@/lib/prisma";
-
-const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
-
-async function getUserId(request) {
-  try {
-    const token = request.cookies.get("auth_token")?.value;
-    if (!token) return "local-user";
-    const { payload } = await jwtVerify(token, SECRET);
-    return String(payload.email || "local-user");
-  } catch {
-    return "local-user";
-  }
-}
+import { getUserId } from "@/lib/auth";
+import { shuffle } from "@/lib/random";
 
 export async function GET(request) {
   try {
@@ -59,7 +47,7 @@ export async function GET(request) {
     if (allTasks.length === 0) return NextResponse.json([]);
 
     // Shuffle and pick
-    const shuffled = [...allTasks].sort(() => Math.random() - 0.5);
+    const shuffled = shuffle(allTasks);
     return NextResponse.json(shuffled.slice(0, count));
   } catch {
     return NextResponse.json([]);

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, CheckCircle, Clock, Play } from "lucide-react";
@@ -31,13 +31,13 @@ export default function ModulePage() {
     return m;
   }, [progress]);
 
-  function getStatus(id) {
+  const getStatus = useCallback((id) => {
     const p = progressMap.get(id);
     if (!p) return "none";
     if (p.completed) return "done";
     if (p.completedTasks?.length > 0) return "progress";
     return "none";
-  }
+  }, [progressMap]);
 
   const continueLesson = useMemo(() => {
     if (!module) return null;
@@ -46,7 +46,7 @@ export default function ModulePage() {
     if (inProg) return inProg;
     // Second: first not-done lesson
     return module.lessons.find(l => getStatus(l.id) !== "done") ?? null;
-  }, [module, progressMap]);
+  }, [module, getStatus]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
