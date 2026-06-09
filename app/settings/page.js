@@ -26,7 +26,7 @@ export default function SettingsPage() {
   const [exporting, setExporting] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
-  const [user, setUser] = useState({ name: "", initial: "", email: "" });
+  const [user, setUser] = useState({ name: "", initial: "", email: "", isAdmin: false });
 
   useEffect(() => {
     fetch("/api/me").then(r => r.json()).then(u => { if (u?.name) setUser(u); }).catch(() => {});
@@ -191,18 +191,20 @@ export default function SettingsPage() {
           </button>
         </section>
 
-        {/* Admin panel shortcut */}
-        <Link href="/admin"
-          className="flex items-center gap-3 bg-slate-800 dark:bg-slate-700 rounded-2xl p-4 hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors group">
-          <div className="w-9 h-9 bg-indigo-500 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Shield className="w-4 h-4 text-white"/>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-black text-white text-sm">Admin Panel</p>
-            <p className="text-slate-400 text-xs">Vizualizează și resetează progresul utilizatorilor</p>
-          </div>
-          <ArrowLeft className="w-4 h-4 text-slate-400 rotate-180 group-hover:text-white transition-colors"/>
-        </Link>
+        {/* Admin panel shortcut — only for the primary admin account */}
+        {user.isAdmin && (
+          <Link href="/admin"
+            className="flex items-center gap-3 bg-slate-800 dark:bg-slate-700 rounded-2xl p-4 hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors group">
+            <div className="w-9 h-9 bg-indigo-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Shield className="w-4 h-4 text-white"/>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-black text-white text-sm">Admin Panel</p>
+              <p className="text-slate-400 text-xs">Vizualizează și resetează progresul utilizatorilor</p>
+            </div>
+            <ArrowLeft className="w-4 h-4 text-slate-400 rotate-180 group-hover:text-white transition-colors"/>
+          </Link>
+        )}
 
         {/* Danger zone */}
         <section className="bg-red-50 dark:bg-red-950/30 rounded-2xl p-4 sm:p-5 border-2 border-red-200 dark:border-red-900">

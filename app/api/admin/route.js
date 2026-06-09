@@ -9,7 +9,8 @@ async function requireAdmin(request) {
     if (!token) return null;
     const { payload } = await jwtVerify(token, getSecret());
     const email = String(payload.email || "");
-    const admins = [process.env.AUTH_EMAIL, process.env.AUTH_EMAIL2].filter(Boolean);
+    // Admin access: ONLY the primary account (AUTH_EMAIL).
+    const admins = [process.env.AUTH_EMAIL].filter(Boolean);
     return admins.includes(email) ? email : null;
   } catch {
     return null;

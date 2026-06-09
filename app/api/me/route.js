@@ -15,7 +15,8 @@ export async function GET(request) {
     const { payload } = await jwtVerify(token, getSecret());
     const email = String(payload.email || "");
     const info = NAME_MAP[email] ?? { name: email.split("@")[0], initial: email[0]?.toUpperCase() ?? "U" };
-    return NextResponse.json({ email, ...info });
+    const isAdmin = Boolean(process.env.AUTH_EMAIL) && email === process.env.AUTH_EMAIL;
+    return NextResponse.json({ email, isAdmin, ...info });
   } catch {
     return NextResponse.json({ email: null, name: "Utilizator", initial: "U" }, { status: 401 });
   }
