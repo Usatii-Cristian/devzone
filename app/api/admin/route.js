@@ -3,24 +3,20 @@ import { jwtVerify } from "jose";
 import prisma from "@/lib/prisma";
 import { getSecret } from "@/lib/auth";
 
-const ADMIN_EMAILS = [
-  process.env.AUTH_EMAIL,
-  process.env.AUTH_EMAIL2,
-].filter(Boolean);
-
 async function requireAdmin(request) {
   try {
     const token = request.cookies.get("auth_token")?.value;
     if (!token) return null;
     const { payload } = await jwtVerify(token, getSecret());
     const email = String(payload.email || "");
-    return ADMIN_EMAILS.includes(email) ? email : null;
+    const admins = [process.env.AUTH_EMAIL, process.env.AUTH_EMAIL2].filter(Boolean);
+    return admins.includes(email) ? email : null;
   } catch {
     return null;
   }
 }
 
-// GET — fetch all progress data grouped by user
+// GET — all modules+lessons, merged with user progress
 export async function GET(request) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,85 +24,143 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
 
-  const allProgress = await prisma.lessonProgress.findMany({
-    where: userId ? { userId } : {},
+  // All modules with all lessons
+  const modules = await prisma.module.findMany({
+    orderBy: { order: "asc" },
     include: {
-      lesson: {
-        select: {
-          id: true,
-          title: true,
-          order: true,
-          module: { select: { id: true, title: true, slug: true, order: true } },
+      lessons: {
+        orderBy: { order: "asc" },
+        select: { id: true, title: true, order: true,
+          tasks: { select: { id: true }, orderBy: { number: "asc" } },
         },
       },
     },
+  });
+
+  // All progress (filtered by userId if given)
+  const allProgress = await prisma.lessonProgress.findMany({
+    where: userId ? { userId } : {},
     orderBy: { updatedAt: "desc" },
   });
 
-  // Group by userId
-  const byUser = {};
+  // Build progress map: userId+lessonId → progress
+  const progressMap = {};
   for (const p of allProgress) {
-    if (!byUser[p.userId]) byUser[p.userId] = [];
-    byUser[p.userId].push(p);
+    progressMap[`${p.userId}::${p.lessonId}`] = p;
   }
 
-  // Compute stats per user
-  const users = Object.entries(byUser).map(([uid, progresses]) => {
-    const done = progresses.filter(p => p.completed).length;
-    const totalTasks = progresses.reduce((s, p) => s + (p.completedTasks?.length || 0), 0);
-    const totalWrong = progresses.reduce((s, p) => s + (p.wrongTasks?.length || 0), 0);
+  // Distinct userIds with activity
+  const userIds = [...new Set(allProgress.map(p => p.userId))];
 
-    // Group by module
-    const byModule = {};
-    for (const p of progresses) {
-      const mod = p.lesson.module;
-      if (!byModule[mod.slug]) {
-        byModule[mod.slug] = {
-          id: mod.id,
-          slug: mod.slug,
-          title: mod.title,
-          order: mod.order,
-          lessons: [],
+  // Build per-user data
+  const users = userIds.map(uid => {
+    const userProgress = allProgress.filter(p => p.userId === uid);
+    const done = userProgress.filter(p => p.completed).length;
+    const totalTasks = userProgress.reduce((s, p) => s + (p.completedTasks?.length || 0), 0);
+    const totalWrong = userProgress.reduce((s, p) => s + (p.wrongTasks?.length || 0), 0);
+
+    const userModules = modules.map(mod => ({
+      id: mod.id,
+      slug: mod.slug,
+      title: mod.title,
+      order: mod.order,
+      lessons: mod.lessons.map(lesson => {
+        const prog = progressMap[`${uid}::${lesson.id}`];
+        return {
+          lessonId: lesson.id,
+          lessonTitle: lesson.title,
+          lessonOrder: lesson.order,
+          totalTaskCount: lesson.tasks.length,
+          taskIds: lesson.tasks.map(t => t.id),
+          // Current progress (null if not started)
+          progressId: prog?.id || null,
+          completed: prog?.completed || false,
+          completedTasks: prog?.completedTasks?.length || 0,
+          wrongTasks: prog?.wrongTasks?.length || 0,
+          currentTaskIdx: prog?.currentTaskIdx || 0,
+          updatedAt: prog?.updatedAt || null,
         };
-      }
-      byModule[mod.slug].lessons.push({
-        progressId: p.id,
-        lessonId: p.lessonId,
-        lessonTitle: p.lesson.title,
-        lessonOrder: p.lesson.order,
-        completed: p.completed,
-        completedTasks: p.completedTasks?.length || 0,
-        wrongTasks: p.wrongTasks?.length || 0,
-        currentTaskIdx: p.currentTaskIdx,
-        updatedAt: p.updatedAt,
-      });
-    }
+      }),
+    }));
 
-    // Sort modules and lessons
-    const modules = Object.values(byModule)
-      .sort((a, b) => a.order - b.order)
-      .map(m => ({
-        ...m,
-        lessons: m.lessons.sort((a, b) => a.lessonOrder - b.lessonOrder),
-        doneLessons: m.lessons.filter(l => l.completed).length,
-        totalLessons: m.lessons.length,
-      }));
+    const doneLessonsInMod = (mod) => mod.lessons.filter(l => l.completed).length;
 
     return {
       userId: uid,
       done,
-      total: progresses.length,
+      total: userProgress.length,
       totalTasks,
       totalWrong,
       successRate: totalTasks > 0 ? Math.round((totalTasks / (totalTasks + totalWrong)) * 100) : 0,
-      modules,
+      modules: userModules.map(m => ({
+        ...m,
+        doneLessons: m.lessons.filter(l => l.completed).length,
+        totalLessons: m.lessons.length,
+        hasAnyProgress: m.lessons.some(l => l.progressId !== null),
+      })),
     };
   });
 
-  return NextResponse.json(users);
+  // Return users + all modules structure (for adding new users/progress)
+  return NextResponse.json({
+    users,
+    allModules: modules.map(mod => ({
+      id: mod.id,
+      slug: mod.slug,
+      title: mod.title,
+      order: mod.order,
+      lessons: mod.lessons.map(l => ({
+        id: l.id,
+        title: l.title,
+        order: l.order,
+        totalTaskCount: l.tasks.length,
+        taskIds: l.tasks.map(t => t.id),
+      })),
+    })),
+  });
 }
 
-// DELETE — reset progress
+// POST — upsert progress for a user+lesson with specific counts
+export async function POST(request) {
+  const admin = await requireAdmin(request);
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { userId, lessonId, completedTasksCount, wrongTasksCount, completed, taskIds } = await request.json();
+  if (!userId || !lessonId) return NextResponse.json({ error: "userId + lessonId required" }, { status: 400 });
+
+  // Build completedTasks array from real task IDs (first N)
+  const allTaskIds = taskIds || [];
+  const count = Math.max(0, Math.min(completedTasksCount ?? allTaskIds.length, allTaskIds.length));
+  const completedTasks = allTaskIds.slice(0, count);
+  const wrongCount = Math.max(0, wrongTasksCount ?? 0);
+  // Use dummy wrong IDs if needed (these are just counters in practice)
+  const wrongTasks = allTaskIds.slice(count, count + wrongCount);
+  const isCompleted = completed ?? (count === allTaskIds.length && allTaskIds.length > 0);
+
+  const progress = await prisma.lessonProgress.upsert({
+    where: { userId_lessonId: { userId, lessonId } },
+    update: {
+      completedTasks,
+      wrongTasks,
+      completed: isCompleted,
+      currentTaskIdx: count,
+      currentTheoryIdx: 0,
+    },
+    create: {
+      userId,
+      lessonId,
+      completedTasks,
+      wrongTasks,
+      completed: isCompleted,
+      currentTaskIdx: count,
+      currentTheoryIdx: 0,
+    },
+  });
+
+  return NextResponse.json({ ok: true, progress });
+}
+
+// DELETE — reset progress (by user, module, or lesson)
 export async function DELETE(request) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -115,19 +169,15 @@ export async function DELETE(request) {
   if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
 
   let where = { userId };
-
   if (lessonId) {
-    // Reset single lesson
     where.lessonId = lessonId;
   } else if (moduleSlug) {
-    // Reset all lessons in a module
     const lessons = await prisma.lesson.findMany({
       where: { module: { slug: moduleSlug } },
       select: { id: true },
     });
     where.lessonId = { in: lessons.map(l => l.id) };
   }
-  // else: reset everything for this user
 
   const { count } = await prisma.lessonProgress.deleteMany({ where });
   return NextResponse.json({ ok: true, deleted: count });
