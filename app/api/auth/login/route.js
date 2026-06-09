@@ -25,6 +25,7 @@ function getUsers() {
   const fromEnv = [
     { email: cleanEnv(process.env.AUTH_EMAIL), password: cleanEnv(process.env.AUTH_PASSWORD) },
     { email: cleanEnv(process.env.AUTH_EMAIL2), password: cleanEnv(process.env.AUTH_PASSWORD2) },
+    { email: cleanEnv(process.env.AUTH_EMAIL3), password: cleanEnv(process.env.AUTH_PASSWORD3) },
   ].filter((u) => u.email && u.password);
 
   if (fromEnv.length > 0) return { users: fromEnv, mode: "env" };
