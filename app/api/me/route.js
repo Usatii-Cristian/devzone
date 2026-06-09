@@ -5,6 +5,7 @@ import { getSecret } from "@/lib/auth";
 const NAME_MAP = {
   [process.env.AUTH_EMAIL]:  { name: "Cristi", initial: "C" },
   [process.env.AUTH_EMAIL2]: { name: "Alex",   initial: "A" },
+  [process.env.AUTH_EMAIL3]: { name: "Dencik", initial: "D" },
 };
 
 export async function GET(request) {
