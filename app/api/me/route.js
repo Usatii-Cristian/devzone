@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { getSecret } from "@/lib/auth";
+import { getSecret, isAdminEmail } from "@/lib/auth";
 
 const NAME_MAP = {
   [process.env.AUTH_EMAIL]:  { name: "Cristi", initial: "C" },
@@ -16,8 +16,7 @@ export async function GET(request) {
     const { payload } = await jwtVerify(token, getSecret());
     const email = String(payload.email || "");
     const info = NAME_MAP[email] ?? { name: email.split("@")[0], initial: email[0]?.toUpperCase() ?? "U" };
-    const isAdmin = Boolean(process.env.AUTH_EMAIL) && email === process.env.AUTH_EMAIL;
-    return NextResponse.json({ email, isAdmin, ...info });
+    return NextResponse.json({ email, isAdmin: isAdminEmail(email), ...info });
   } catch {
     return NextResponse.json({ email: null, name: "Utilizator", initial: "U" }, { status: 401 });
   }

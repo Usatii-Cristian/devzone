@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import prisma from "@/lib/prisma";
-import { getSecret } from "@/lib/auth";
+import { getSecret, isAdminEmail } from "@/lib/auth";
 
 async function requireAdmin(request) {
   try {
@@ -10,8 +10,7 @@ async function requireAdmin(request) {
     const { payload } = await jwtVerify(token, getSecret());
     const email = String(payload.email || "");
     // Admin access: ONLY the primary account (AUTH_EMAIL).
-    const admins = [process.env.AUTH_EMAIL].filter(Boolean);
-    return admins.includes(email) ? email : null;
+    return isAdminEmail(email) ? email : null;
   } catch {
     return null;
   }
