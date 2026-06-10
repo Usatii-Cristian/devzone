@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import { useLocalStorage } from "@/lib/hooks";
 import {
   ArrowLeft, Settings, Moon, Sun, Download, Type, Palette, Code2, Trash2,
-  AlertTriangle, LogOut, User, Shield
+  AlertTriangle, LogOut, User, Shield, WifiOff, DownloadCloud, CheckCircle2
 } from "lucide-react";
 
 const EDITOR_THEMES = [
@@ -27,6 +27,7 @@ export default function SettingsPage() {
   const [resetting, setResetting] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [user, setUser] = useState({ name: "", initial: "", email: "", isAdmin: false });
+  const [dl, setDl] = useState({ running: false, done: 0, total: 0, finished: false, error: "" });
 
   useEffect(() => {
     fetch("/api/me").then(r => r.json()).then(u => { if (u?.name) setUser(u); }).catch(() => {});
@@ -55,6 +56,56 @@ export default function SettingsPage() {
       alert("Eroare la export. Încearcă din nou.");
     }
     setExporting(false);
+  }
+
+  // Warm the service-worker caches with ALL content so the whole platform works
+  // offline after a single tap on Wi-Fi: module/lesson data (API), page documents
+  // and RSC payloads used by client-side navigation.
+  async function downloadOffline() {
+    if (dl.running) return;
+    if (!("serviceWorker" in navigator)) {
+      setDl({ running: false, done: 0, total: 0, finished: false, error: "Browserul nu suportă mod offline." });
+      return;
+    }
+    setDl({ running: true, done: 0, total: 0, finished: false, error: "" });
+    try {
+      const mods = await fetch("/api/modules").then(r => r.json());
+      const apiUrls = ["/api/modules", "/api/me", "/api/progress", "/api/training"];
+      const pageUrls = ["/", "/antrenament", "/proiecte", "/trasee", "/dictionar", "/settings"];
+      for (const m of (Array.isArray(mods) ? mods : [])) {
+        apiUrls.push(`/api/modules/${m.slug}`);
+        pageUrls.push(`/modules/${m.slug}`);
+        for (const l of (m.lessons || [])) {
+          apiUrls.push(`/api/lessons/${l.id}`);
+          pageUrls.push(`/modules/${m.slug}/lessons/${l.id}`);
+        }
+      }
+      const jobs = [
+        ...apiUrls.map(u => ["api", u]),
+        ...pageUrls.map(u => ["page", u]),
+        ...pageUrls.map(u => ["rsc", u]),
+      ];
+      setDl(d => ({ ...d, total: jobs.length }));
+
+      let done = 0;
+      const queue = jobs.slice();
+      const worker = async () => {
+        while (queue.length) {
+          const [type, url] = queue.shift();
+          try {
+            if (type === "rsc") await fetch(url, { headers: { RSC: "1" }, credentials: "include" });
+            else if (type === "page") await fetch(url, { headers: { Accept: "text/html" }, credentials: "include" });
+            else await fetch(url, { credentials: "include" });
+          } catch { /* skip failures, keep going */ }
+          done++;
+          if (done % 5 === 0 || queue.length === 0) setDl(d => ({ ...d, done }));
+        }
+      };
+      await Promise.all(Array.from({ length: 6 }, worker));
+      setDl(d => ({ ...d, running: false, done: d.total, finished: true }));
+    } catch {
+      setDl({ running: false, done: 0, total: 0, finished: false, error: "Eroare la descărcare. Verifică conexiunea." });
+    }
   }
 
   async function resetAllProgress() {
@@ -177,6 +228,47 @@ export default function SettingsPage() {
           <button onClick={exportProgress} disabled={exporting}
             className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-5 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 active:scale-[0.98]">
             <Download className="w-4 h-4"/> {exporting ? "Se exportă..." : "Descarcă JSON"}
+          </button>
+        </section>
+
+        {/* Offline mode */}
+        <section className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+          <h2 className="font-black text-slate-800 dark:text-white text-sm mb-2 flex items-center gap-2">
+            <WifiOff className="w-4 h-4 text-violet-500"/> Mod offline
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
+            Descarcă toate modulele și lecțiile pe dispozitiv. După aceea poți deschide aplicația și învăța <b>fără internet</b>. Instalează aplicația (din meniul browserului → „Adaugă pe ecranul principal") pentru acces ca o aplicație nativă.
+          </p>
+
+          {dl.running && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between text-xs font-bold text-violet-600 dark:text-violet-400 mb-1.5">
+                <span>Se descarcă...</span>
+                <span>{dl.total ? Math.round((dl.done / dl.total) * 100) : 0}%</span>
+              </div>
+              <div className="h-2.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-violet-500 to-purple-600 transition-all duration-200"
+                  style={{ width: `${dl.total ? (dl.done / dl.total) * 100 : 0}%` }}/>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">{dl.done} / {dl.total} resurse</p>
+            </div>
+          )}
+
+          {dl.finished && !dl.running && (
+            <div className="mb-3 flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-sm px-4 py-3 rounded-xl font-bold">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0"/> Gata! Tot conținutul e disponibil offline.
+            </div>
+          )}
+
+          {dl.error && (
+            <div className="mb-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 text-sm px-4 py-3 rounded-xl font-medium">
+              {dl.error}
+            </div>
+          )}
+
+          <button onClick={downloadOffline} disabled={dl.running}
+            className="w-full sm:w-auto bg-gradient-to-r from-violet-500 to-purple-600 text-white px-5 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 active:scale-[0.98]">
+            <DownloadCloud className="w-4 h-4"/> {dl.running ? "Se descarcă..." : dl.finished ? "Descarcă din nou" : "Descarcă tot pentru offline"}
           </button>
         </section>
 
