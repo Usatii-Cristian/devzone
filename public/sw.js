@@ -5,13 +5,19 @@
 //   • RSC payloads (client-side nav data) → network-first, fall back to cache
 //   • content APIs (modules, lessons, progress, me…) → network-first, fall back to cache
 //   • auth / AI / code-eval / admin APIs → never cached (need a live server)
-const VERSION = "v3";
+// Documents and RSC payloads live in SEPARATE caches: they share the same URL
+// key, so mixing them would let a navigation match an RSC payload (blank page).
+const VERSION = "v4";
 const STATIC_CACHE = `devzone-static-${VERSION}`;
 const PAGE_CACHE = `devzone-pages-${VERSION}`;
+const RSC_CACHE = `devzone-rsc-${VERSION}`;
 const API_CACHE = `devzone-api-${VERSION}`;
-const KEEP = [STATIC_CACHE, PAGE_CACHE, API_CACHE];
+const KEEP = [STATIC_CACHE, PAGE_CACHE, RSC_CACHE, API_CACHE];
 
-const PRECACHE = ["/", "/manifest.json", "/logo.png", "/image.png", "/icon-192.png", "/icon-512.png"];
+// Only auth-free, always-200 assets. "/" is intentionally NOT precached: if the
+// SW installed on /login (logged out), it could cache the login page as "/".
+// "/" gets cached on the first authenticated navigation (and by the offline download).
+const PRECACHE = ["/manifest.json", "/logo.png", "/image.png", "/icon-192.png", "/icon-512.png"];
 const STATIC_RE = /\.(?:js|css|woff2?|ttf|otf|png|jpe?g|gif|svg|webp|ico)$/;
 
 // APIs that must NOT be served from cache (live data / external services only).
@@ -41,13 +47,18 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Only cache real, same-origin, non-redirected success responses. A redirect to
+// /login (when a request is unauthenticated) must never poison a content cache.
+function isCacheable(res) {
+  return res && res.ok && !res.redirected && res.type !== "opaqueredirect";
+}
+
 async function cacheFirst(req, cacheName) {
-  const hit = await caches.match(req, { ignoreVary: true });
+  const cache = await caches.open(cacheName);
+  const hit = await cache.match(req, { ignoreVary: true });
   if (hit) return hit;
   const res = await fetch(req);
-  if (res && (res.ok || res.type === "opaque")) {
-    (await caches.open(cacheName)).put(req, res.clone());
-  }
+  if (isCacheable(res) || (res && res.type === "opaque")) cache.put(req, res.clone());
   return res;
 }
 
@@ -55,13 +66,13 @@ async function networkFirst(req, cacheName, { fallbackToRoot = false } = {}) {
   const cache = await caches.open(cacheName);
   try {
     const res = await fetch(req);
-    if (res && res.ok) cache.put(req, res.clone());
+    if (isCacheable(res)) cache.put(req, res.clone());
     return res;
   } catch (err) {
     const hit = await cache.match(req, { ignoreVary: true });
     if (hit) return hit;
     if (fallbackToRoot) {
-      const root = await caches.match("/", { ignoreVary: true });
+      const root = await (await caches.open(PAGE_CACHE)).match("/", { ignoreVary: true });
       if (root) return root;
     }
     throw err;
@@ -88,10 +99,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // RSC payloads used by client-side navigation
+  // RSC payloads used by client-side navigation (kept apart from documents)
   const isRSC = req.headers.get("RSC") === "1" || url.searchParams.has("_rsc");
   if (isRSC) {
-    event.respondWith(networkFirst(req, PAGE_CACHE));
+    event.respondWith(networkFirst(req, RSC_CACHE));
     return;
   }
 

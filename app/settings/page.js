@@ -80,28 +80,48 @@ export default function SettingsPage() {
           pageUrls.push(`/modules/${m.slug}/lessons/${l.id}`);
         }
       }
+      const assets = new Set(); // /_next/static chunks the pages depend on
       const jobs = [
         ...apiUrls.map(u => ["api", u]),
         ...pageUrls.map(u => ["page", u]),
         ...pageUrls.map(u => ["rsc", u]),
       ];
-      setDl(d => ({ ...d, total: jobs.length }));
 
+      let total = jobs.length;
       let done = 0;
-      const queue = jobs.slice();
-      const worker = async () => {
-        while (queue.length) {
-          const [type, url] = queue.shift();
-          try {
-            if (type === "rsc") await fetch(url, { headers: { RSC: "1" }, credentials: "include" });
-            else if (type === "page") await fetch(url, { headers: { Accept: "text/html" }, credentials: "include" });
-            else await fetch(url, { credentials: "include" });
-          } catch { /* skip failures, keep going */ }
-          done++;
-          if (done % 5 === 0 || queue.length === 0) setDl(d => ({ ...d, done }));
-        }
+      setDl(d => ({ ...d, total, done }));
+      const bump = () => { done++; if (done % 5 === 0 || done >= total) setDl(d => ({ ...d, done, total })); };
+
+      const runQueue = async (queue, handler) => {
+        const work = async () => {
+          while (queue.length) {
+            const item = queue.shift();
+            try { await handler(item); } catch { /* skip failures, keep going */ }
+            bump();
+          }
+        };
+        await Promise.all(Array.from({ length: 6 }, work));
       };
-      await Promise.all(Array.from({ length: 6 }, worker));
+
+      // Phase 1 — data, page documents (collect chunk URLs), RSC payloads
+      await runQueue(jobs.slice(), async ([type, url]) => {
+        if (type === "rsc") {
+          await fetch(url, { headers: { RSC: "1" }, credentials: "include" });
+        } else if (type === "page") {
+          const res = await fetch(url, { headers: { Accept: "text/html" }, credentials: "include" });
+          const html = await res.text();
+          for (const m of html.matchAll(/\/_next\/static\/[^"'()\s]+?\.(?:js|css)/g)) assets.add(m[0]);
+        } else {
+          await fetch(url, { credentials: "include" });
+        }
+      });
+
+      // Phase 2 — the JS/CSS bundles so every route can render with no network
+      const assetJobs = [...assets];
+      total += assetJobs.length;
+      setDl(d => ({ ...d, total }));
+      await runQueue(assetJobs, async (u) => { await fetch(u, { credentials: "include" }); });
+
       setDl(d => ({ ...d, running: false, done: d.total, finished: true }));
     } catch {
       setDl({ running: false, done: 0, total: 0, finished: false, error: "Eroare la descărcare. Verifică conexiunea." });
