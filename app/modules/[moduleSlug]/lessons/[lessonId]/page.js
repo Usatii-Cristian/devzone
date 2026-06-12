@@ -9,6 +9,7 @@ import {
   Copy, Sparkles, PenLine, ArrowDown
 } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
+import { runPython, gradeByOutput, canGradeOffline } from "@/lib/codeRunner";
 
 const DIFF = {
   easy:   { label:"Ușor",  cls:"bg-green-100 text-green-700 border-green-200" },
@@ -509,6 +510,9 @@ parent.postMessage({logs:_log},'*');
   async function runWithPiston(code, lang) {
     const cfg = PISTON_LANGS[lang];
     if (!cfg) return "(execuție indisponibilă pentru " + lang + ")";
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return `Limbajul ${lang.toUpperCase()} se rulează pe server și necesită internet. Offline poți rula Python și JavaScript.`;
+    }
     try {
       const res = await fetch("https://emkc.org/api/v2/piston/execute", {
         method: "POST",
@@ -530,6 +534,8 @@ parent.postMessage({logs:_log},'*');
       const lang = (language || "javascript").toLowerCase();
       if (lang === "javascript" || lang === "jsx" || !lang) {
         out = await runInIframe(code);
+      } else if (lang === "python") {
+        out = await runPython(code);
       } else {
         out = await runWithPiston(code, lang);
       }
@@ -547,40 +553,52 @@ parent.postMessage({logs:_log},'*');
     setCodeEvaluating(true);
     const output = await runCode(code, task.language);
 
-    try {
-      const res = await fetch("/api/evaluate-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code,
-          output,
-          question: task.question,
-          language: task.language || "javascript",
-          lessonTitle: lesson?.title || "",
-          explanation: task.explanation || "",
-        }),
-      });
-      const evaluation = await res.json();
-      setCodeResult(evaluation);
+    let evaluation = null;
 
-      if (evaluation.correct) {
-        const nc = completed.includes(task.id) ? completed : [...completed, task.id];
-        const nw = wrong.filter(id => id !== task.id);
-        setCompleted(nc);
-        setWrong(nw);
-        const allDone = lesson.tasks.every(tk => nc.includes(tk.id));
-        if (allDone) setFinished(true);
-        save({ completedTasks: nc, wrongTasks: nw, completed: allDone });
-      } else {
-        if (!wrong.includes(task.id) && !completed.includes(task.id)) {
-          const nw = [...wrong, task.id];
-          setWrong(nw);
-          save({ wrongTasks: nw });
-        }
-      }
-    } catch {
-      setCodeResult({ correct: false, feedback: "Eroare la evaluare. Încearcă din nou." });
+    // Online: prefer the AI evaluation (richer feedback, blocks hardcoded answers).
+    if (typeof navigator === "undefined" || navigator.onLine) {
+      try {
+        const res = await fetch("/api/evaluate-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code,
+            output,
+            question: task.question,
+            language: task.language || "javascript",
+            lessonTitle: lesson?.title || "",
+            explanation: task.explanation || "",
+          }),
+        });
+        if (res.ok) evaluation = await res.json();
+      } catch { /* fall through to offline grading */ }
     }
+
+    // Offline (or server unavailable): grade locally against expectedOutput.
+    if (!evaluation) {
+      evaluation = canGradeOffline(task)
+        ? gradeByOutput(output, task.expectedOutput)
+        : { correct: false, feedback: "Acest task necesită internet pentru evaluare (nu are un output exact de verificat offline)." };
+    }
+
+    setCodeResult(evaluation);
+
+    if (evaluation.correct) {
+      const nc = completed.includes(task.id) ? completed : [...completed, task.id];
+      const nw = wrong.filter(id => id !== task.id);
+      setCompleted(nc);
+      setWrong(nw);
+      const allDone = lesson.tasks.every(tk => nc.includes(tk.id));
+      if (allDone) setFinished(true);
+      save({ completedTasks: nc, wrongTasks: nw, completed: allDone });
+    } else {
+      if (!wrong.includes(task.id) && !completed.includes(task.id)) {
+        const nw = [...wrong, task.id];
+        setWrong(nw);
+        save({ wrongTasks: nw });
+      }
+    }
+
     setCodeEvaluating(false);
   }
 

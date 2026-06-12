@@ -7,7 +7,9 @@
 //   • auth / AI / code-eval / admin APIs → never cached (need a live server)
 // Documents and RSC payloads live in SEPARATE caches: they share the same URL
 // key, so mixing them would let a navigation match an RSC payload (blank page).
-const VERSION = "v4";
+const VERSION = "v5";
+// Cross-origin CDNs whose assets we cache for offline (Pyodide = Python runtime).
+const CDN_ORIGINS = ["https://cdn.jsdelivr.net"];
 const STATIC_CACHE = `devzone-static-${VERSION}`;
 const PAGE_CACHE = `devzone-pages-${VERSION}`;
 const RSC_CACHE = `devzone-rsc-${VERSION}`;
@@ -84,6 +86,13 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
+
+  // Approved CDNs (Pyodide runtime) → cache-first so code runs offline
+  if (CDN_ORIGINS.includes(url.origin)) {
+    event.respondWith(cacheFirst(req, STATIC_CACHE));
+    return;
+  }
+
   if (url.origin !== self.location.origin) return;
 
   // Immutable build assets & images

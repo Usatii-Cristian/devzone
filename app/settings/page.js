@@ -8,6 +8,7 @@ import {
   ArrowLeft, Settings, Moon, Sun, Download, Type, Palette, Code2, Trash2,
   AlertTriangle, LogOut, User, Shield, WifiOff, DownloadCloud, CheckCircle2
 } from "lucide-react";
+import { getPyodide } from "@/lib/codeRunner";
 
 const EDITOR_THEMES = [
   { v: "vs-dark", l: "Dark", desc: "VS Code clasic" },
@@ -121,6 +122,13 @@ export default function SettingsPage() {
       total += assetJobs.length;
       setDl(d => ({ ...d, total }));
       await runQueue(assetJobs, async (u) => { await fetch(u, { credentials: "include" }); });
+
+      // Phase 3 — warm the Python runtime (Pyodide, ~10MB) so Python runs offline
+      total += 1;
+      setDl(d => ({ ...d, total }));
+      try { await getPyodide(); } catch { /* Python warmup is best-effort */ }
+      done += 1;
+      setDl(d => ({ ...d, done, total }));
 
       setDl(d => ({ ...d, running: false, done: d.total, finished: true }));
     } catch {
@@ -257,7 +265,7 @@ export default function SettingsPage() {
             <WifiOff className="w-4 h-4 text-violet-500"/> Mod offline
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
-            Descarcă toate modulele și lecțiile pe dispozitiv. După aceea poți deschide aplicația și învăța <b>fără internet</b>. Instalează aplicația (din meniul browserului → „Adaugă pe ecranul principal") pentru acces ca o aplicație nativă.
+            Descarcă toate modulele și lecțiile + motorul Python pe dispozitiv. După aceea poți deschide aplicația, învăța și <b>rula cod Python și JavaScript fără internet</b> (verificarea se face local). Instalează aplicația (meniul browserului → „Adaugă pe ecranul principal") pentru acces ca o aplicație nativă.
           </p>
 
           {dl.running && (
