@@ -22,6 +22,7 @@ export default function LessonPage() {
   const { moduleSlug, lessonId } = useParams();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   const [view, setView] = useState("theory");
   const [taskIdx, setTaskIdx] = useState(0);
   const [completed, setCompleted] = useState([]);
@@ -122,36 +123,50 @@ export default function LessonPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      fetch(`/api/lessons/${lessonId}`),
-      fetch(`/api/progress?lessonId=${lessonId}`)
-    ])
-      .then(([l, p]) => Promise.all([l.json(), p.json()]))
-      .then(([les, prog]) => {
-        if (cancelled) return;
-        const lessonData = les?.error ? null : les;
-        setLesson(lessonData);
-        if (prog) {
-          const c = prog.completedTasks || [];
-          const w = prog.wrongTasks || [];
-          const idx = prog.currentTaskIdx || 0;
-          setCompleted(c);
-          setWrong(w);
-          setTaskIdx(idx);
-          if (prog.completed) setFinished(true);
-          // Restore submitted/selected for current task if already answered
-          const t = lessonData?.tasks?.[idx];
-          if (t && c.includes(t.id) && t.answer != null) {
-            setSelected(t.answer);
-            setSubmitted(true);
-          }
-        }
+    setLoading(true);
+
+    // Lesson data is REQUIRED — fetch it on its own with a couple of retries so a
+    // transient network/SW hiccup doesn't blank the whole page.
+    (async () => {
+      let les = null;
+      for (let attempt = 0; attempt < 3 && !les && !cancelled; attempt++) {
+        try {
+          const r = await fetch(`/api/lessons/${lessonId}`, { cache: "no-store" });
+          const j = await r.json();
+          if (!j?.error) les = j;
+        } catch { /* retry */ }
+        if (!les && attempt < 2) await new Promise(res => setTimeout(res, 500 * (attempt + 1)));
+      }
+      if (cancelled) return;
+      setLesson(les);
+      setLoading(false);
+    })();
+
+    // Progress is OPTIONAL — its failure must never prevent the lesson from showing.
+    fetch(`/api/progress?lessonId=${lessonId}`)
+      .then(r => r.json())
+      .then(prog => {
+        if (cancelled || !prog) return;
+        setCompleted(prog.completedTasks || []);
+        setWrong(prog.wrongTasks || []);
+        setTaskIdx(prog.currentTaskIdx || 0);
+        if (prog.completed) setFinished(true);
       })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setLoading(false); });
+      .catch(() => {});
 
     return () => { cancelled = true; };
-  }, [lessonId]);
+  }, [lessonId, reloadKey]);
+
+  // Once the lesson is loaded, pre-fill the answered state for the current task.
+  useEffect(() => {
+    if (!lesson) return;
+    const t = lesson.tasks?.[taskIdx];
+    if (t && completed.includes(t.id) && t.answer != null) {
+      setSelected(t.answer);
+      setSubmitted(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lesson]);
 
   function save(patch = {}) {
     const body = {
@@ -616,10 +631,18 @@ parent.postMessage({logs:_log},'*');
   );
 
   if (!lesson) return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-indigo-50 dark:from-slate-900 dark:to-slate-800">
-      <Link href={`/modules/${moduleSlug}`} className="text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
-        <ChevronLeft className="w-4 h-4"/> Înapoi la modul
-      </Link>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center bg-gradient-to-br from-slate-100 to-indigo-50 dark:from-slate-900 dark:to-slate-800">
+      <p className="text-slate-600 dark:text-slate-300 font-bold">Nu am putut încărca lecția.</p>
+      <div className="flex gap-2">
+        <button onClick={() => setReloadKey(k => k + 1)}
+          className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors flex items-center gap-2 active:scale-95">
+          <RefreshCw className="w-4 h-4"/> Reîncearcă
+        </button>
+        <Link href={`/modules/${moduleSlug}`} className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
+          <ChevronLeft className="w-4 h-4"/> Înapoi la modul
+        </Link>
+      </div>
+      <Link href="/settings" className="text-xs text-slate-400 underline hover:text-indigo-500">Dacă persistă: Setări → Resetează cache & actualizează</Link>
     </div>
   );
 
