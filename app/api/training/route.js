@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 import { getUserId } from "@/lib/auth";
 import { shuffle } from "@/lib/random";
+import { geminiText } from "@/lib/aiProviders";
 
 export async function POST(request) {
   const limit = rateLimit(`training:${clientKey(request)}`, 8);
@@ -55,8 +56,9 @@ export async function POST(request) {
       return NextResponse.json({ error: "Nu există lecții pentru acest scope." }, { status: 400 });
     }
 
-    const apiKey = process.env.GOOGLE_AI_KEY;
-    if (!apiKey || effectiveTaskType === "coding" || effectiveTaskType === "fillblank") {
+    // Real DB tasks — used directly for coding/fillblank or when there's no AI
+    // key, and as the graceful fallback whenever AI generation fails/times out.
+    const dbFallback = async () => {
       const allTasks = await prisma.task.findMany({
         where: {
           lessonId: { in: lessonsForContext.map(l => l.id) },
@@ -66,7 +68,12 @@ export async function POST(request) {
         include: { lesson: { select: { title: true } } },
       });
       const shuffled = shuffle(allTasks);
-      return NextResponse.json(shuffled.slice(0, Math.min(count, shuffled.length)));
+      return shuffled.slice(0, Math.min(count, shuffled.length));
+    };
+
+    const apiKey = process.env.GOOGLE_AI_KEY;
+    if (!apiKey || effectiveTaskType === "coding" || effectiveTaskType === "fillblank") {
+      return NextResponse.json(await dbFallback());
     }
 
     const lessonTitles = [...new Set(lessonsForContext.map(l => `${l.module.title} — ${l.title}`))];
@@ -112,45 +119,38 @@ Cerințe suplimentare:
 
 Returnează STRICT array-ul JSON, nimic altceva.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-          generationConfig: { maxOutputTokens: 4096, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
-        }),
-      }
-    );
+    let text = await geminiText({
+      apiKey,
+      system: systemPrompt,
+      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+      maxOutputTokens: 4096,
+      temperature: 0.7,
+      timeoutMs: 8000,
+    }).catch(() => null);
 
-    if (!response.ok) {
-      return NextResponse.json({ error: "Eroare la generare. Încearcă din nou." }, { status: 500 });
-    }
+    // AI slow/unavailable → never error; serve real DB tasks instead.
+    if (!text) return NextResponse.json(await dbFallback());
 
-    const data = await response.json();
-    const parts = data.candidates?.[0]?.content?.parts ?? [];
-    const textPart = parts.find(p => !p.thought) || parts[0];
-    let text = (textPart?.text ?? "").trim();
     text = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
 
     // Sometimes the model wraps in object instead of array
     if (text.startsWith("{")) {
-      const obj = JSON.parse(text);
-      const key = Object.keys(obj).find(k => Array.isArray(obj[k]));
-      text = key ? JSON.stringify(obj[key]) : text;
+      try {
+        const obj = JSON.parse(text);
+        const key = Object.keys(obj).find(k => Array.isArray(obj[k]));
+        text = key ? JSON.stringify(obj[key]) : text;
+      } catch { /* fall through */ }
     }
 
     let questions;
     try {
       questions = JSON.parse(text);
     } catch {
-      return NextResponse.json({ error: "Răspuns AI invalid. Încearcă din nou." }, { status: 500 });
+      return NextResponse.json(await dbFallback());
     }
 
     if (!Array.isArray(questions)) {
-      return NextResponse.json({ error: "Format invalid de la AI." }, { status: 500 });
+      return NextResponse.json(await dbFallback());
     }
 
     // Validate and clean each question
@@ -169,7 +169,7 @@ Returnează STRICT array-ul JSON, nimic altceva.`;
       }));
 
     if (enriched.length === 0) {
-      return NextResponse.json({ error: "AI-ul nu a generat probleme valide. Încearcă din nou." }, { status: 500 });
+      return NextResponse.json(await dbFallback());
     }
 
     return NextResponse.json(enriched);

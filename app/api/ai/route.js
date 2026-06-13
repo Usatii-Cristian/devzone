@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
+import { generateText } from "@/lib/aiProviders";
 
 export async function POST(request) {
   const limit = rateLimit(`ai:${clientKey(request)}`, 15);
@@ -18,11 +19,9 @@ export async function POST(request) {
   // Keep only last 12 messages to limit token usage
   const messages = rawMessages.slice(-12);
 
-  const apiKey = process.env.GOOGLE_AI_KEY;
-
-  if (!apiKey) {
+  if (!process.env.GOOGLE_AI_KEY && !process.env.GROQ_API_KEY) {
     return NextResponse.json({
-      reply: "AI-ul nu este configurat. Adaugă GOOGLE_AI_KEY în Environment Variables.",
+      reply: "AI-ul nu este configurat. Adaugă GOOGLE_AI_KEY (sau GROQ_API_KEY) în Environment Variables.",
     });
   }
 
@@ -50,38 +49,25 @@ Cum răspunzi:
 - Răspunzi ÎNTOTDEAUNA în română
 - IMPORTANT: NU folosi formatare Markdown în text normal! Fara **bold**, fara *italic*, fara # headings, fara - liste cu cratime. Scrie text simplu, natural, ca un mesaj normal. Codul merge DOAR în blocuri de cod cu backticks triple.`;
 
-  // Convert messages to Gemini format (role: "user" | "model")
+  // Gemini format (role: "user" | "model") and OpenAI/Groq format.
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
   }));
+  const groqMessages = messages.map((m) => ({
+    role: m.role === "assistant" ? "assistant" : "user",
+    content: m.content,
+  }));
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents,
-          generationConfig: { maxOutputTokens: 600, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
-        }),
-      }
-    );
+  const reply = await generateText({
+    system: systemPrompt,
+    contents,
+    messages: groqMessages,
+    maxTokens: 600,
+    temperature: 0.7,
+  });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      console.error("Gemini error:", err);
-      return NextResponse.json({ reply: "Eroare la AI. Încearcă din nou." });
-    }
-
-    const data = await response.json();
-    const parts = data.candidates?.[0]?.content?.parts ?? [];
-    const textPart = parts.find(p => !p.thought) || parts[0];
-    const reply = textPart?.text ?? "Fără răspuns.";
-    return NextResponse.json({ reply });
-  } catch {
-    return NextResponse.json({ reply: "Eroare de rețea. Încearcă din nou." });
-  }
+  return NextResponse.json({
+    reply: reply || "AI-ul e indisponibil momentan (răspuns lent sau limită atinsă). Încearcă din nou în câteva momente.",
+  });
 }

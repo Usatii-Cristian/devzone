@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import { useLocalStorage } from "@/lib/hooks";
 import {
   ArrowLeft, Settings, Moon, Sun, Download, Type, Palette, Code2, Trash2,
-  AlertTriangle, LogOut, User, Shield, WifiOff, DownloadCloud, CheckCircle2, Smartphone
+  AlertTriangle, LogOut, User, Shield, WifiOff, DownloadCloud, CheckCircle2, Smartphone, RefreshCw
 } from "lucide-react";
 import { getPyodide } from "@/lib/codeRunner";
 
@@ -56,6 +56,22 @@ export default function SettingsPage() {
     try { await p.userChoice; } catch {}
     window.__deferredInstallPrompt = null;
     setInstall(s => ({ ...s, can: false }));
+  }
+
+  // Heal a stuck/old service worker (e.g. blank pages after an update):
+  // drop all SW registrations + caches, then reload fresh from the network.
+  async function resetApp() {
+    try {
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      if (typeof caches !== "undefined") {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch {}
+    window.location.reload();
   }
 
   function applyTheme(t) {
@@ -338,6 +354,14 @@ export default function SettingsPage() {
             className="w-full sm:w-auto bg-gradient-to-r from-violet-500 to-purple-600 text-white px-5 py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 active:scale-[0.98]">
             <DownloadCloud className="w-4 h-4"/> {dl.running ? "Se descarcă..." : dl.finished ? "Descarcă din nou" : "Descarcă tot pentru offline"}
           </button>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+            <p className="text-[11px] text-slate-400 mb-2">Probleme (pagini goale, lecții care nu apar, nu se actualizează)?</p>
+            <button onClick={resetApp}
+              className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors active:scale-95">
+              <RefreshCw className="w-3.5 h-3.5"/> Resetează cache & actualizează aplicația
+            </button>
+          </div>
         </section>
 
         {/* Logout */}
