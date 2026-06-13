@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import prisma from "@/lib/prisma";
-import { getSecret, isAdminEmail } from "@/lib/auth";
+import { getSecret, isAdminEmail, cleanEnv } from "@/lib/auth";
+
+// All configured accounts — shown in the panel even with zero progress.
+function knownUsers() {
+  return [process.env.AUTH_EMAIL, process.env.AUTH_EMAIL2, process.env.AUTH_EMAIL3]
+    .map((e) => cleanEnv(e))
+    .filter(Boolean);
+}
 
 async function requireAdmin(request) {
   try {
@@ -49,8 +56,11 @@ export async function GET(request) {
     progressMap[`${p.userId}::${p.lessonId}`] = p;
   }
 
-  // Distinct userIds with activity
-  const userIds = [...new Set(allProgress.map(p => p.userId))];
+  // Configured accounts first (always shown, even with 0 progress / after a
+  // reset), then any other userIds that have activity.
+  const userIds = userId
+    ? [userId]
+    : [...new Set([...knownUsers(), ...allProgress.map(p => p.userId)])];
 
   // Build per-user data
   const users = userIds.map(uid => {

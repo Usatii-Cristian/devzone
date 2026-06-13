@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import { useLocalStorage } from "@/lib/hooks";
 import {
   ArrowLeft, Settings, Moon, Sun, Download, Type, Palette, Code2, Trash2,
-  AlertTriangle, LogOut, User, Shield, WifiOff, DownloadCloud, CheckCircle2
+  AlertTriangle, LogOut, User, Shield, WifiOff, DownloadCloud, CheckCircle2, Smartphone
 } from "lucide-react";
 import { getPyodide } from "@/lib/codeRunner";
 
@@ -29,10 +29,34 @@ export default function SettingsPage() {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [user, setUser] = useState({ name: "", initial: "", email: "", isAdmin: false });
   const [dl, setDl] = useState({ running: false, done: 0, total: 0, finished: false, error: "" });
+  const [install, setInstall] = useState({ can: false, installed: false, ios: false });
 
   useEffect(() => {
     fetch("/api/me").then(r => r.json()).then(u => { if (u?.name) setUser(u); }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const standalone = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
+    const ios = /iphone|ipad|ipod/i.test(window.navigator.userAgent) && !window.MSStream;
+    setInstall({ can: !!window.__deferredInstallPrompt, installed: standalone, ios });
+    const onCan = () => setInstall(s => ({ ...s, can: true }));
+    const onDone = () => setInstall(s => ({ ...s, can: false, installed: true }));
+    window.addEventListener("pwa-installable", onCan);
+    window.addEventListener("pwa-installed", onDone);
+    return () => {
+      window.removeEventListener("pwa-installable", onCan);
+      window.removeEventListener("pwa-installed", onDone);
+    };
+  }, []);
+
+  async function installApp() {
+    const p = window.__deferredInstallPrompt;
+    if (!p) return;
+    p.prompt();
+    try { await p.userChoice; } catch {}
+    window.__deferredInstallPrompt = null;
+    setInstall(s => ({ ...s, can: false }));
+  }
 
   function applyTheme(t) {
     setThemeStored(t);
@@ -265,8 +289,24 @@ export default function SettingsPage() {
             <WifiOff className="w-4 h-4 text-violet-500"/> Mod offline
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
-            Descarcă toate modulele și lecțiile + motorul Python pe dispozitiv. După aceea poți deschide aplicația, învăța și <b>rula cod Python și JavaScript fără internet</b> (verificarea se face local). Instalează aplicația (meniul browserului → „Adaugă pe ecranul principal") pentru acces ca o aplicație nativă.
+            Descarcă toate modulele și lecțiile + motorul Python pe dispozitiv. După aceea poți deschide aplicația, învăța și <b>rula cod Python și JavaScript fără internet</b> (verificarea se face local).
           </p>
+
+          {/* Install app */}
+          {install.installed ? (
+            <div className="mb-3 flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-sm px-4 py-3 rounded-xl font-bold">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0"/> Aplicația e instalată pe acest dispozitiv.
+            </div>
+          ) : install.can ? (
+            <button onClick={installApp}
+              className="w-full sm:w-auto mb-3 bg-slate-800 dark:bg-slate-700 text-white px-5 py-3 rounded-xl font-black text-sm hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2 active:scale-[0.98]">
+              <Smartphone className="w-4 h-4"/> Instalează aplicația
+            </button>
+          ) : install.ios ? (
+            <div className="mb-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/40 rounded-xl px-4 py-3 leading-relaxed">
+              Pe iPhone/iPad: apasă <b>Share</b> (pătratul cu săgeată în sus) → <b>„Add to Home Screen"</b>.
+            </div>
+          ) : null}
 
           {dl.running && (
             <div className="mb-3">

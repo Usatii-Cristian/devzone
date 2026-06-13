@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import { dracula } from "@uiw/codemirror-theme-dracula";
+import { useLocalStorage } from "@/lib/hooks";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { java } from "@codemirror/lang-java";
@@ -30,11 +31,19 @@ function getLang(language) {
 }
 
 export default function CodeEditor({ value, onChange, language, disabled, minHeight = "200px" }) {
+  // Honor the user's Settings (shared with the /editor playground). The stored
+  // values use Monaco-style names; "vs-light" maps to CodeMirror's light theme,
+  // everything else to dracula (dark).
+  const [editorTheme] = useLocalStorage("editor-theme", "vs-dark");
+  const [editorFontRaw] = useLocalStorage("editor-font", "14");
+  const fontSize = `${Number(editorFontRaw) || 14}px`;
+  const light = editorTheme === "vs-light";
+
   return (
-    <div style={{ minHeight }} className="bg-gray-900">
+    <div style={{ minHeight }} className={light ? "bg-white" : "bg-gray-900"}>
       <CodeMirror
         value={value}
-        theme={dracula}
+        theme={light ? "light" : dracula}
         extensions={[getLang(language)]}
         onChange={val => onChange?.(val)}
         editable={!disabled}
@@ -49,8 +58,7 @@ export default function CodeEditor({ value, onChange, language, disabled, minHei
           closeBrackets: true,
           highlightActiveLine: true,
         }}
-        style={{ fontSize: "13px", minHeight }}
-        className="text-sm"
+        style={{ fontSize, minHeight }}
       />
     </div>
   );
