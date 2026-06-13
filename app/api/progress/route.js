@@ -1,6 +1,21 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getUserId } from "@/lib/auth";
+import { addActiveDay, computeStreakFromDays } from "@/lib/stats";
+
+// Record a day of activity for accurate streaks. At most one write per day/user.
+async function touchActivity(userId, day) {
+  if (!day || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return;
+  const existing = await prisma.userStats.findUnique({ where: { userId } });
+  if (existing && existing.lastActiveDay === day && existing.activeDays.includes(day)) return;
+  const activeDays = addActiveDay(existing?.activeDays || [], day);
+  const { current, longest } = computeStreakFromDays(activeDays, day);
+  await prisma.userStats.upsert({
+    where: { userId },
+    update: { activeDays, currentStreak: current, longestStreak: Math.max(longest, existing?.longestStreak || 0), lastActiveDay: day },
+    create: { userId, activeDays, currentStreak: current, longestStreak: longest, lastActiveDay: day },
+  });
+}
 
 export async function GET(request) {
   try {
@@ -30,7 +45,7 @@ export async function POST(request) {
   try {
     const userId = await getUserId(request);
     const body = await request.json();
-    const { lessonId, completedTasks, wrongTasks, currentTaskIdx, currentTheoryIdx, completed } = body;
+    const { lessonId, completedTasks, wrongTasks, currentTaskIdx, currentTheoryIdx, completed, day } = body;
 
     const data = {};
     if (completedTasks !== undefined) data.completedTasks = completedTasks;
@@ -52,6 +67,8 @@ export async function POST(request) {
         completed: completed ?? false,
       },
     });
+
+    if (day) { try { await touchActivity(userId, day); } catch {} }
 
     return NextResponse.json(progress);
   } catch (e) {

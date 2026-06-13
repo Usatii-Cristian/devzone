@@ -160,6 +160,7 @@ export default function LessonPage() {
       wrongTasks: wrong,
       currentTaskIdx: taskIdx,
       completed: finished,
+      day: new Date().toLocaleDateString("en-CA"),
       ...patch,
     };
     // Saves over the network when online; queues locally offline and syncs later.
@@ -175,6 +176,7 @@ export default function LessonPage() {
         wrongTasks: wrong,
         currentTaskIdx: taskIdx,
         completed: finished,
+        day: new Date().toLocaleDateString("en-CA"),
       };
       // Offline: persist to the local queue (sendBeacon can't deliver offline).
       if (typeof navigator !== "undefined" && navigator.onLine === false) {

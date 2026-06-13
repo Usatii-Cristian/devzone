@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search, BookOpen, Trophy, X,
+  Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search, BookOpen, Trophy, X, BarChart2,
   Sprout, Briefcase, GraduationCap, Wrench, Monitor, Zap, Rocket, Target, Crown,
   Microscope, Building2, Cog, Wand2, Shield, Swords, Gem, Sparkles, Lock,
 } from "lucide-react";
@@ -24,14 +24,17 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [ranksOpen, setRanksOpen] = useState(false);
   const [user, setUser] = useState({ name: "", initial: "" });
+  const [serverStats, setServerStats] = useState(null);
 
   useEffect(() => {
-    Promise.all([fetch("/api/modules"), fetch("/api/progress"), fetch("/api/me")])
-      .then(([m, p, u]) => Promise.all([m.json(), p.json(), u.json()]))
-      .then(([mods, prog, usr]) => {
+    const today = new Date().toLocaleDateString("en-CA");
+    Promise.all([fetch("/api/modules"), fetch("/api/progress"), fetch("/api/me"), fetch(`/api/stats?day=${today}`)])
+      .then((r) => Promise.all(r.map((x) => x.json())))
+      .then(([mods, prog, usr, stats]) => {
         setModules(Array.isArray(mods) ? mods : []);
         setProgress(Array.isArray(prog) ? prog : []);
         if (usr?.name) setUser(usr);
+        setServerStats(stats || null);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -73,7 +76,8 @@ export default function Home() {
     return best;
   }, [modules, progress]);
 
-  const streak = useMemo(() => computeStreak(progress), [progress]);
+  // Accurate streak from the server (persisted active days); fall back to local.
+  const streak = useMemo(() => serverStats?.streak || computeStreak(progress), [serverStats, progress]);
   const achievements = useMemo(() => computeAchievements(progress, modules), [progress, modules]);
   const unlockedCount = achievements.filter(a => a.unlocked).length;
   const xp = useMemo(() => computeXP(progress), [progress]);
@@ -246,6 +250,11 @@ export default function Home() {
               </p>
             </div>
           </div>
+
+          <Link href="/dashboard"
+            className="mt-3 w-full flex items-center justify-center gap-1.5 bg-white/10 hover:bg-white/15 rounded-xl py-2 text-xs font-black text-white transition-colors active:scale-95">
+            <BarChart2 className="w-3.5 h-3.5"/> Vezi statistici complete
+          </Link>
         </div>
 
         {/* Continue where you left off */}

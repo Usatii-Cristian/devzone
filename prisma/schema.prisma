@@ -73,3 +73,30 @@ model LessonProgress {
 
   @@unique([userId, lessonId])
 }
+
+// Streak / activity tracking. XP & level are derived from LessonProgress, but
+// daily activity (for streaks + the heatmap) must be persisted.
+model UserStats {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @unique
+  activeDays    String[]                 // YYYY-MM-DD (user-local), unique & sorted
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  lastActiveDay String   @default("")
+  updatedAt     DateTime @updatedAt
+}
+
+// Spaced repetition (SM-2). One row per user+task that needs reviewing.
+model ReviewItem {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String
+  taskId       String   @db.ObjectId
+  due          DateTime @default(now())
+  intervalDays Int      @default(0)
+  ease         Float    @default(2.5)
+  reps         Int      @default(0)
+  lapses       Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, taskId])
+}
