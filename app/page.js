@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search, BookOpen, Trophy, X, BarChart2,
+  Dumbbell, CheckCircle, Clock, BookMarked, ChevronRight, Play, Star, Code2, Flame, Award, Search, BookOpen, Trophy, X, BarChart2, Brain,
   Sprout, Briefcase, GraduationCap, Wrench, Monitor, Zap, Rocket, Target, Crown,
   Microscope, Building2, Cog, Wand2, Shield, Swords, Gem, Sparkles, Lock,
 } from "lucide-react";
@@ -25,16 +25,24 @@ export default function Home() {
   const [ranksOpen, setRanksOpen] = useState(false);
   const [user, setUser] = useState({ name: "", initial: "" });
   const [serverStats, setServerStats] = useState(null);
+  const [reviewDue, setReviewDue] = useState(0);
 
   useEffect(() => {
     const today = new Date().toLocaleDateString("en-CA");
-    Promise.all([fetch("/api/modules"), fetch("/api/progress"), fetch("/api/me"), fetch(`/api/stats?day=${today}`)])
+    Promise.all([
+      fetch("/api/modules"),
+      fetch("/api/progress"),
+      fetch("/api/me"),
+      fetch(`/api/stats?day=${today}`),
+      fetch("/api/review/due"),
+    ])
       .then((r) => Promise.all(r.map((x) => x.json())))
-      .then(([mods, prog, usr, stats]) => {
+      .then(([mods, prog, usr, stats, review]) => {
         setModules(Array.isArray(mods) ? mods : []);
         setProgress(Array.isArray(prog) ? prog : []);
         if (usr?.name) setUser(usr);
         setServerStats(stats || null);
+        setReviewDue(review?.dueCount || 0);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -256,6 +264,21 @@ export default function Home() {
             <BarChart2 className="w-3.5 h-3.5"/> Vezi statistici complete
           </Link>
         </div>
+
+        {/* Spaced repetition — only when something is due */}
+        {!loading && reviewDue > 0 && (
+          <Link href="/review"
+            className="mb-5 sm:mb-6 flex items-center gap-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-2xl p-3.5 sm:p-4 shadow-lg hover:opacity-95 transition-opacity active:scale-[0.99]">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white"/>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-black text-sm">Repetiție spațiată · {reviewDue} {reviewDue === 1 ? "card" : "carduri"}</p>
+              <p className="text-white/70 text-[11px] sm:text-xs">Întărește ce ai greșit, la momentul potrivit</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-white/70 flex-shrink-0"/>
+          </Link>
+        )}
 
         {/* Continue where you left off */}
         {!loading && continueLesson && (
