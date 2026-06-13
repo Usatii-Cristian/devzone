@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
 import { runPython, gradeByOutput, canGradeOffline } from "@/lib/codeRunner";
+import { saveProgress, enqueueProgress } from "@/lib/offlineQueue";
 
 const DIFF = {
   easy:   { label:"Ușor",  cls:"bg-green-100 text-green-700 border-green-200" },
@@ -161,25 +162,26 @@ export default function LessonPage() {
       completed: finished,
       ...patch,
     };
-    fetch("/api/progress", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      keepalive: true,
-    }).catch(() => {});
+    // Saves over the network when online; queues locally offline and syncs later.
+    saveProgress(body);
   }
 
   useEffect(() => {
     if (loading || !lesson) return;
     function flush() {
-      const body = JSON.stringify({
+      const payload = {
         lessonId,
         completedTasks: completed,
         wrongTasks: wrong,
         currentTaskIdx: taskIdx,
         completed: finished,
-      });
-      navigator.sendBeacon?.("/api/progress", new Blob([body], { type: "application/json" }));
+      };
+      // Offline: persist to the local queue (sendBeacon can't deliver offline).
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueProgress(payload);
+        return;
+      }
+      navigator.sendBeacon?.("/api/progress", new Blob([JSON.stringify(payload)], { type: "application/json" }));
     }
     function onVis() { if (document.visibilityState === "hidden") flush(); }
     window.addEventListener("beforeunload", flush);

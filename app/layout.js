@@ -3,6 +3,7 @@ import "./globals.css";
 import GlobalAI from "@/components/GlobalAI";
 import ThemeInit from "@/components/ThemeInit";
 import PWAInit from "@/components/PWAInit";
+import ConnectionStatus from "@/components/ConnectionStatus";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,6 +56,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col bg-slate-50 dark:bg-slate-900">
         <ThemeInit />
         <PWAInit />
+        <ConnectionStatus />
         {children}
         <GlobalAI />
       </body>
