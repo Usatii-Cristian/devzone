@@ -2,39 +2,86 @@
 require("dotenv").config({ path: ".env" });
 const { PrismaClient } = require("@prisma/client");
 
-const API_KEY = process.env.GOOGLE_AI_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-const MIN_CHARS = 1500; // sections shorter than this get enhanced (raised for full quality pass)
+// Provider chain: each Gemini model has its own free-tier quota, Groq is the last resort.
+// A provider that returns 429/quota errors is benched for COOLDOWN_MS and the next one is tried.
+const PROVIDERS = [
+  ...["gemini-2.5-flash", "gemini-3-flash-preview", "gemini-flash-latest", "gemini-2.5-flash-lite"]
+    .map(model => ({ name: model, call: (s, u) => callGemini(model, s, u) })),
+  ...["openai/gpt-oss-120b", "qwen/qwen3.8-27b"]
+    .map(model => ({ name: model, call: (s, u) => callGroq(model, s, u) })),
+];
+const MIN_CHARS = parseInt(process.env.MIN_CHARS || "1500"); // sections shorter than this get enhanced
 const DELAY_MS = 7000;  // 7s between calls — free tier limit is 10 RPM
+const COOLDOWN_MS = 15 * 60 * 1000;
 
 const prisma = new PrismaClient();
+const benchedUntil = {};
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
-async function callGemini(systemInstr, userPrompt) {
-  const res = await fetch(GEMINI_URL, {
+async function callGemini(model, systemInstr, userPrompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GOOGLE_AI_KEY}`;
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       system_instruction: { parts: [{ text: systemInstr }] },
       contents: [{ role: "user", parts: [{ text: userPrompt }] }],
       generationConfig: {
-        maxOutputTokens: 2500,
+        maxOutputTokens: 4000,
         temperature: 0.4,
-        thinkingConfig: { thinkingBudget: 0 },
+        ...(model.includes("2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
       },
     }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(`HTTP ${res.status}: ${JSON.stringify(err).slice(0, 200)}`);
+    throw Object.assign(new Error(`HTTP ${res.status}: ${JSON.stringify(err).slice(0, 200)}`), { status: res.status });
   }
   const data = await res.json();
   const parts = data.candidates?.[0]?.content?.parts ?? [];
   const textPart = parts.find(p => !p.thought) || parts[0];
   return (textPart?.text ?? "").trim();
+}
+
+async function callGroq(model, systemInstr, userPrompt) {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "system", content: systemInstr }, { role: "user", content: userPrompt }],
+      max_tokens: 6000,
+      temperature: 0.4,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(`HTTP ${res.status}: ${JSON.stringify(err).slice(0, 200)}`), { status: res.status });
+  }
+  const data = await res.json();
+  return (data.choices?.[0]?.message?.content ?? "").trim();
+}
+
+// Try providers in order, skipping benched ones. When all are benched, wait for the first to recover.
+async function callLLM(systemInstr, userPrompt) {
+  for (;;) {
+    const now = Date.now();
+    for (const p of PROVIDERS) {
+      if ((benchedUntil[p.name] || 0) > now) continue;
+      try {
+        return { text: await p.call(systemInstr, userPrompt), provider: p.name };
+      } catch (err) {
+        console.log(`    ${p.name} failed: ${err.message.slice(0, 100)}`);
+        benchedUntil[p.name] = Date.now() + (err.status === 429 ? COOLDOWN_MS : 60 * 1000);
+      }
+    }
+    const wake = Math.min(...PROVIDERS.map(p => benchedUntil[p.name]));
+    console.log(`    all providers benched — waiting ${Math.round((wake - Date.now()) / 60000)} min`);
+    await sleep(Math.max(wake - Date.now(), 1000));
+  }
 }
 
 function buildPrompt(moduleTitle, moduleSlug, lessonTitle, sectionTitle, existingContent) {
@@ -63,7 +110,7 @@ ${existingContent}
 ---
 
 CERINȚE:
-• MINIM 1500 caractere total (important!)
+• MINIM 2500 caractere total (important!) — explicații lungi, pas cu pas, pentru un începător
 • Include 2-3 blocuri de cod: \`\`\`${codeLang}\\n...\\n\`\`\`
 • Cod real, corect, comentat unde e nevoie
 • Folosește **bold** pentru concepte cheie
@@ -137,9 +184,9 @@ async function main() {
 
     try {
       const { systemInstr, userPrompt } = buildPrompt(mod.title, mod.slug, lesson.title, section.title, section.content);
-      const enhanced = await callGemini(systemInstr, userPrompt);
+      const { text: enhanced, provider } = await callLLM(systemInstr, userPrompt);
 
-      if (!enhanced || enhanced.length < 800) {
+      if (!enhanced || enhanced.length < Math.max(1200, section.content.length) || !enhanced.includes("```")) {
         console.log(`  ⚠ SHORT response for: ${prefix} (got ${enhanced?.length ?? 0} chars)`);
         failed++;
       } else {
@@ -147,7 +194,7 @@ async function main() {
           where: { id: section.id },
           data: { content: enhanced },
         });
-        console.log(`  ✓ ${prefix}: ${section.content.length} → ${enhanced.length} chars`);
+        console.log(`  ✓ ${prefix}: ${section.content.length} → ${enhanced.length} chars [${provider}]`);
         done++;
       }
     } catch (err) {
