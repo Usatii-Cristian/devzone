@@ -25,6 +25,7 @@ async function callGemini(model, systemInstr, userPrompt) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GOOGLE_AI_KEY}`;
   const res = await fetch(url, {
     method: "POST",
+    signal: AbortSignal.timeout(120000),
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       system_instruction: { parts: [{ text: systemInstr }] },
@@ -49,6 +50,7 @@ async function callGemini(model, systemInstr, userPrompt) {
 async function callGroq(model, systemInstr, userPrompt) {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
+    signal: AbortSignal.timeout(120000),
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
     body: JSON.stringify({
       model,
