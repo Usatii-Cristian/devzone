@@ -1,4 +1,5 @@
 "use client";
+import { fillMatches } from "@/lib/codeRunner";
 import { useState, useEffect, useMemo } from "react";
 import { Play, RotateCcw, Trophy, ChevronRight, Zap, CheckCircle, Sparkles, Globe, Library, ArrowLeft, RefreshCw, Send, XCircle, Wand2, Terminal, Lightbulb, PenLine } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -687,28 +688,28 @@ parent.postMessage({logs:_log},'*');
               <>
                 {/* ── FILL-IN-BLANK ── */}
                 <div className="mb-4">
-                  <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${fillSubmitted ? (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "border-red-400 bg-red-50 dark:bg-red-900/30") : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"}`}>
+                  <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${fillSubmitted ? (fillMatches(fillValue, task.answer) ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "border-red-400 bg-red-50 dark:bg-red-900/30") : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"}`}>
                     <PenLine className="w-4 h-4 text-slate-400 flex-shrink-0"/>
                     <input
                       type="text"
                       value={fillValue}
                       onChange={e => { if (!fillSubmitted) setFillValue(e.target.value); }}
-                      onKeyDown={e => { if (e.key === "Enter" && !fillSubmitted && fillValue.trim()) { setFillSubmitted(true); if (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()) setScore(s => s + 1); } }}
+                      onKeyDown={e => { if (e.key === "Enter" && !fillSubmitted && fillValue.trim()) { setFillSubmitted(true); if (fillMatches(fillValue, task.answer)) setScore(s => s + 1); } }}
                       disabled={fillSubmitted}
                       placeholder="Scrie răspunsul tău..."
                       className="flex-1 bg-transparent text-sm font-mono text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none disabled:opacity-70"
                       autoComplete="off" autoCorrect="off" spellCheck={false}
                     />
-                    {fillSubmitted && (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()
+                    {fillSubmitted && (fillMatches(fillValue, task.answer)
                       ? <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0"/>
                       : <XCircle className="w-5 h-5 text-red-500 flex-shrink-0"/>)}
                   </div>
                 </div>
 
                 {fillSubmitted && (
-                  <div className={`rounded-2xl p-4 mb-4 border-2 ${fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700" : "bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700"}`}>
-                    <p className={`font-black text-sm mb-1 ${fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"}`}>
-                      {fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()
+                  <div className={`rounded-2xl p-4 mb-4 border-2 ${fillMatches(fillValue, task.answer) ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700" : "bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700"}`}>
+                    <p className={`font-black text-sm mb-1 ${fillMatches(fillValue, task.answer) ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"}`}>
+                      {fillMatches(fillValue, task.answer)
                         ? "✓ Corect!"
                         : `✗ Răspuns corect: ${task.answer}`}
                     </p>
@@ -721,7 +722,7 @@ parent.postMessage({logs:_log},'*');
                 )}
 
                 {!fillSubmitted && (
-                  <button onClick={() => { if (fillValue.trim()) { setFillSubmitted(true); if (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()) setScore(s => s + 1); }}} disabled={!fillValue.trim()}
+                  <button onClick={() => { if (fillValue.trim()) { setFillSubmitted(true); if (fillMatches(fillValue, task.answer)) setScore(s => s + 1); }}} disabled={!fillValue.trim()}
                     className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl font-black text-sm hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-2 shadow-md active:scale-95">
                     <Send className="w-4 h-4"/> Verifică
                   </button>

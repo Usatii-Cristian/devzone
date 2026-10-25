@@ -1,4 +1,5 @@
 "use client";
+import { fillMatches } from "@/lib/codeRunner";
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
@@ -36,7 +37,7 @@ export default function ReviewPage() {
 
   const isCorrect = card
     ? card.type === "fillblank"
-      ? fillValue.trim().toLowerCase() === (card.answer || "").trim().toLowerCase()
+      ? fillMatches(fillValue, card.answer)
       : selected === card.answer
     : false;
 

@@ -9,7 +9,7 @@ import {
   Copy, Sparkles, PenLine, ArrowDown
 } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
-import { runPython, gradeByOutput, canGradeOffline } from "@/lib/codeRunner";
+import { runPython, gradeByOutput, canGradeOffline, fillMatches } from "@/lib/codeRunner";
 import { saveProgress, enqueueProgress } from "@/lib/offlineQueue";
 
 const DIFF = {
@@ -292,7 +292,7 @@ export default function LessonPage() {
   function submitFillBlank(task) {
     if (fillSubmitted) return;
     setFillSubmitted(true);
-    const correct = fillValue.trim().toLowerCase() === (task.answer || "").trim().toLowerCase();
+    const correct = fillMatches(fillValue, task.answer);
     if (correct) {
       const nc = completed.includes(task.id) ? completed : [...completed, task.id];
       const nw = wrong.filter(id => id !== task.id);
@@ -1258,7 +1258,7 @@ parent.postMessage({logs:_log},'*');
                   <>
                     {/* FILL-IN-BLANK */}
                     <div className="mb-4">
-                      <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${fillSubmitted ? (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "border-red-400 bg-red-50 dark:bg-red-900/30") : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"}`}>
+                      <div className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${fillSubmitted ? (fillMatches(fillValue, task.answer) ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "border-red-400 bg-red-50 dark:bg-red-900/30") : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"}`}>
                         <PenLine className="w-4 h-4 text-slate-400 flex-shrink-0"/>
                         <input
                           type="text"
@@ -1270,16 +1270,16 @@ parent.postMessage({logs:_log},'*');
                           className="flex-1 bg-transparent text-sm font-mono text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none disabled:opacity-70"
                           autoComplete="off" autoCorrect="off" spellCheck={false}
                         />
-                        {fillSubmitted && (fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()
+                        {fillSubmitted && (fillMatches(fillValue, task.answer)
                           ? <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0"/>
                           : <XCircle className="w-5 h-5 text-red-500 flex-shrink-0"/>)}
                       </div>
                     </div>
 
                     {fillSubmitted && (
-                      <div className={`rounded-2xl p-4 mb-4 border-2 ${fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "bg-emerald-50 border-emerald-300" : "bg-red-50 border-red-300"}`}>
-                        <p className={`font-black text-sm mb-1 flex items-center gap-1.5 ${fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase() ? "text-emerald-700" : "text-red-700"}`}>
-                          {fillValue.trim().toLowerCase() === task.answer.trim().toLowerCase()
+                      <div className={`rounded-2xl p-4 mb-4 border-2 ${fillMatches(fillValue, task.answer) ? "bg-emerald-50 border-emerald-300" : "bg-red-50 border-red-300"}`}>
+                        <p className={`font-black text-sm mb-1 flex items-center gap-1.5 ${fillMatches(fillValue, task.answer) ? "text-emerald-700" : "text-red-700"}`}>
+                          {fillMatches(fillValue, task.answer)
                             ? <><CheckCircle className="w-4 h-4"/> Corect! Exact!</>
                             : <><XCircle className="w-4 h-4"/> Greșit. Răspuns corect: <code className="bg-emerald-100 px-1.5 py-0.5 rounded font-mono text-emerald-800">{task.answer}</code></>}
                         </p>

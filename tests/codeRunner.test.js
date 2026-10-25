@@ -50,3 +50,13 @@ describe("isLocalLanguage", () => {
     );
   });
 });
+
+import { fillMatches } from "../lib/codeRunner.js";
+describe("fillMatches", () => {
+  it("ignores case and whitespace", () => {
+    expect(fillMatches("if n%2==0 else", "if n % 2 == 0 else")).toBe(true);
+    expect(fillMatches("  IN ", "in")).toBe(true);
+    expect(fillMatches("if n % 2 != 0 else", "if n % 2 == 0 else")).toBe(false);
+    expect(fillMatches("", "")).toBe(false);
+  });
+});
