@@ -725,7 +725,7 @@ parent.postMessage({logs:_log},'*');
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-xs font-semibold truncate ${isCurrent ? "text-indigo-700 dark:text-indigo-200" : "text-slate-700 dark:text-slate-200"}`}>
-                      {t.name || `Problema ${idx + 1}`}
+                      {`Problema ${idx + 1}`}
                     </p>
                     <span className={`text-xs font-bold px-1.5 py-0.5 rounded border ${d.cls}`}>{d.label}</span>
                   </div>
@@ -888,7 +888,7 @@ parent.postMessage({logs:_log},'*');
                   </div>
 
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white flex-1">{t.name}</h3>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white flex-1">Problema {t.number}</h3>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${tDiff.cls}`}>{tDiff.label}</span>
                   </div>
                   <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 mb-4 shadow-sm border border-slate-100 dark:border-slate-700">
@@ -983,7 +983,7 @@ parent.postMessage({logs:_log},'*');
 
                   {/* Question */}
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white flex-1">{rt?.name}</h3>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white flex-1">Întrebare de recapitulare</h3>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${rtDiff.cls}`}>{rtDiff.label}</span>
                   </div>
                   <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 mb-4 shadow-sm border border-slate-100 dark:border-slate-700">
@@ -1068,7 +1068,7 @@ parent.postMessage({logs:_log},'*');
                     PROBLEMA {taskIdx + 1} DIN {totalTasks}
                   </p>
                   <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <h2 className="text-xl font-black text-slate-900 dark:text-white">{task.name || `Problema ${taskIdx + 1}`}</h2>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">{`Problema ${taskIdx + 1}`}</h2>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={`text-xs font-black px-2.5 py-1 rounded-full border ${diff.cls}`}>{diff.label}</span>
                       <span className="text-xs font-black bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full border border-yellow-200 flex items-center gap-1">

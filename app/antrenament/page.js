@@ -528,7 +528,7 @@ parent.postMessage({logs:_log},'*');
 
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm p-4 sm:p-5 mb-4">
               <div className="flex items-start justify-between mb-3 gap-2">
-                <h2 className="text-sm sm:text-base font-black text-slate-800 dark:text-white flex-1">{task.name}</h2>
+                <h2 className="text-sm sm:text-base font-black text-slate-800 dark:text-white flex-1">Întrebarea {idx + 1}</h2>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   {task.type === "coding" && (
                     <span className="text-[11px] sm:text-xs font-bold px-2 py-1 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600 flex items-center gap-1">
