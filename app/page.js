@@ -190,7 +190,7 @@ export default function Home() {
             <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black shadow-inner flex-shrink-0">{user.initial || "?"}</div>
             <div className="flex-1 min-w-0">
               <p className="text-indigo-200 text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-0.5">Bine ai venit</p>
-              <h1 className="text-lg sm:text-xl font-black leading-tight">Bine ai venit{user.name ? `, ${user.name}` : ""}!</h1>
+              <h1 className="text-lg sm:text-xl font-black leading-tight">Bine ai venit!</h1>
               {!loading && totalLessons > 0 && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between mb-1">

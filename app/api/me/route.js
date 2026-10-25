@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { getSecret, isAdminEmail, defaultUserId } from "@/lib/auth";
+import { getSecret, isAdminEmail } from "@/lib/auth";
 
 const NAME_MAP = {
   [process.env.AUTH_EMAIL]:  { name: "Cristi", initial: "C" },
@@ -10,8 +10,8 @@ const NAME_MAP = {
 
 // Visitor without a session = primary account, but never admin (admin needs a real login).
 function guest() {
-  const email = defaultUserId();
-  return NextResponse.json({ email, isAdmin: false, ...(NAME_MAP[process.env.AUTH_EMAIL] ?? { name: "Utilizator", initial: "U" }) });
+  // Public site: never expose the owner's name or email to anonymous visitors.
+  return NextResponse.json({ email: null, isAdmin: false, name: "Bun venit", initial: "👋" });
 }
 
 export async function GET(request) {

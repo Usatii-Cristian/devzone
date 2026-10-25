@@ -221,7 +221,7 @@ export default function SettingsPage() {
         <section className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-4 text-white shadow-lg flex items-center gap-3">
           <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl font-black flex-shrink-0">{user.initial || "?"}</div>
           <div className="flex-1 min-w-0">
-            <p className="text-indigo-200 text-xs">Conectat ca</p>
+            {user.email && <p className="text-indigo-200 text-xs">Conectat ca</p>}
             <p className="font-black text-base truncate">{user.name || "..."}</p>
             {user.email && <p className="text-indigo-200 text-xs truncate">{user.email}</p>}
           </div>
