@@ -1,5 +1,5 @@
 "use client";
-import { fillMatches } from "@/lib/codeRunner";
+import { fillMatches, blankHtml } from "@/lib/codeRunner";
 import { useState, useEffect, useMemo } from "react";
 import { Play, RotateCcw, Trophy, ChevronRight, Zap, CheckCircle, Sparkles, Globe, Library, ArrowLeft, RefreshCw, Send, XCircle, Wand2, Terminal, Lightbulb, PenLine } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -21,7 +21,7 @@ function fmt(t) {
     .replace(/`(.+?)`/g, "<code class='bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono text-xs'>$1</code>");
 }
 
-function fmtQuestion(text) {
+function fmtQuestion(text, fill) {
   const parts = [];
   const re = /```(?:\w*)\n?([\s\S]*?)```/g;
   let last = 0, m;
@@ -31,7 +31,7 @@ function fmtQuestion(text) {
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push(`<span>${fmt(text.slice(last))}</span>`);
-  return parts.join("");
+  return blankHtml(parts.join(""), fill);
 }
 
 const DIFF = {
@@ -543,7 +543,7 @@ parent.postMessage({logs:_log},'*');
                 <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mb-3 font-semibold">{task.lesson.title}</p>
               )}
               <div className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: fmtQuestion(task.question || "") }}/>
+                dangerouslySetInnerHTML={{ __html: fmtQuestion(task.question || "", task.type === "fillblank" ? fillValue : "") }}/>
             </div>
 
             {/* Hint button + hints */}

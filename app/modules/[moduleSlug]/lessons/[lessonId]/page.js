@@ -9,7 +9,7 @@ import {
   Copy, Sparkles, PenLine, ArrowDown
 } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
-import { runPython, gradeByOutput, canGradeOffline, fillMatches } from "@/lib/codeRunner";
+import { runPython, gradeByOutput, canGradeOffline, fillMatches, blankHtml } from "@/lib/codeRunner";
 import { saveProgress, enqueueProgress } from "@/lib/offlineQueue";
 
 const DIFF = {
@@ -1080,7 +1080,7 @@ parent.postMessage({logs:_log},'*');
 
                 {/* Question */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 mb-2 shadow-sm border border-slate-100 dark:border-slate-700">
-                  <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-medium text-sm" dangerouslySetInnerHTML={{ __html: fmtQuestion(task.question) }}/>
+                  <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-medium text-sm" dangerouslySetInnerHTML={{ __html: fmtQuestion(task.question, task.type === "fillblank" ? fillValue : "") }}/>
                 </div>
 
                 {/* Hint button + hints */}
@@ -1478,7 +1478,7 @@ function fmt(t) {
     .replace(/`(.+?)`/g, "<code class='bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono text-xs'>$1</code>");
 }
 
-function fmtQuestion(text) {
+function fmtQuestion(text, fill) {
   const parts = [];
   const re = /```(?:\w*)\n?([\s\S]*?)```/g;
   let last = 0, m;
@@ -1490,5 +1490,5 @@ function fmtQuestion(text) {
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push(`<span>${fmt(text.slice(last))}</span>`);
-  return parts.join("");
+  return blankHtml(parts.join(""), fill);
 }

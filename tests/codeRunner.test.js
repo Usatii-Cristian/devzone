@@ -60,3 +60,13 @@ describe("fillMatches", () => {
     expect(fillMatches("", "")).toBe(false);
   });
 });
+
+import { blankHtml } from "../lib/codeRunner.js";
+describe("blankHtml", () => {
+  it("renders same-size box regardless of answer, shows escaped typed text", () => {
+    expect(blankHtml("x = ___", "")).toContain(">?</span>");
+    expect(blankHtml("<___>", "<b>")).toContain("&lt;b&gt;");
+    expect(blankHtml("a ___ b _____", "in").match(/<span/g)).toHaveLength(2);
+    expect(blankHtml("__init__", "")).toBe("__init__");
+  });
+});
